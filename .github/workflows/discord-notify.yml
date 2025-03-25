@@ -2,9 +2,9 @@ name: Discord Notification
 
 on:
   issues:
-    types: [opened]
+    types: [opened, closed]
   pull_request:
-    types: [opened]
+    types: [opened, closed, merged]
 
 jobs:
   notify:
