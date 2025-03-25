@@ -1,4 +1,4 @@
-package com.dementor.mentoringclass.dto.request;
+package com.dementor.domain.mentoringclass.dto.request;
 
 public record MentoringClassCreateRequest(
         Long mentor_id,

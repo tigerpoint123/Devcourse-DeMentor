@@ -1,4 +1,0 @@
-package com.dementor.mentoringclass.dto.request;
-
-public class MentoringClassCreate {
-}

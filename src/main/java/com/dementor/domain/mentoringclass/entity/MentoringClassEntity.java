@@ -1,4 +1,4 @@
-package com.dementor.mentoringclass.entity;
+package com.dementor.domain.mentoringclass.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

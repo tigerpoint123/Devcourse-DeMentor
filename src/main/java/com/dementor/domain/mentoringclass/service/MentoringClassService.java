@@ -1,4 +1,4 @@
-package com.dementor.mentoringclass.service;
+package com.dementor.domain.mentoringclass.service;
 
 import org.springframework.stereotype.Service;
 

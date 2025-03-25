@@ -1,4 +1,4 @@
-package com.dementor.mentoringclass.dto.response;
+package com.dementor.domain.mentoringclass.dto.response;
 
 public record MentoringClassSelectResponse(
         Long id,

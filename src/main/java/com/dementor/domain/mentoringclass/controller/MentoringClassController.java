@@ -1,6 +1,6 @@
-package com.dementor.mentoringclass.controller;
+package com.dementor.domain.mentoringclass.controller;
 
-import com.dementor.mentoringclass.service.MentoringClassService;
+import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
