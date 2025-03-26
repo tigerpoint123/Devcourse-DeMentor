@@ -1,8 +1,8 @@
 package com.dementor.domain.mentoringclass.dto.response;
 
-public record MentoringClassSelectResponse(
+public record MentoringClassCreateResponse(
         Long classId,
-        MentorInfoResponse mentor,
+        Long mentorId,
         String stack,
         String content,
         String title,

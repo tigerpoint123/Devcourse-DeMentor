@@ -15,5 +15,14 @@ public class MentoringClassEntity {
     
     private String title;
 
+    private String stack;
 
+    private String content;
+
+    private int price;
+
+    // TODO : Mentor 엔티티 생성되면 연결
+//    @ManyToOne
+//    @JoinColumn(name = "mentor_id")
+//    private MentorEntity mentor;
 }
