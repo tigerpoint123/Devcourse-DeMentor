@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "tbl_categories")
+@Table(name = "categories")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -27,6 +27,7 @@ public class Categories {
     private String jobName;
 
     // Mentor 엔티티와의 관계 (일대다)
+    @Builder.Default
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Mentor> mentors = new ArrayList<>();
 }

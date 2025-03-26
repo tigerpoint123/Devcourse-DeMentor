@@ -1,6 +1,7 @@
 package com.dementor.domain.mentor.entity;
 
 import com.dementor.domain.categories.entity.Categories;
+import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentoringclass.entity.MentoringClassEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,21 +24,24 @@ public class Mentor {
     @Column(name = "mentor_id", nullable = false)
     private Long mentorId;
 
-    // User 엔티티와의 관계 (일대일)
-    //todo: 회원 테이블과 연관관계
-    //private User user;
+    // Member 엔티티와의 관계 (일대일)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member;
 
     // categories 엔티티와의 관계 (다대일)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
-    private Categories category;
+    private Categories categories;
 
     // PostAttachment 엔티티와의 관계 (일대일, 식별관계)
     //todo: 파일첨부 테이블과 연관관계
     //private PostAttachment attachment;
 
     // Mentoring 수업 엔티티와의 관계 (일대다)
-    @OneToMany(mappedBy = "mentor_id", cascade = CascadeType.ALL)
+    @Builder.Default
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "mentor_id")
     private List<MentoringClassEntity> mentorings = new ArrayList<>();
 
     @Column(name = "name", length = 10, nullable = false)
@@ -77,7 +81,7 @@ public class Mentor {
     public Mentor updateInfo(Categories category, String name, Integer career,
                              String phone, String introduction) {
         return this.toBuilder()
-                .category(category != null ? category : this.category)
+                .categories(category != null ? category : this.categories)
                 .name(name != null ? name : this.name)
                 .career(career != null ? career : this.career)
                 .phone(phone != null ? phone : this.phone)
@@ -91,5 +95,10 @@ public class Mentor {
         return this.toBuilder()
                 .isApproved(isApproved)
                 .build();
+    }
+
+    // 멘토링 수업 추가 메서드
+    public void addMentoringClass(MentoringClassEntity mentoringClass) {
+        mentorings.add(mentoringClass);
     }
 }
