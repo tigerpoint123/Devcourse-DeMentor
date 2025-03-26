@@ -32,7 +32,7 @@ public class Mentor {
     // categories 엔티티와의 관계 (다대일)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "job_id", nullable = false)
-    private Categories categories;
+    private Categories category;
 
     // PostAttachment 엔티티와의 관계 (일대일, 식별관계)
     //todo: 파일첨부 테이블과 연관관계
@@ -81,7 +81,7 @@ public class Mentor {
     public Mentor updateInfo(Categories category, String name, Integer career,
                              String phone, String introduction) {
         return this.toBuilder()
-                .categories(category != null ? category : this.categories)
+                .category(category != null ? category : this.category)
                 .name(name != null ? name : this.name)
                 .career(career != null ? career : this.career)
                 .phone(phone != null ? phone : this.phone)
