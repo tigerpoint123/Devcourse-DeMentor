@@ -1,6 +1,6 @@
 package com.dementor.domain.mentoringclass.controller;
 
-import com.dementor.domain.mentoringclass.entity.MentoringClassEntity;
+import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,9 +18,9 @@ public class MentoringClassController {
     public ApiResponse<?> getClass(
             @RequestParam(required = false) Long jobId
     ) {
-        List<MentoringClassEntity> list = mentoringClassService.selectClass(jobId);
+        List<MentoringClassFindResponse> list = mentoringClassService.selectClass(jobId);
         return ApiResponse.success(
-                "멘토링 클래스 선택 성공",
+                "멘토링 클래스 조회 성공",
                 list
         );
     }
