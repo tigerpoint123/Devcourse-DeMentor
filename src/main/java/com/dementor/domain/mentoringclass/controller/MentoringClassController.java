@@ -3,24 +3,28 @@ package com.dementor.domain.mentoringclass.controller;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 @RestController
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
 public class MentoringClassController {
     private final MentoringClassService mentoringClassService;
 
+    @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
     @GetMapping // 전체 조회
     public ApiResponse<?> getClass(
             @RequestParam(required = false) Long jobId
     ) {
         List<MentoringClassFindResponse> list = mentoringClassService.selectClass(jobId);
         return ApiResponse.success(
-                "멘토링 클래스 조회 성공",
+                "멘토링 수업 조회 성공",
                 list
         );
     }
