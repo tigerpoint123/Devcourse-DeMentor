@@ -1,10 +1,11 @@
 package com.dementor.domain.mentoringclass.dto.request;
 
-public record MentoringClassCreateRequest(
-        Long mentorId, //TODO : mentor dto 참조해서 수정
+public record MentoringClassModifyRequest(
+        Long classId,
         String stack,
         String content,
         String title,
-        int price
+        int price,
+        Long schedule
 ) {
 }
