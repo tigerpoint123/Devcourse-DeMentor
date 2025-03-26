@@ -1,6 +1,6 @@
 package com.dementor.domain.mentor.dto.request;
 
-import com.dementor.domain.mentor.entity.MentorEntity;
+import com.dementor.domain.mentor.entity.Mentor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,9 +15,11 @@ public class MentorRequestDto {
         private Long jobId;
         private Long userId;
         private String name;
+        private String currentCompany;
         private Integer career;
         private String phone;
         private String introduction;
+        private String bestFor;
 
         // 파일 첨부 정보
         private AttachmentInfo attachment;
@@ -33,16 +35,16 @@ public class MentorRequestDto {
         }
 
         // MentorEntity 변환 메서드
-        public MentorEntity toEntity() {
-            return MentorEntity.builder()
-                    .jobId(jobId)
-                    .userId(userId)
+        public Mentor toEntity() {
+            return Mentor.builder()
                     .name(name)
+                    .currentCompany(currentCompany)
                     .career(career)
                     .phone(phone)
                     .introduction(introduction)
-                    .isApproved(false)
-                    .isModified(false)
+                    .bestFor(bestFor)
+                    .isApproved(Mentor.ApprovalStatus.N)
+                    .isModified(Mentor.ApprovalStatus.N)
                     .build();
         }
     }
@@ -59,15 +61,12 @@ public class MentorRequestDto {
         private String phone;
         private String introduction;
 
-        // 기존 첨부파일 ID 목록 (삭제를 위한)
+        // 기존 첨부파일 ID (삭제를 위한)
         private Long removeAttachmentId;
+
         // 새로운 첨부파일 정보
         private Create.AttachmentInfo newAttachment;
 
-        // MentorEntity 업데이트 메서드
-        public MentorEntity updateEntity(MentorEntity entity) {
-            return entity.updateInfo(jobId, name, career, phone, introduction);
-        }
     }
 
     @Getter
@@ -76,6 +75,6 @@ public class MentorRequestDto {
     @Builder
     public static class Approve {
         private Long mentorId;
-        private Boolean approve;
+        private Mentor.ApprovalStatus approve;
     }
 }
