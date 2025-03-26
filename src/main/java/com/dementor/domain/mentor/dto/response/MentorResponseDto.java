@@ -1,4 +1,4 @@
-package com.dementor.domain.mentor.dto;
+package com.dementor.domain.mentor.dto.response;
 
 import com.dementor.domain.mentor.entity.MentorEntity;
 import lombok.AllArgsConstructor;
