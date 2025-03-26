@@ -35,7 +35,7 @@ public class Member extends BaseEntity {
 
 	@Column(nullable = false)
 	private UserRole role;
-	//test
+	//test1
 
 	public Member() {
 	}
