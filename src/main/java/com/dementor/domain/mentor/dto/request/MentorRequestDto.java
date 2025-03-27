@@ -43,8 +43,8 @@ public class MentorRequestDto {
                     .phone(phone)
                     .introduction(introduction)
                     .bestFor(bestFor)
-                    .isApproved(Mentor.ApprovalStatus.N)
-                    .isModified(Mentor.ApprovalStatus.N)
+                    .isApproved(false)
+                    .isModified(false)
                     .build();
         }
     }
@@ -75,6 +75,6 @@ public class MentorRequestDto {
     @Builder
     public static class Approve {
         private Long mentorId;
-        private Mentor.ApprovalStatus approve;
+        private Boolean approve;
     }
 }

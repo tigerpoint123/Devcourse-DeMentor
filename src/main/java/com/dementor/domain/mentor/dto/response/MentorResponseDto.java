@@ -22,14 +22,13 @@ public class MentorResponseDto {
         private Integer career;
         private String phone;
         private String introduction;
-        private Mentor.ApprovalStatus isApproved;
-        private Mentor.ApprovalStatus isModified;
+        private Boolean isApproved;
+        private Boolean isModified;
         private String bestFor;
 
         // Entity를 DTO로 변환하는 정적 메서드
         public static Basic from(Mentor entity) {
             return Basic.builder()
-                    .mentorId(entity.getId())
                     //.userId(entity.getUser().getUserId())
                     //.userName(entity.getUser().getNickname())
                     .jobId(entity.getJob().getId())
