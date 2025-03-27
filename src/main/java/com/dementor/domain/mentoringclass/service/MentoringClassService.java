@@ -5,6 +5,7 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindRespons
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,10 @@ public class MentoringClassService {
 
     @Transactional
     public Long createClass(Long mentorId, MentoringClassCreateRequest request) {
-        // TODO: mentorId를 통해 멘토 정보를 조회하고 연동
+        // 현재 인증된 사용자의 정보를 가져옴
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        // TODO: username을 통해 멘토 정보를 조회하고 연동
         // 1. 멘토 정보 조회
         // 2. MentoringClass 엔티티 생성
         MentoringClass mentoringClass = MentoringClass.builder()

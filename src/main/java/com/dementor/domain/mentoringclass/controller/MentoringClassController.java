@@ -7,10 +7,8 @@ import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
@@ -53,11 +51,13 @@ public class MentoringClassController {
     @PostMapping
     public ApiResponse<?> createClass(
             @RequestBody MentoringClassCreateRequest request,
-            @AuthenticationPrincipal Principal principal
+            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
     ) {
-        Long mentorId = Long.parseLong(principal.getName());
-        Long classId = mentoringClassService.createClass(mentorId, request);
-        return ApiResponse.success("멘토링 클래스 생성 성공", classId);
+        Long classId = mentoringClassService.createClass(memberId, request);
+        return ApiResponse.success(
+                "멘토링 클래스 생성 성공",
+                classId
+        );
     }
 
     @PutMapping("/{class_id}")
