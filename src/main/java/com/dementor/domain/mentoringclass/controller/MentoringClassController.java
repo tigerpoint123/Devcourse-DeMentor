@@ -7,8 +7,10 @@ import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
@@ -19,7 +21,7 @@ public class MentoringClassController {
     private final MentoringClassService mentoringClassService;
 
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
-    @GetMapping // 전체 조회
+    @GetMapping
     public ApiResponse<?> getClass(
             @RequestParam(required = false) Long jobId
     ) {
@@ -50,13 +52,11 @@ public class MentoringClassController {
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
     @PostMapping
     public ApiResponse<?> createClass(
-            @RequestBody MentoringClassCreateRequest request
+            @RequestBody MentoringClassCreateRequest request,
+            @AuthenticationPrincipal Principal principal
     ) {
-        // TODO: 멘토 도메인 개발 완료 후 멘토 검증 로직 추가 필요
-        // 1. 현재 로그인한 사용자가 멘토인지 확인
-        // 2. 멘토가 아닌 경우 예외 처리
-        
-        Long classId = mentoringClassService.createClass(request);
+        Long mentorId = Long.parseLong(principal.getName());
+        Long classId = mentoringClassService.createClass(mentorId, request);
         return ApiResponse.success("멘토링 클래스 생성 성공", classId);
     }
 

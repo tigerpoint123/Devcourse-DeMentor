@@ -40,7 +40,6 @@ public class MentoringClassTest {
     void 멘토링수업등록() throws Exception {
         // given
         MentoringClassCreateRequest request = new MentoringClassCreateRequest(
-            1L, // 임시 mentorId
             "Spring Boot",
             "스프링 부트 기초부터 실전까지",
             "스프링 부트 완전 정복",
