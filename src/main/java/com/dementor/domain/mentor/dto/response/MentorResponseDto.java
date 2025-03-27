@@ -29,11 +29,11 @@ public class MentorResponseDto {
         // Entity를 DTO로 변환하는 정적 메서드
         public static Basic from(Mentor entity) {
             return Basic.builder()
-                    .mentorId(entity.getMentorId())
+                    .mentorId(entity.getId())
                     //.userId(entity.getUser().getUserId())
                     //.userName(entity.getUser().getNickname())
-                    .jobId(entity.getCategory().getJobId())
-                    .jobName(entity.getCategory().getJobName())
+                    .jobId(entity.getJob().getId())
+                    .jobName(entity.getJob().getName())
                     .name(entity.getName())
                     .currentCompany(entity.getCurrentCompany())
                     .career(entity.getCareer())
