@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.controller;
 
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
@@ -30,6 +31,7 @@ public class MentoringClassController {
     }
 
     // TODO : /api/mentor/class/{mentor_id} 로 바꿀 예정
+    @Operation(summary = "멘토가 등록한 수업 조회", description = "멘토가 자신의 수업을 조회합니다.")
     @GetMapping("/{mentor_id}")
     public ApiResponse<?> getClassByMentorId(
         @PathVariable(required = false) Long mentorId
@@ -37,6 +39,7 @@ public class MentoringClassController {
         return null;
     }
 
+    @Operation(summary = "멘토링 수업 상세 조회", description = "특정 멘토링 수업의 상세 정보를 조회합니다.")
     @GetMapping("/{class_id}")
     public ApiResponse<?> getClassById(
             @PathVariable Long classId
@@ -47,10 +50,14 @@ public class MentoringClassController {
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
     @PostMapping
     public ApiResponse<?> createClass(
-//            @RequestBody MentoringClassCreateRequest request
-            ) {
-
-        return ApiResponse.success("멘토링 클래스 생성 성공", "생성된 클래스 ID");
+            @RequestBody MentoringClassCreateRequest request
+    ) {
+        // TODO: 멘토 도메인 개발 완료 후 멘토 검증 로직 추가 필요
+        // 1. 현재 로그인한 사용자가 멘토인지 확인
+        // 2. 멘토가 아닌 경우 예외 처리
+        
+        Long classId = mentoringClassService.createClass(request);
+        return ApiResponse.success("멘토링 클래스 생성 성공", classId);
     }
 
     @PutMapping("/{class_id}")
