@@ -50,9 +50,11 @@ public class MentoringClassController {
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
     @PostMapping
     public ApiResponse<?> createClass(
-            @RequestBody MentoringClassCreateRequest request,
-            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
+            @RequestBody MentoringClassCreateRequest request
+//            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
     ) {
+        // TODO : 쿠키의 토큰에 저장된 key 에 맞게 수정 필요
+        Long memberId = 1L;
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.success(
                 "멘토링 클래스 생성 성공",
