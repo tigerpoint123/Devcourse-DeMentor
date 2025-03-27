@@ -2,7 +2,7 @@ package com.dementor.domain.mentor.entity;
 
 import com.dementor.domain.categories.entity.Categories;
 import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.mentoringclass.entity.MentoringClassEntity;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +42,7 @@ public class Mentor {
     @Builder.Default
     @OneToMany(cascade = CascadeType.ALL)
     @JoinColumn(name = "mentor_id")
-    private List<MentoringClassEntity> mentorings = new ArrayList<>();
+    private List<MentoringClass> mentorings = new ArrayList<>();
 
     @Column(name = "name", length = 10, nullable = false)
     private String name;
@@ -98,7 +98,7 @@ public class Mentor {
     }
 
     // 멘토링 수업 추가 메서드
-    public void addMentoringClass(MentoringClassEntity mentoringClass) {
+    public void addMentoringClass(MentoringClass mentoringClass) {
         mentorings.add(mentoringClass);
     }
 }

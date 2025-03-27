@@ -1,4 +1,4 @@
-package com.dementor.domain;
+package com.dementor.global.base;
 
 import jakarta.persistence.*;
 import lombok.Getter;

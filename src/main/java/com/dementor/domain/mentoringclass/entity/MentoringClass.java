@@ -8,7 +8,7 @@ import lombok.Setter;
 @Table(name = "mentoring_class")
 @Getter
 @Setter
-public class MentoringClassEntity {
+public class MentoringClass {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
