@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.service;
 
+import com.dementor.domain.mentoringclass.dto.response.MentorInfo;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +22,14 @@ public class MentoringClassService {
                         mentoringClass.getStack(),
                         mentoringClass.getContent(),
                         mentoringClass.getTitle(),
-                        mentoringClass.getPrice()
-//                        new MentorInfo(
-//                                mentoringClass.getMentor().getId(),
-//                                mentoringClass.getMentor().getName(),
-//                                mentoringClass.getMentor().getCareer(),
-//                                mentoringClass.getMentor().getIntroduction()
-//
-//                        )
+                        mentoringClass.getPrice(),
+                        new MentorInfo(
+                                mentoringClass.getMentor().getMentorId(),
+                                mentoringClass.getMentor().getName(),
+                                mentoringClass.getMentor().getCareer(),
+                                mentoringClass.getMentor().getIntroduction()
+
+                        )
                 ))
                 .collect(Collectors.toList());
     }

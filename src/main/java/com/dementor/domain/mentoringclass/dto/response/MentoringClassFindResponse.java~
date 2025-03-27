@@ -5,7 +5,8 @@ public record MentoringClassFindResponse(
         String stack,
         String content,
         String title,
-        int price
+        int price,
+        MentorInfo mentor
 ) {
 }
 
