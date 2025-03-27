@@ -29,6 +29,7 @@ public class MentoringClassController {
         );
     }
 
+    // TODO : /api/mentor/class/{mentor_id} 로 바꿀 예정
     @GetMapping("/{mentor_id}")
     public ApiResponse<?> getClassByMentorId(
         @PathVariable(required = false) Long mentorId
@@ -43,9 +44,12 @@ public class MentoringClassController {
         return null;
     }
 
+    @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
     @PostMapping
-    public ApiResponse<?> createClass() {
-        // TODO: 실제 생성 로직 구현
+    public ApiResponse<?> createClass(
+//            @RequestBody MentoringClassCreateRequest request
+            ) {
+
         return ApiResponse.success("멘토링 클래스 생성 성공", "생성된 클래스 ID");
     }
 
