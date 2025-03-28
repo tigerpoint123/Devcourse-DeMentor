@@ -29,6 +29,17 @@ public class MentoringClass {
     @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
     private List<Schedule> schedules = new ArrayList<>();
 
+    @Builder
+    public MentoringClass(String title, String stack, String content, int price, List<Schedule> schedules) {
+        this.title = title;
+        this.stack = stack;
+        this.content = content;
+        this.price = price;
+        if (schedules != null) {
+            this.schedules = schedules;
+        }
+    }
+
     // TODO : Mentor 엔티티 생성되면 연결
 //    @ManyToOne
 //    @JoinColumn(name = "mentor_id")
