@@ -1,4 +1,4 @@
-package com.dementor.domain.categories.entity;
+package com.dementor.domain.job.entity;
 
 import java.util.List;
 

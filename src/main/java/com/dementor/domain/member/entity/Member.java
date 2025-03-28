@@ -1,7 +1,12 @@
 package com.dementor.domain.member.entity;
 
 import com.dementor.global.base.BaseEntity;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,10 +34,10 @@ public class Member extends BaseEntity {
 	private String password;
 
 	@Column(nullable = false)
-	private UserRole role;
-	//test1
+	private UserRole userRole;
 
 	public Member() {
+
 	}
 
 }
