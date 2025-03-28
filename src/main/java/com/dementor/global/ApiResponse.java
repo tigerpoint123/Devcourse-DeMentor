@@ -1,33 +1,49 @@
 package com.dementor.global;
 
-public record ApiResponse<T>(
-    boolean success,
-    String message,
-    T data,
-    ErrorResponse error
-) {
-    public static <T> ApiResponse<T> success(String message, T data) {
-        return new ApiResponse<>(true, message, data, null);
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@JsonInclude(Include.NON_NULL)
+@Getter
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+public class ApiResponse<T> {
+
+    @NotNull
+    private final Boolean isSuccess;
+    @NotNull
+    private final String code;
+    @NotNull
+    private final String message;
+    private final T data;
+
+    public static <T> ApiResponse<T> of(@NotNull final Boolean isSuccess,
+                                        @NotNull final String code,
+                                        @NotNull final String message) {
+        return new ApiResponse<>(isSuccess, code, message, null);
     }
 
-    public static <T> ApiResponse<T> failure(String message, ErrorResponse error) {
-        return new ApiResponse<>(false, message, null, error);
+    public static <T> ApiResponse<T> of(@NotNull final Boolean isSuccess,
+                                        @NotNull final HttpStatus status,
+                                        @NotNull final String message) {
+        return new ApiResponse<>(isSuccess, String.valueOf(status.value()), message, null);
+    }
+
+    public static <T> ApiResponse<T> of(@NotNull final Boolean isSuccess,
+                                        @NotNull final String code,
+                                        @NotNull final String message,
+                                        @NotNull final T data) {
+        return new ApiResponse<>(isSuccess, code, message, data);
+    }
+
+    public static <T> ApiResponse<T> of(@NotNull final Boolean isSuccess,
+                                        @NotNull final HttpStatus status,
+                                        @NotNull final String message,
+                                        @NotNull final T data) {
+        return new ApiResponse<>(isSuccess, String.valueOf(status.value()), message, data);
     }
 }
-
-record ErrorResponse(
-    String code,
-    String details
-) {
-    public static ErrorResponse notFound(String details) {
-        return new ErrorResponse("NOT_FOUND", details);
-    }
-
-    public static ErrorResponse validationError(String details) {
-        return new ErrorResponse("VALIDATION_ERROR", details);
-    }
-
-    public static ErrorResponse serverError(String details) {
-        return new ErrorResponse("SERVER_ERROR", details);
-    }
-} 

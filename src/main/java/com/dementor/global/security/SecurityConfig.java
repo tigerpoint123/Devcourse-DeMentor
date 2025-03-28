@@ -3,6 +3,7 @@ package com.dementor.global.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @Configuration
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Profile("!test") // 테스트 프로필이 아닐 때만 적용 (없으면 TestSecurityConfig 랑 충돌남)
 public class SecurityConfig {
 
 	private final JwtTokenProvider jwtTokenProvider;
