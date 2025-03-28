@@ -2,7 +2,7 @@ package com.dementor.domain.mentor.entity;
 
 import java.util.List;
 
-import com.dementor.domain.categories.entity.Job;
+import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 
