@@ -17,7 +17,7 @@ import java.util.List;
 public class Mentor {
 
     @Id
-    private Long memberId;
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // member_id를 PK이자 FK로 사용
@@ -66,8 +66,25 @@ public class Mentor {
     @Column(length = 255)
     private String bestFor;
 
+    @Column(length = 255)
+    private String stack;
+
+
+
     // 멘토링 수업 추가 메서드
     public void addMentoringClass(MentoringClass mentoringClass) {
         mentorings.add(mentoringClass);
+    }
+
+    // 필드 수정 메서드
+    public void update(String currentCompany, Integer career, String phone,
+                       String introduction, String bestFor, String stack) {
+        this.currentCompany = currentCompany;
+        this.career = career;
+        this.phone = phone;
+        this.introduction = introduction;
+        this.bestFor = bestFor;
+        this.stack = stack;
+        this.isModified = true; // 수정 시 상태 변경
     }
 }
