@@ -1,11 +1,13 @@
 package com.dementor.domain.mentoringclass.service;
 
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MentoringClassService {
     private final MentoringClassRepository mentoringClassRepository;
+    private final ScheduleRepository scheduleRepository;
 
     public List<MentoringClassFindResponse> selectClass(Long jobId) {
         return mentoringClassRepository.findAll()
@@ -27,24 +30,15 @@ public class MentoringClassService {
                         mentoringClass.getContent(),
                         mentoringClass.getTitle(),
                         mentoringClass.getPrice()
-//                        new MentorInfo(
-//                                mentoringClass.getMentor().getId(),
-//                                mentoringClass.getMentor().getName(),
-//                                mentoringClass.getMentor().getCareer(),
-//                                mentoringClass.getMentor().getIntroduction()
-//
-//                        )
                 ))
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public Long createClass(Long mentorId, MentoringClassCreateRequest request) {
-        // 현재 인증된 사용자의 정보를 가져옴
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        
         // TODO: username을 통해 멘토 정보를 조회하고 연동
         // 1. 멘토 정보 조회
+
         // 2. MentoringClass 엔티티 생성
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
@@ -54,7 +48,27 @@ public class MentoringClassService {
                 // .mentor(mentor) // 멘토 정보 연동
                 .build();
         
-        // 3. 저장 및 ID 반환
-        return mentoringClassRepository.save(mentoringClass).getId();
+        // 3. MentoringClass 저장
+        mentoringClass = mentoringClassRepository.save(mentoringClass);
+        
+        // 4. Schedule 엔티티들 생성 및 저장
+        List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
+        mentoringClass.setSchedules(schedules);
+        
+        return mentoringClass.getId();
+    }
+
+    // 스케줄 저장 로직 별도로 관리
+    private List<Schedule> createSchedules(List<ScheduleRequest> scheduleRequests, MentoringClass mentoringClass) {
+        return scheduleRequests.stream()
+                .map(scheduleRequest -> {
+                    Schedule schedule = Schedule.builder()
+                            .dayOfWeek(scheduleRequest.dayOfWeek())
+                            .time(scheduleRequest.time())
+                            .mentoringClass(mentoringClass)
+                            .build();
+                    return scheduleRepository.save(schedule);
+                })
+                .collect(Collectors.toList());
     }
 }
