@@ -7,6 +7,7 @@ import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +25,9 @@ public class MentoringClassController {
             @RequestParam(required = false) Long jobId
     ) {
         List<MentoringClassFindResponse> list = mentoringClassService.selectClass(jobId);
-        return ApiResponse.success(
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
                 "멘토링 수업 조회 성공",
                 list
         );
@@ -56,7 +59,9 @@ public class MentoringClassController {
         // TODO : 쿠키의 토큰에 저장된 key 에 맞게 수정 필요
         Long memberId = 1L;
         Long classId = mentoringClassService.createClass(memberId, request);
-        return ApiResponse.success(
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
                 "멘토링 클래스 생성 성공",
                 classId
         );
@@ -67,7 +72,12 @@ public class MentoringClassController {
             @PathVariable Long classId
     ) {
         // TODO: 실제 생성 로직 구현
-        return ApiResponse.success("멘토링 클래스 수정 성공", "생성된 클래스 ID");
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
+                "멘토링 클래스 수정 성공",
+                "생성된 클래스 ID"
+        );
     }
 
     @DeleteMapping("/{class_id}")
@@ -75,6 +85,11 @@ public class MentoringClassController {
             @PathVariable Long classId
     ) {
         // TODO: 실제 생성 로직 구현
-        return ApiResponse.success("멘토링 클래스 삭제 성공", "생성된 클래스 ID");
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
+                "멘토링 클래스 삭제 성공",
+                "생성된 클래스 ID"
+        );
     }
 }

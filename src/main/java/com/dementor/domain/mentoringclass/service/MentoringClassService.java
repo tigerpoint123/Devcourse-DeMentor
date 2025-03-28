@@ -3,7 +3,9 @@ package com.dementor.domain.mentoringclass.service;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MentoringClassService {
     private final MentoringClassRepository mentoringClassRepository;
+    private final ScheduleRepository scheduleRepository;
 
     public List<MentoringClassFindResponse> selectClass(Long jobId) {
         return mentoringClassRepository.findAll()
@@ -27,13 +30,6 @@ public class MentoringClassService {
                         mentoringClass.getContent(),
                         mentoringClass.getTitle(),
                         mentoringClass.getPrice()
-//                        new MentorInfo(
-//                                mentoringClass.getMentor().getId(),
-//                                mentoringClass.getMentor().getName(),
-//                                mentoringClass.getMentor().getCareer(),
-//                                mentoringClass.getMentor().getIntroduction()
-//
-//                        )
                 ))
                 .collect(Collectors.toList());
     }
@@ -54,7 +50,21 @@ public class MentoringClassService {
                 // .mentor(mentor) // 멘토 정보 연동
                 .build();
         
-        // 3. 저장 및 ID 반환
-        return mentoringClassRepository.save(mentoringClass).getId();
+        // 3. 멘토링 클래스 저장
+        mentoringClass = mentoringClassRepository.save(mentoringClass);
+        
+        // 4. 스케줄 정보 저장
+        if (request.schedules() != null) {
+            request.schedules().forEach(scheduleRequest -> {
+                Schedule schedule = Schedule.builder()
+                        .dayOfWeek(scheduleRequest.dayOfWeek())
+                        .time(scheduleRequest.time())
+                        .mentoringClass(mentoringClass)
+                        .build();
+                scheduleRepository.save(schedule);
+            });
+        }
+        
+        return mentoringClass.getId();
     }
 }
