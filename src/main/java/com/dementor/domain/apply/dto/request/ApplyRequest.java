@@ -4,27 +4,27 @@ import java.time.LocalDateTime;
 
 import com.dementor.domain.apply.entity.ApplyStatus;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 
 public class ApplyRequest {
 
 	@Getter
-	@Setter
-	@AllArgsConstructor
-	@NoArgsConstructor
 	public static class ApplyCreateRequest {
 		private Long class_id;
 		private String inquiry;
-		private LocalDateTime schedule;
+		private String year_month;
+		private LocalDateTime schedule;//신청 날짜
 	}
 
+	@Getter
+	public static class ApplyUpdateRequest {
+		private Long applyment_id;
+		private String year_month;
+		private LocalDateTime schedule;//신청 날짜
+	}
 
 	@Getter
-	public static class ApplyStatusRequest {
+	public static class ApplyApproveRequest {
 		private ApplyStatus status;
 	}
 
