@@ -60,7 +60,7 @@ public class MemberControllerTest {
 		when(memberService.isEmail(email)).thenReturn(true);
 
 		// when & then
-		mvc.perform(get("/api/member/isEmail")
+		mvc.perform(get("/api/signup/isEmail")
 				.param("email", email))
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.code").value("200"))
@@ -77,11 +77,44 @@ public class MemberControllerTest {
 			.thenThrow(new MemberException(MemberErrorCode.DUPLICATE_EMAIL));
 
 		// when & then
-		mvc.perform(get("/api/member/isEmail")
+		mvc.perform(get("/api/signup/isEmail")
 				.param("email", email))
 			.andExpect(jsonPath("$.isSuccess").value(false))
 			.andExpect(jsonPath("$.code").value("409"))
 			.andExpect(jsonPath("$.message").value("이미 존재하는 이메일입니다"));
 	}
+
+	@Test
+	@DisplayName("닉네임 중복확인 - 사용 가능한 닉네임")
+	public void testIsNicknameSuccess() throws Exception {
+		// given
+		String nickname = "hong";
+		when(memberService.isNickname(nickname)).thenReturn(true);
+
+		// when & then
+		mvc.perform(get("/api/signup/isNickname")
+				.param("nickname", nickname))
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.code").value("200"))
+			.andExpect(jsonPath("$.message").value("Nickname exists"))
+			.andExpect(jsonPath("$.data").value(true));
+	}
+
+	@Test
+	@DisplayName("이메일 중복확인 - 이미 존재하는 이메일")
+	public void testIsNicknameDuplicate() throws Exception {
+		// given
+		String nickname = "testMentee";
+		when(memberService.isNickname(nickname))
+			.thenThrow(new MemberException(MemberErrorCode.DUPLICATE_NICKNAME));
+
+		// when & then
+		mvc.perform(get("/api/signup/isNickname")
+				.param("nickname", nickname))
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value("409"))
+			.andExpect(jsonPath("$.message").value("이미 존재하는 닉네임입니다"));
+	}
+
 }
 

@@ -13,13 +13,13 @@ import com.dementor.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/member")
+@RequestMapping("/api/signup")
 @RequiredArgsConstructor
 public class MemberController {
 
 	private final MemberService memberService;
 
-	@PostMapping("/signup")
+	@PostMapping
 	public ApiResponse<?> createMember() {
 		return ApiResponse.of(true, HttpStatus.CREATED , "Create member");
 	}
@@ -28,6 +28,12 @@ public class MemberController {
 	public ApiResponse<?> isEmail(@RequestParam("email") String email) {
 		boolean isEmail = memberService.isEmail(email);
 		return ApiResponse.of(true, HttpStatus.OK, "Email exists", isEmail);
+	}
+
+	@GetMapping("/isNickname")
+	public ApiResponse<?> isNickname(@RequestParam("nickname") String nickname) {
+		boolean isNickname = memberService.isNickname(nickname);
+		return ApiResponse.of(true, HttpStatus.OK, "Nickname exists", isNickname);
 	}
 
 }

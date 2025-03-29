@@ -20,4 +20,11 @@ public class MemberService {
 		});
 		return true;
 	}
+
+	public boolean isNickname(String nickname) {
+		memberRepository.findByNickname(nickname).ifPresent(member -> {
+			throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
+		});
+		return true;
+	}
 }
