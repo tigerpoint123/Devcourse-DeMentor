@@ -110,4 +110,5 @@ public class JwtTokenProvider implements InitializingBean {
 		}
 		return false;
 	}
+
 }

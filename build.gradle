@@ -50,6 +50,8 @@ dependencies {
 
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    testImplementation 'org.testcontainers:testcontainers:1.19.7' // 기본 Testcontainers
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'  // JUnit 5 연동
 
 }
 

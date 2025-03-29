@@ -3,10 +3,12 @@ package com.dementor.domain.member.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.dementor.domain.member.dto.request.SignupRequest;
 import com.dementor.domain.member.service.MemberService;
 import com.dementor.email.service.EmailService;
 import com.dementor.global.ApiResponse;
@@ -24,7 +26,8 @@ public class MemberController {
 	private final EmailService emailService;
 
 	@PostMapping
-	public ApiResponse<?> createMember() {
+	public ApiResponse<?> createMember(@RequestBody SignupRequest signupRequest) {
+		memberService.createMember(signupRequest);
 		return ApiResponse.of(true, HttpStatus.CREATED , "Create member");
 	}
 
