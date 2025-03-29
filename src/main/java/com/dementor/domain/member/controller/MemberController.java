@@ -1,7 +1,6 @@
 package com.dementor.domain.member.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,10 +40,16 @@ public class MemberController {
 		return ApiResponse.of(true, HttpStatus.OK, "Nickname exists", isNickname);
 	}
 
-	@PostMapping("/verifycode")
-	public ResponseEntity<String> sendVerificationEmail(@RequestParam("email") String email) throws MessagingException {
+	@PostMapping("/verifyCode")
+	public ApiResponse<?> sendVerificationEmail(@RequestParam("email") String email) throws MessagingException {
 		emailService.sendVerificationEmail(email);
-		return ResponseEntity.ok("인증 메일이 발송되었습니다.");
+		return ApiResponse.of(true, HttpStatus.OK, "Send verification code");
+	}
+
+	@GetMapping("/verifyEmail")
+	public ApiResponse<?> verifyEmailCode(@RequestParam("email") String email, @RequestParam("verifyCode") String verifyCode){
+		boolean verified = emailService.verifyCode(email, verifyCode);
+		return ApiResponse.of(true, HttpStatus.OK, "verified Email", verified);
 	}
 
 }

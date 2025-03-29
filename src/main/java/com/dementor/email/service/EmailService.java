@@ -1,7 +1,9 @@
 package com.dementor.email.service;
 
+import java.time.Duration;
 import java.util.Random;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 public class EmailService {
 
 	private final JavaMailSender mailSender;
+	private final RedisTemplate<String, String> redisTemplate;
+	private static final long EXPIRE_TIME = 5 * 60; // 5분
 
 	// 랜덤 인증번호 생성
 	private String createCode() {
@@ -22,8 +26,11 @@ public class EmailService {
 		return String.format("%06d", random.nextInt(1000000));
 	}
 
-	public String sendVerificationEmail(String to) throws MessagingException {
+	public String sendVerificationEmail(String email) throws MessagingException {
 		String code = createCode();
+
+		redisTemplate.opsForValue().set("email:" + email, code, Duration.ofSeconds(EXPIRE_TIME));
+
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -38,12 +45,22 @@ public class EmailService {
                 </div>
                 """.formatted(code);
 
-		helper.setTo(to);
+		helper.setTo(email);
 		helper.setSubject(subject);
 		helper.setText(content, true); // HTML 적용
 
 		mailSender.send(message);
 		return code;
+	}
+
+	public boolean verifyCode(String email, String inputCode){
+		String storedCode = redisTemplate.opsForValue().get("email:" + email);
+		if (storedCode != null && storedCode.equals(inputCode)) {
+			redisTemplate.delete("email:" + email);
+			return true;
+
+		}
+		return false; //TODO : 예외처리로 변환
 	}
 
 }
