@@ -2,6 +2,7 @@ package com.dementor.domain.mentoringclass.controller;
 
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,20 +35,26 @@ public class MentoringClassController {
     }
 
     // TODO : /api/mentor/class/{mentor_id} 로 바꿀 예정
-    @Operation(summary = "멘토가 등록한 수업 조회", description = "멘토가 자신의 수업을 조회합니다.")
-    @GetMapping("/{mentor_id}")
-    public ApiResponse<?> getClassByMentorId(
-        @PathVariable(required = false) Long mentorId
-    ) {
-        return null;
-    }
+//    @Operation(summary = "멘토가 등록한 수업 조회", description = "멘토가 자신의 수업을 조회합니다.")
+//    @GetMapping("/{mentor_id}")
+//    public ApiResponse<?> getClassByMentorId(
+//        @PathVariable(required = false) Long mentorId
+//    ) {
+//        return null;
+//    }
 
     @Operation(summary = "멘토링 수업 상세 조회", description = "특정 멘토링 수업의 상세 정보를 조회합니다.")
-    @GetMapping("/{class_id}")
+    @GetMapping("/{classId}")
     public ApiResponse<?> getClassById(
             @PathVariable Long classId
     ) {
-        return null;
+        MentoringClass mentoringClass = mentoringClassService.findOneClass(classId);
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
+                "멘토링 수업 상세 조회 성공",
+                mentoringClass
+        );
     }
 
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")

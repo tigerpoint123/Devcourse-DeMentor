@@ -71,4 +71,10 @@ public class MentoringClassService {
                 })
                 .collect(Collectors.toList());
     }
+
+    public MentoringClass findOneClass(Long classId) {
+
+        return mentoringClassRepository.findById(classId)
+                .orElse(null);
+    }
 }
