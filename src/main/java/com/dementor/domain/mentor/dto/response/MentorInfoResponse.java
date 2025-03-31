@@ -12,7 +12,7 @@ public record MentorInfoResponse (
         String stack,
         String introduction,
         String bestFor,
-        Boolean isApproved,
+        Mentor.ApprovalStatus approvalStatus,
         Integer totalClasses,
         Integer pendingRequests,
         Integer completedSessions
@@ -29,7 +29,7 @@ public record MentorInfoResponse (
                 mentor.getStack(),
                 mentor.getIntroduction(),
                 mentor.getBestFor(),
-                mentor.getIsApproved(),
+                mentor.getApprovalStatus(),
                 totalClasses,
                 pendingRequests,
                 completedSessions

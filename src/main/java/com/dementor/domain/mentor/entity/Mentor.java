@@ -3,6 +3,7 @@ package com.dementor.domain.mentor.entity;
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.postattachment.entity.PostAttachment;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,17 +29,13 @@ public class Mentor {
     @JoinColumn(nullable = false)
     private Job job;
 
-    // PostAttachment 엔티티와의 관계 (일대일, 식별관계)
-    //todo: 파일첨부 테이블과 연관관계
-    //private PostAttachment attachment;
+    // PostAttachment 엔티티와의 관계 (일대다)
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostAttachment> attachments;
 
     // Mentoring 수업 엔티티와의 관계 (일대다)
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MentoringClass> mentorings;
-
-    // todo: 파일첨부 테이블과의 관계 (추후 구현)
-    //@Column(name = "attachment_id")
-    //private Long attachmentId;
 
     @Column(length = 10, nullable = false)
     private String name;
@@ -55,13 +52,10 @@ public class Mentor {
     @Column(length = 255, nullable = false)
     private String introduction;
 
-    @Setter
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean isApproved;
-
-    @Setter
-    @Column(nullable = false)
-    private Boolean isModified;
+    @Builder.Default
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
     @Column(length = 255)
     private String bestFor;
@@ -69,11 +63,21 @@ public class Mentor {
     @Column(length = 255)
     private String stack;
 
-
+    // 승인 상태 Enum
+    public enum ApprovalStatus {
+        PENDING,    // 대기 중
+        APPROVED,   // 승인됨
+        REJECTED    // 거부됨
+    }
 
     // 멘토링 수업 추가 메서드
     public void addMentoringClass(MentoringClass mentoringClass) {
         mentorings.add(mentoringClass);
+    }
+
+    // 승인 상태 변경 메서드
+    public void updateApprovalStatus(ApprovalStatus approvalStatus) {
+        this.approvalStatus = approvalStatus;
     }
 
     // 필드 수정 메서드
@@ -85,6 +89,5 @@ public class Mentor {
         this.introduction = introduction;
         this.bestFor = bestFor;
         this.stack = stack;
-        this.isModified = true; // 수정 시 상태 변경
     }
 }

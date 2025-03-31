@@ -1,5 +1,6 @@
 package com.dementor.domain.mentor.dto.request;
 
+import com.dementor.domain.mentor.entity.Mentor;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
@@ -22,5 +23,16 @@ public class MentorUpdateRequest {
             String bestFor,
 
             List<Long> attachmentId
-    ) {}
+    ) {
+        public void applyToMentor(Mentor mentor) {
+            mentor.update(
+                    currentCompany,
+                    career,
+                    phone,
+                    introduction,
+                    bestFor,
+                    stack
+            );
+        }
+    }
 }

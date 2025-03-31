@@ -53,8 +53,7 @@ public class MentorApplicationRequest {
                             .stack(stack)
                             .introduction(introduction)
                             .bestFor(bestFor)
-                            .isApproved(false)
-                            .isModified(false)
+                            .approvalStatus(Mentor.ApprovalStatus.PENDING)
                             .build();
             }
     }

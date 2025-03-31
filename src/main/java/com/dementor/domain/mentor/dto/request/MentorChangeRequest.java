@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Min;
 
 import java.util.List;
 
-public class MentorModificationRequest {
+public class MentorChangeRequest {
     // 요청 파라미터를 위한 DTO
     public record ModificationRequestParams(
             String status,
