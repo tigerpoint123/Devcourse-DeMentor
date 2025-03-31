@@ -29,7 +29,7 @@ public class ApplyService {
 	@Transactional
 	public ApplyResponse.GetApplyId createApply(ApplyRequest.ApplyCreateRequest req, Long memberId) {
 
-		MentoringClass mentoringClass = mentoringClassRepository.findById(req.getClass_id())
+		MentoringClass mentoringClass = mentoringClassRepository.findById(req.getClassId())
 			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멘토링입니다."));
 
 		Member member = memberRepository.findById(memberId)
