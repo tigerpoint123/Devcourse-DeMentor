@@ -34,7 +34,7 @@ public class Mentor {
     private List<PostAttachment> attachments;
 
     // Mentoring 수업 엔티티와의 관계 (일대다)
-    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MentoringClass> mentorings;
 
     @Column(length = 10, nullable = false)
@@ -68,11 +68,6 @@ public class Mentor {
         PENDING,    // 대기 중
         APPROVED,   // 승인됨
         REJECTED    // 거부됨
-    }
-
-    // 멘토링 수업 추가 메서드
-    public void addMentoringClass(MentoringClass mentoringClass) {
-        mentorings.add(mentoringClass);
     }
 
     // 승인 상태 변경 메서드
