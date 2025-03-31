@@ -73,7 +73,7 @@ public class ApplyServiceTest {
 	void createApplySuccess() {
 
 		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClass_id(mentoringClassId);
+		request.setClassId(mentoringClassId);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
@@ -97,7 +97,7 @@ public class ApplyServiceTest {
 	void createApplyFail1() {
 
 		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClass_id(99999L);
+		request.setClassId(99999L);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 

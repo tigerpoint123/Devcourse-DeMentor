@@ -17,7 +17,7 @@ public class ApplyRequest {
 	@AllArgsConstructor
 	@NoArgsConstructor
 	public static class ApplyCreateRequest {
-		private Long class_id;
+		private Long classId;
 		private String inquiry;
 		private LocalDateTime schedule;
 	}
