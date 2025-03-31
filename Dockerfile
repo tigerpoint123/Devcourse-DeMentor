@@ -7,6 +7,7 @@ WORKDIR /app
 # 소스 코드와 Gradle 래퍼 복사
 COPY build.gradle .
 COPY settings.gradle .
+COPY .env .
 
 # 종속성 설치
 RUN gradle dependencies --no-daemon -x test
