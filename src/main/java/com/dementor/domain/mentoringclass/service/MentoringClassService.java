@@ -21,7 +21,7 @@ public class MentoringClassService {
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
 
-    public List<MentoringClassFindResponse> selectClass(Long jobId) {
+    public List<MentoringClassFindResponse> findClass(Long jobId) {
         return mentoringClassRepository.findAll()
                 .stream()
                 .map(mentoringClass -> new MentoringClassFindResponse(
@@ -73,8 +73,7 @@ public class MentoringClassService {
     }
 
     public MentoringClass findOneClass(Long classId) {
-
         return mentoringClassRepository.findById(classId)
-                .orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("멘토링 수업를 찾을 수 없습니다: " + classId));
     }
 }

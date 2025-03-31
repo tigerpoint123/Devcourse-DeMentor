@@ -25,7 +25,7 @@ public class MentoringClassController {
     public ApiResponse<?> getClass(
             @RequestParam(required = false) Long jobId
     ) {
-        List<MentoringClassFindResponse> list = mentoringClassService.selectClass(jobId);
+        List<MentoringClassFindResponse> list = mentoringClassService.findClass(jobId);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
@@ -34,7 +34,7 @@ public class MentoringClassController {
         );
     }
 
-    // TODO : /api/mentor/class/{mentor_id} 로 바꿀 예정
+    // TODO : /api/mentor/class/{mentor_id} 멘토 도메인으로 옮겨야 함.
 //    @Operation(summary = "멘토가 등록한 수업 조회", description = "멘토가 자신의 수업을 조회합니다.")
 //    @GetMapping("/{mentor_id}")
 //    public ApiResponse<?> getClassByMentorId(
