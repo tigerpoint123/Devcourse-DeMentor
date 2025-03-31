@@ -50,7 +50,7 @@ public class SecurityConfig {
 				.requestMatchers("/api/signup/**").permitAll()
 				.requestMatchers("/api/member/login").permitAll()
 				.requestMatchers("/api/authenticate").permitAll()
-				.requestMatchers("/swagger-ui").permitAll()
+				.requestMatchers("/swagger-ui/**").permitAll()
 				.requestMatchers("/actuator/**").permitAll()
 				.anyRequest().authenticated()
 			)
