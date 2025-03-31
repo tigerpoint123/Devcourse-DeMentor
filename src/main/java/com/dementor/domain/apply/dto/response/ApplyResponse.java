@@ -45,7 +45,7 @@ public class ApplyResponse {
 				.applymentId(apply.getId())
 				.classId(apply.getMentoringClass().getId())
 				.memberId(apply.getMember().getId())
-				.name(apply.getMember().getNickname()) //멘토 이름 //바꿔야 됨 멘토과 회원 식별관계
+				.name(apply.getMember().getNickname())
 				.status(apply.getApplyStatus())
 				.inquiry(apply.getInquiry())
 				.schedule(ZonedDateTime.from(apply.getSchedule()))//신청 날짜
