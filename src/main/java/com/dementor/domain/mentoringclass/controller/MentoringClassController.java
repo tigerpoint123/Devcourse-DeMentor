@@ -1,8 +1,8 @@
 package com.dementor.domain.mentoringclass.controller;
 
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +48,7 @@ public class MentoringClassController {
     public ApiResponse<?> getClassById(
             @PathVariable Long classId
     ) {
-        MentoringClass mentoringClass = mentoringClassService.findOneClass(classId);
+        MentoringClassDetailResponse mentoringClass = mentoringClassService.findOneClass(classId);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
@@ -60,11 +60,11 @@ public class MentoringClassController {
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
     @PostMapping
     public ApiResponse<?> createClass(
-            @RequestBody MentoringClassCreateRequest request
-//            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
+            @RequestBody MentoringClassCreateRequest request,
+            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
     ) {
         // TODO : 쿠키의 토큰에 저장된 key 에 맞게 수정 필요
-        Long memberId = 1L;
+//        Long memberId = 1L;
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(
                 true,
@@ -74,6 +74,7 @@ public class MentoringClassController {
         );
     }
 
+    @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
     @PutMapping("/{class_id}")
     public ApiResponse<?> updateClass(
             @PathVariable Long classId
@@ -87,16 +88,17 @@ public class MentoringClassController {
         );
     }
 
+    @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
     @DeleteMapping("/{class_id}")
     public ApiResponse<?> deleteClass(
             @PathVariable Long classId
     ) {
-        // TODO: 실제 생성 로직 구현
+        mentoringClassService.deleteClass(classId);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
-                "멘토링 클래스 삭제 성공",
-                "생성된 클래스 ID"
+                "멘토링 수업 삭제 성공",
+                null
         );
     }
 }

@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.entity;
 
+import com.dementor.domain.mentor.entity.Mentor;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,7 +31,7 @@ public class MentoringClass {
     private List<Schedule> schedules = new ArrayList<>();
 
     // TODO : Mentor 엔티티 생성되면 연결
-//    @ManyToOne
-//    @JoinColumn(name = "mentor_id")
-//    private MentorEntity mentor;
+    @ManyToOne
+    @JoinColumn(name = "mentor_id")
+    private Mentor mentor;
 }
