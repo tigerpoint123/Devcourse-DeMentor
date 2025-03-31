@@ -1,9 +1,11 @@
 package com.dementor.mentoringclass;
 
-import com.dementor.config.TestSecurityConfig;
-import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
-import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,12 +16,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.dementor.config.TestSecurityConfig;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -30,7 +30,8 @@ public class MentoringClassTest {
     private MockMvc mockMvc;
 
     @Test
-    void 멘토링수업전체조회() throws Exception {
+    @DisplayName("멘토링수업전체조회")
+    void t1() throws Exception {
         // given
         // when & then
         mockMvc.perform(get("/api/class")
@@ -44,7 +45,8 @@ public class MentoringClassTest {
 
     @Test
     @WithMockUser(roles = "MENTOR")
-    void 멘토링수업등록() throws Exception {
+    @DisplayName("멘토링수업등록")
+    void t2() throws Exception {
         // given
         MentoringClassCreateRequest request = new MentoringClassCreateRequest(
             "Spring Boot",
