@@ -1,7 +1,7 @@
 package com.dementor.domain.apply.controller;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +12,7 @@ import com.dementor.domain.apply.dto.request.ApplyRequest;
 import com.dementor.domain.apply.dto.response.ApplyResponse;
 import com.dementor.domain.apply.service.ApplyService;
 import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,10 +27,10 @@ public class ApplyController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public ApiResponse<?> createApply(
 		@RequestBody ApplyRequest.ApplyCreateRequest req,
-		@CookieValue("memberId") Long memberId
+		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
-		ApplyResponse.GetApplyId response = applyService.createApply(req, memberId);
+		ApplyResponse.GetApplyId response = applyService.createApply(req, userDetails.getId());
 
-		return ApiResponse.of(true, HttpStatus.CREATED, "신청이 성공적으로 완료되었습니다", response);
+		return ApiResponse.of(true, HttpStatus.CREATED, "멘토링 신청이 완료되었습니다", response);
 	}
 }

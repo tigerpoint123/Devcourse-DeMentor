@@ -37,10 +37,10 @@ public class ApplyService {
 
 		Apply apply = Apply.builder()
 			.mentoringClass(mentoringClass)
-			.member(member)
 			.inquiry(req.getInquiry())
 			.applyStatus(ApplyStatus.PENDING)
 			.schedule(req.getSchedule())
+			.member(member)
 			.build();
 
 		Apply savedApply = applyRepository.save(apply);
