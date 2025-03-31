@@ -94,7 +94,7 @@ public class ApplyControllerTest {
 	void createApply1() throws Exception {
 
 		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClass_id(testMentoringClassId);
+		request.setClassId(testMentoringClassId);
 		request.setInquiry("멘티의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
@@ -123,7 +123,7 @@ public class ApplyControllerTest {
 	void createApply2() throws Exception {
 
 		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClass_id(testMentoringClassId);
+		request.setClassId(testMentoringClassId);
 		request.setInquiry("멘토의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
