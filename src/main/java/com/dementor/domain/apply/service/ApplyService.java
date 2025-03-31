@@ -7,8 +7,12 @@ import com.dementor.domain.apply.dto.request.ApplyRequest;
 import com.dementor.domain.apply.dto.response.ApplyResponse;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.exception.ApplyErrorCode;
+import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.exception.MemberErrorCode;
+import com.dementor.domain.member.exception.MemberException;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
@@ -30,10 +34,14 @@ public class ApplyService {
 	public ApplyResponse.GetApplyId createApply(ApplyRequest.ApplyCreateRequest req, Long memberId) {
 
 		MentoringClass mentoringClass = mentoringClassRepository.findById(req.getClassId())
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멘토링입니다."));
+			.orElseThrow(() -> new IllegalArgumentException("멘토링 클래스를 찾을 수 없습니다."));
 
 		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+		if (req.getSchedule() == null) {
+			throw new ApplyException(ApplyErrorCode.SCHEDULE_REQUIRED);
+		}
 
 		Apply apply = Apply.builder()
 			.mentoringClass(mentoringClass)
