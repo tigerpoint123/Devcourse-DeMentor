@@ -16,6 +16,8 @@ import com.dementor.domain.apply.dto.request.ApplyRequest;
 import com.dementor.domain.apply.dto.response.ApplyResponse;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.exception.ApplyErrorCode;
+import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.apply.service.ApplyService;
 import com.dementor.domain.member.entity.Member;
@@ -52,6 +54,7 @@ public class ApplyServiceTest {
 			.email("test@test.com")
 			.password("password")
 			.nickname("test")
+			.name("test")
 			.userRole(UserRole.MENTEE)
 			.build();
 		testMember = memberRepository.save(testMember);
@@ -104,7 +107,24 @@ public class ApplyServiceTest {
 
 		assertThrows(IllegalArgumentException.class, () -> {
 			applyService.createApply(request, testMember.getId());
+		});;
+	}
+
+	@Test
+	@DisplayName("멘토링 일정을 입력하지 않고 신청 시 예외 발생")
+	void createApplyFail2() {
+
+		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		request.setClassId(mentoringClassId);
+		request.setInquiry("테스트 문의입니다");
+		request.setSchedule(null);
+
+		ApplyException exception = assertThrows(ApplyException.class, () -> {
+			applyService.createApply(request, testMember.getId());
 		});
+
+		assertEquals(ApplyErrorCode.SCHEDULE_REQUIRED, exception.getErrorCode());
+		assertEquals("멘토링 일정을 선택해야 합니다.", exception.getMessage());
 	}
 }
 

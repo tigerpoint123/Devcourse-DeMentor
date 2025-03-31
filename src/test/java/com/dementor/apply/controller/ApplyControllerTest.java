@@ -60,6 +60,7 @@ public class ApplyControllerTest {
 			.nickname("testMentee")
 			.password("password")
 			.nickname("테스트멘티")
+			.name("테스트멘티")
 			.email("123@1233.com")
 			.userRole(UserRole.MENTEE)
 			.build();
@@ -71,6 +72,7 @@ public class ApplyControllerTest {
 			.nickname("testMentor")
 			.password("password")
 			.nickname("테스트멘토")
+			.name("테스트멘토")
 			.email("1234@1233.com")
 			.userRole(UserRole.MENTOR)
 			.build();
