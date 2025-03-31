@@ -22,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/api/member")
 public class MemberAuthController {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final AuthenticationManager authenticationManager;
@@ -63,5 +63,18 @@ public class MemberAuthController {
 			return ResponseEntity.badRequest()
 				.body(new LoginResponse(null, "로그인 실패: "));
 		}
+	}
+
+	@PostMapping("/logout")
+	public ResponseEntity<?> logout() {
+
+		SecurityContextHolder.clearContext();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteJwtCookie().toString());
+
+		return ResponseEntity.ok()
+			.headers(headers)
+			.body(new LoginResponse(null, "로그아웃 성공"));
 	}
 }
