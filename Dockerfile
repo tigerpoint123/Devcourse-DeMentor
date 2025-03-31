@@ -7,7 +7,6 @@ WORKDIR /app
 # 소스 코드와 Gradle 래퍼 복사
 COPY build.gradle .
 COPY settings.gradle .
-COPY .env .
 
 # 종속성 설치
 RUN gradle dependencies --no-daemon -x test
@@ -26,6 +25,8 @@ WORKDIR /app
 
 # 첫 번째 스테이지에서 빌드된 JAR 파일 복사
 COPY --from=builder /app/build/libs/*.jar app.jar
+
+COPY .env .env
 
 # 실행할 JAR 파일 지정
 ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
