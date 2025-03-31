@@ -27,11 +27,14 @@ public class Member extends BaseEntity {
 	@Column(nullable = false, unique = true)
 	private String email;
 
-	@Column(nullable = false, unique = true)
-	private String nickname;
-
 	@Column(nullable = false)
 	private String password;
+
+	@Column(nullable = false)
+	private String name;
+
+	@Column(nullable = false, unique = true)
+	private String nickname;
 
 	@Column(nullable = false)
 	private UserRole userRole;

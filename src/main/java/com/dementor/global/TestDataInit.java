@@ -29,6 +29,7 @@ public class TestDataInit implements CommandLineRunner {
 				.email("mentor@test.com")
 				.password(passwordEncoder.encode("1234"))
 				.nickname("테스트멘토")
+				.name("TEST_NAME")
 				.userRole(UserRole.MENTOR)
 				.build();
 
@@ -36,6 +37,7 @@ public class TestDataInit implements CommandLineRunner {
 				.email("mentee@test.com")
 				.password(passwordEncoder.encode("1234"))
 				.nickname("테스트멘티")
+				.name("TEST_NAME")
 				.userRole(UserRole.MENTEE)
 				.build();
 
