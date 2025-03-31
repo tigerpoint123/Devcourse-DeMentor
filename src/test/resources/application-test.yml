@@ -4,16 +4,16 @@ spring:
     username: sa
     password:
     driver-class-name: org.h2.Driver
+
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
 
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.type.descriptor.sql.BasicBinder: trace 
+jwt:
+  secret: "c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK"
+  expiration: 86400000  # 24시간
