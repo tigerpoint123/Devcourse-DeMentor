@@ -42,6 +42,10 @@ public class PostAttachment extends BaseEntity {
     @Column(nullable = false)
     private ImageType imageType;
 
+    // 예: 마크다운에서 ![alt](/images/abc123.png) 형태로 참조할 때 abc123이 uniqueIdentifier . UUID 형식 추천
+    @Column(unique = true)
+    private String uniqueIdentifier; // 마크다운 내 이미지 참조를 위한 고유 식별자
+
     @Builder
     public PostAttachment(String filename, String originalFilename, String storeFilePath,
                           Long fileSize, Member member, Mentor mentor, ImageType imageType) {
@@ -57,6 +61,7 @@ public class PostAttachment extends BaseEntity {
     // ImageType enum
     public enum ImageType {
         NORMAL,      // 일반 첨부 파일
-        MARKDOWN     // 마크다운 내 이미지
+        MARKDOWN_SELF_INTRODUCTION,     // "나를 소개하는 글" 마크다운 내 이미지
+        MARKDOWN_RECOMMENDATION, // 추천 대상 마크다운 내 이미지
     }
 }
