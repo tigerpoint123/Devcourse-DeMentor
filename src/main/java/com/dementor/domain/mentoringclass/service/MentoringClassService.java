@@ -1,9 +1,11 @@
 package com.dementor.domain.mentoringclass.service;
 
+import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
@@ -26,6 +28,7 @@ public class MentoringClassService {
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
     private final MemberRepository memberRepository;
+    private final JobRepository jobRepository;
 
     public List<MentoringClassFindResponse> findClass(Long jobId) {
         List<MentoringClass> mentoringClasses;
@@ -93,5 +96,28 @@ public class MentoringClassService {
 
     public void deleteClass(Long classId) {
         mentoringClassRepository.deleteById(classId);
+    }
+
+    public void updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
+        MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 멘토링 클래스입니다."));
+        
+        // 권한 체크
+        if (!mentoringClass.getMentor().getId().equals(memberId)) {
+            throw new IllegalArgumentException("해당 멘토링 클래스를 수정할 권한이 없습니다.");
+        }
+        
+        // 변경된 필드만 업데이트
+        if (request.getTitle() != null) {
+            mentoringClass.updateTitle(request.getTitle());
+        }
+        if (request.getContent() != null) {
+            mentoringClass.updateDescription(request.getContent());
+        }
+        if (request.getPrice() != null) {
+            mentoringClass.updatePrice(request.getPrice());
+        }
+
+        mentoringClassRepository.save(mentoringClass);
     }
 }
