@@ -18,9 +18,11 @@ import com.dementor.global.security.CustomUserDetails;
 import com.dementor.global.security.cookie.CookieUtil;
 import com.dementor.global.security.jwt.JwtTokenProvider;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Operation;
 
+@Tag(name = "로그인, 로그아웃", description = "로그인, 로그아웃")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/member")

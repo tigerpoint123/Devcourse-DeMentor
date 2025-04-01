@@ -24,6 +24,10 @@ public class MemberService {
 
 	public void createMember(SignupRequest signupRequest) {
 
+		memberRepository.findByEmail(signupRequest.getEmail()).ifPresent(member -> {
+			throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
+		});
+
 		//redis 에 저장된 code 가져오기
 		String storedCode = redisTemplate.opsForValue().get("email:" + signupRequest.getEmail());
 
