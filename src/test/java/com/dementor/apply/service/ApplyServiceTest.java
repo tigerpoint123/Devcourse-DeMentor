@@ -85,10 +85,10 @@ public class ApplyServiceTest {
 
 
 		assertNotNull(result);
-		assertNotNull(result.getApplyment_id());
+		assertNotNull(result.getApplymentId());
 
 
-		Apply savedApply = applyRepository.findById(result.getApplyment_id()).orElse(null);
+		Apply savedApply = applyRepository.findById(result.getApplymentId()).orElse(null);
 		assertNotNull(savedApply);
 		assertEquals("테스트 문의입니다", savedApply.getInquiry());
 		assertEquals(ApplyStatus.PENDING, savedApply.getApplyStatus());
@@ -126,5 +126,54 @@ public class ApplyServiceTest {
 		assertEquals(ApplyErrorCode.SCHEDULE_REQUIRED, exception.getErrorCode());
 		assertEquals("멘토링 일정을 선택해야 합니다.", exception.getMessage());
 	}
+
+	@Test
+	@DisplayName("멘토링 신청 취소 성공")
+	void deleteApplySuccess() {
+
+		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		request.setClassId(mentoringClassId);
+		request.setInquiry("취소 테스트용 문의입니다");
+		request.setSchedule(LocalDateTime.now().plusDays(1));
+
+		ApplyResponse.GetApplyId result = applyService.createApply(request, testMember.getId());
+		Long applyId = result.getApplymentId();
+
+		applyService.deleteApply(applyId, testMember.getId());
+
+
+		Apply deletedApply = applyRepository.findById(applyId).orElse(null);
+		assertNull(deletedApply, "멘토링 신청 취소가 되지 않았습니다.");
+	}
+
+	@Test
+	@DisplayName("권한 없는 사용자가 멘토링 신청 취소 시 예외 발생")
+	void deleteApplyFail() {
+
+		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		request.setClassId(mentoringClassId);
+		request.setInquiry("취소 테스트용 문의입니다");
+		request.setSchedule(LocalDateTime.now().plusDays(1));
+
+		ApplyResponse.GetApplyId result = applyService.createApply(request, testMember.getId());
+		Long applyId = result.getApplymentId();
+
+		Member anotherMember = Member.builder()
+			.email("another@test.com")
+			.password("password")
+			.nickname("another")
+			.name("another")
+			.userRole(UserRole.MENTEE)
+			.build();
+		anotherMember = memberRepository.save(anotherMember);
+
+		Member AnotherMember = anotherMember;
+		ApplyException exception = assertThrows(ApplyException.class, () -> {
+			applyService.deleteApply(applyId, AnotherMember.getId());
+		});
+
+		assertEquals(ApplyErrorCode.NOT_YOUR_APPLY, exception.getErrorCode());
+	}
+
 }
 

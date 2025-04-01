@@ -15,11 +15,11 @@ public class ApplyResponse {
 	@Getter
 	@Builder
 	public static class GetApplyId{
-		private Long applyment_id;
+		private Long applymentId;
 
 		public static GetApplyId from(Apply apply) {
 			return GetApplyId.builder()
-				.applyment_id(apply.getId())
+				.applymentId(apply.getId())
 				.build();
 		}
 	}
