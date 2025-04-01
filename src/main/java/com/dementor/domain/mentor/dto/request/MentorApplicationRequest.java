@@ -41,7 +41,6 @@ public class MentorApplicationRequest {
     ) {
             public Mentor toEntity(Member member, Job job) {
                     return Mentor.builder()
-                            .id(memberId)
                             .member(member)
                             .job(job)
                             .name(name)
