@@ -1,9 +1,15 @@
 package com.dementor.global.security;
 
+import com.dementor.global.security.jwt.JwtAccessDeniedHandler;
+import com.dementor.global.security.jwt.JwtAuthenticationEntryPoint;
+import com.dementor.global.security.jwt.JwtAuthenticationFilter;
+import com.dementor.global.security.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -14,13 +20,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.dementor.global.security.jwt.JwtAccessDeniedHandler;
-import com.dementor.global.security.jwt.JwtAuthenticationEntryPoint;
-import com.dementor.global.security.jwt.JwtAuthenticationFilter;
-import com.dementor.global.security.jwt.JwtTokenProvider;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableMethodSecurity
@@ -51,8 +50,8 @@ public class SecurityConfig {
 				.requestMatchers("/api/member/login").permitAll()
 				.requestMatchers("/api/authenticate").permitAll()
 				// this is from 김호남남
-				.requestMatchers("/api/class").permitAll() // 모든 수업 조회 허용
-				.requestMatchers("/api/class/{classId}").permitAll() // 특정 수업 조회 허용
+				.requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
+				.requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
 				.requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
 				// end of 김호남남
 				.requestMatchers("/swagger-ui/**").permitAll() // swagger 주소 허용
