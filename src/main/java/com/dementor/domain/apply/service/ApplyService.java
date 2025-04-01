@@ -30,6 +30,7 @@ public class ApplyService {
 	private final MentoringClassRepository mentoringClassRepository;
 	private final MemberRepository memberRepository;
 
+	//멘토링 신청
 	@Transactional
 	public ApplyResponse.GetApplyId createApply(ApplyRequest.ApplyCreateRequest req, Long memberId) {
 
@@ -54,5 +55,20 @@ public class ApplyService {
 		Apply savedApply = applyRepository.save(apply);
 
 		return ApplyResponse.GetApplyId.from(savedApply);
+	}
+
+	//멘토링 신청 취소
+	@Transactional
+	public void deleteApply(Long applyId, Long memberId) {
+
+		Apply apply = applyRepository.findById(applyId)
+			.orElseThrow(() -> new ApplyException(ApplyErrorCode.APPLY_NOT_FOUND));
+
+		if (!apply.getMember().getId().equals(memberId)) {
+			throw new ApplyException(ApplyErrorCode.NOT_YOUR_APPLY);
+		}
+
+		applyRepository.delete(apply);
+
 	}
 }

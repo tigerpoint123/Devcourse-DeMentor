@@ -21,6 +21,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dementor.domain.apply.dto.request.ApplyRequest;
+import com.dementor.domain.apply.entity.Apply;
+import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
@@ -47,9 +50,13 @@ public class ApplyControllerTest {
 	@Autowired
 	private MentoringClassRepository mentoringClassRepository;
 
-	private Member testMentee; // 멘티(일반 회원)
-	private Member testMentor; // 멘토
+	@Autowired
+	private ApplyRepository applyRepository;
+
+	private Member testMentee;
+	private Member testMentor;
 	private Long testMentoringClassId;
+	private MentoringClass testMentoringClass;
 	private CustomUserDetails menteePrincipal;
 	private CustomUserDetails mentorPrincipal;
 
@@ -116,7 +123,7 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.code").value("201"))
 			.andExpect(jsonPath("$.message").value("멘토링 신청이 완료되었습니다"))
-			.andExpect(jsonPath("$.data.applyment_id").exists());
+			.andExpect(jsonPath("$.data.applymentId").exists());
 	}
 
 	@Test
@@ -144,7 +151,64 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.code").value("201"))
 			.andExpect(jsonPath("$.message").value("멘토링 신청이 완료되었습니다"))
-			.andExpect(jsonPath("$.data.applyment_id").exists());
+			.andExpect(jsonPath("$.data.applymentId").exists());
+	}
+
+	@Test
+	@DisplayName("멘티가 멘토링 신청 취소 성공")
+	@WithMockUser(roles = "MENTEE")
+	void deleteApply() throws Exception {
+
+		Apply testApply = Apply.builder()
+			.mentoringClass(testMentoringClass)
+			.member(testMentee)
+			.inquiry("테스트용 문의")
+			.applyStatus(ApplyStatus.PENDING)
+			.schedule(LocalDateTime.now().plusDays(1))
+			.build();
+
+		testApply = applyRepository.save(testApply);
+
+		ResultActions resultActions = mvc
+			.perform(
+				delete("/api/apply/" + testApply.getId())
+					.with(user(menteePrincipal))
+			)
+			.andDo(print());
+
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.message").value("멘토링 신청이 취소되었습니다"));
+	}
+
+	@Test
+	@DisplayName("멘토가 멘토링 신청 취소 성공")
+	@WithMockUser(roles = "MENTOR")
+	void deleteApply2() throws Exception {
+
+		Apply testApply = Apply.builder()
+			.mentoringClass(testMentoringClass)
+			.member(testMentor)
+			.inquiry("멘토의 테스트용 문의")
+			.applyStatus(ApplyStatus.PENDING)
+			.schedule(LocalDateTime.now().plusDays(1))
+			.build();
+
+		testApply = applyRepository.save(testApply);
+
+		ResultActions resultActions = mvc
+			.perform(
+				delete("/api/apply/" + testApply.getId())
+					.with(user(mentorPrincipal))
+			)
+			.andDo(print());
+
+
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.message").value("멘토링 신청이 취소되었습니다"));
 	}
 
 }
