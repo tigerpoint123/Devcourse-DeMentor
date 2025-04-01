@@ -30,7 +30,6 @@ public class MentoringClass {
     @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
     private List<Schedule> schedules = new ArrayList<>();
 
-    // TODO : Mentor 엔티티 생성되면 연결
     @ManyToOne
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
