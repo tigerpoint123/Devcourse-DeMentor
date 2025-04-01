@@ -48,9 +48,6 @@ public class MentorService {
         // 멘토 엔티티 생성
         Mentor mentor = requestDto.toEntity(member, job);
 
-        // 지원 상태를 PENDING으로 변경
-        mentor.updateApprovalStatus(Mentor.ApprovalStatus.PENDING);
-
         // 첨부파일 연결 - TODO: 파일 처리 로직 구현 필요
         if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
             List<PostAttachment> attachments = attachmentRepository.findAllById(requestDto.attachmentId());

@@ -50,6 +50,7 @@ public class MentorApplicationRequest {
                             .currentCompany(currentCompany)
                             .introduction(introduction)
                             .bestFor(bestFor)
+                            .approvalStatus(Mentor.ApprovalStatus.PENDING)
                             .build();
             }
     }
