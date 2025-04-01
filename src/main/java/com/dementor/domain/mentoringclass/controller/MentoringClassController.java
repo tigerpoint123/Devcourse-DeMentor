@@ -2,6 +2,7 @@ package com.dementor.domain.mentoringclass.controller;
 
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
+import com.dementor.domain.mentoringclass.dto.request.ScheduleUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
@@ -115,6 +116,27 @@ public class MentoringClassController {
                 HttpStatus.OK,
                 "멘토링 수업 삭제 성공",
                 null
+        );
+    }
+
+    // TODO : 이렇게 할 지 ?
+    @Operation(summary = "멘토링 수업 스케줄 수정", description = "멘토링 수업의 스케줄을 수정합니다.")
+    @PreAuthorize("hasRole('MENTOR')")
+    @PutMapping("/{classId}/schedule")
+    public ApiResponse<?> updateSchedule(
+            @PathVariable Long classId,
+            @RequestBody ScheduleUpdateRequest request,
+            Authentication authentication
+    ) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
+        
+        mentoringClassService.updateSchedule(classId, memberId, request);
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
+                "멘토링 클래스 스케줄 수정 성공",
+                classId
         );
     }
 }
