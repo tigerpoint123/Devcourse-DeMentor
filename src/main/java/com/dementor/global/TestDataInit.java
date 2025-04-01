@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+
 @Component
 @Profile("local") // 로컬 환경에서만 실행되도록
 public class TestDataInit implements CommandLineRunner {
@@ -55,22 +56,22 @@ public class TestDataInit implements CommandLineRunner {
                     .userRole(UserRole.MENTEE)
                     .build();
 
-            Mentor mentor = Mentor.builder()
+            // 테스트 멘토의 멘토 정보 생성
+            Mentor mentorInfo = Mentor.builder()
                     .member(testMentor)
-                    .name("테스트 멘토")
-                    .currentCompany("테스트 회사")
+                    .name(testMentor.getName())
+                    .currentCompany("테스트회사")
                     .career(5)
                     .phone("010-1234-5678")
-                    .introduction("테스트 멘토 소개")
-                    .bestFor("백엔드 개발자")
-                    .isApproved(Mentor.ApprovalStatus.Y)
-                    .isModified(Mentor.ApprovalStatus.N)
+                    .introduction("테스트 멘토 소개입니다. 경력 5년차 개발자입니다.")
+                    .bestFor("코딩 테스트, 알고리즘, 백엔드 개발")
+                    .approvalStatus(Mentor.ApprovalStatus.APPROVED) // 승인 상태로 설정
                     .job(job)
                     .build();
 
-            memberRepository.save(testMentor);
-            memberRepository.save(testMentee);
-            mentorRepository.save(mentor);
-        }
-    }
+			memberRepository.save(testMentor);
+			memberRepository.save(testMentee);
+			mentorRepository.save(mentorInfo);
+		}
+	}
 }
