@@ -22,17 +22,30 @@ public class MentorUpdateRequest {
 
             String bestFor,
 
+            Mentor.ModificationStatus modificationStatus,
+
             List<Long> attachmentId
     ) {
-        public void applyToMentor(Mentor mentor) {
+        public void updateMentor(Mentor mentor) {
             mentor.update(
                     currentCompany,
                     career,
                     phone,
                     introduction,
-                    bestFor,
-                    stack
+                    bestFor
             );
+
+            // 수정 상태를 PENDING으로 변경
+            mentor.updateModificationStatus(Mentor.ModificationStatus.PENDING);
+
+            // stack 업데이트 로직
+            if (this.stack() != null && !this.stack().isEmpty()) {
+                // 멘토링 클래스가 있는 경우, 모든 클래스에 동일한 스택 정보 적용
+                // 또는 첫 번째 클래스만 업데이트하거나, 특정 로직에 따라 처리
+                if (mentor.getMentorings() != null && !mentor.getMentorings().isEmpty()) {
+                    mentor.getMentorings().forEach(mc -> mc.setStack(this.stack()));
+                }
+            }
         }
     }
 }

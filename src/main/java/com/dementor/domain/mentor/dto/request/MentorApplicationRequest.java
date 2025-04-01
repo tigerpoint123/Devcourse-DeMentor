@@ -32,8 +32,6 @@ public class MentorApplicationRequest {
 
             String currentCompany,
 
-            String stack,
-
             @NotBlank(message = "소개글은 필수 입력 항목입니다.")
             String introduction,
 
@@ -50,10 +48,8 @@ public class MentorApplicationRequest {
                             .phone(phone)
                             .career(career)
                             .currentCompany(currentCompany)
-                            .stack(stack)
                             .introduction(introduction)
                             .bestFor(bestFor)
-                            .approvalStatus(Mentor.ApprovalStatus.PENDING)
                             .build();
             }
     }

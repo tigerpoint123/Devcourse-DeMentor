@@ -9,10 +9,10 @@ public record MentorInfoResponse (
         Integer career,
         String phone,
         String currentCompany,
-        String stack,
         String introduction,
         String bestFor,
         Mentor.ApprovalStatus approvalStatus,
+        Mentor.ModificationStatus modificationStatus,
         Integer totalClasses,
         Integer pendingRequests,
         Integer completedSessions
@@ -26,10 +26,10 @@ public record MentorInfoResponse (
                 mentor.getCareer(),
                 mentor.getPhone(),
                 mentor.getCurrentCompany(),
-                mentor.getStack(),
                 mentor.getIntroduction(),
                 mentor.getBestFor(),
                 mentor.getApprovalStatus(),
+                mentor.getModificationStatus(),
                 totalClasses,
                 pendingRequests,
                 completedSessions

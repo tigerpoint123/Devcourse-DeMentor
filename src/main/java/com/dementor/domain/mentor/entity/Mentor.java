@@ -57,11 +57,13 @@ public class Mentor {
     @Builder.Default
     private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
 
-    @Column(length = 255)
-    private String bestFor;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ModificationStatus modificationStatus = ModificationStatus.NONE;
 
     @Column(length = 255)
-    private String stack;
+    private String bestFor;
 
     // 승인 상태 Enum
     public enum ApprovalStatus {
@@ -70,19 +72,37 @@ public class Mentor {
         REJECTED    // 거부됨
     }
 
+    // 정보 수정 상태 Enum
+    public enum ModificationStatus {
+        NONE,      // 수정 요청 없음
+        PENDING,   // 승인 대기 중
+        APPROVED,  // 수정 승인됨
+        REJECTED   // 수정 거부됨
+    }
+
     // 승인 상태 변경 메서드
     public void updateApprovalStatus(ApprovalStatus approvalStatus) {
         this.approvalStatus = approvalStatus;
     }
 
+    // 정보 수정 상태 변경 메서드
+    public void updateModificationStatus(ModificationStatus modificationStatus) {
+        this.modificationStatus = modificationStatus;
+    }
+
+    // 첨부파일 목록 업데이트 메서드
+    public void updateAttachments(List<PostAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
     // 필드 수정 메서드
     public void update(String currentCompany, Integer career, String phone,
-                       String introduction, String bestFor, String stack) {
+                       String introduction, String bestFor) {
         this.currentCompany = currentCompany;
         this.career = career;
         this.phone = phone;
         this.introduction = introduction;
         this.bestFor = bestFor;
-        this.stack = stack;
+        this.modificationStatus = ModificationStatus.PENDING;
     }
 }
