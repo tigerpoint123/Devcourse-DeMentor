@@ -13,8 +13,9 @@ import com.dementor.domain.member.entity.UserRole;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
+
 @Getter
+@RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 	private final Long id;
 	private final String email;

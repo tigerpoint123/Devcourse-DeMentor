@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.service;
 
+import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
@@ -24,6 +25,7 @@ public class MentoringClassService {
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
+    private final MemberRepository memberRepository;
 
     public List<MentoringClassFindResponse> findClass(Long jobId) {
         List<MentoringClass> mentoringClasses;

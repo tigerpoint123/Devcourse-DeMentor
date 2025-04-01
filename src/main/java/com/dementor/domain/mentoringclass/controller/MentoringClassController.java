@@ -9,6 +9,7 @@ import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,6 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
+@Slf4j
 public class MentoringClassController {
     private final MentoringClassService mentoringClassService;
 
@@ -69,6 +71,7 @@ public class MentoringClassController {
     ) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
+        log.info("memberId : {}", memberId);
 
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(

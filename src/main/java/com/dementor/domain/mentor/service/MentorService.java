@@ -40,13 +40,16 @@ public class MentorService {
         Job job = jobRepository.findById(requestDto.jobId())
                 .orElseThrow(() -> new EntityNotFoundException("직무를 찾을 수 없습니다: " + requestDto.jobId()));
 
-        // 멘토 엔티티 생성
+        // 멘토 엔티티 생성 - 초기 상태는 PENDING
         Mentor mentor = requestDto.toEntity(member, job);
 
         // 첨부파일 연결 - TODO: 파일 처리 로직 구현 필요
 
-        // 멘토 저장
+        // 멘토 저장 (PENDING 상태로)
         mentorRepository.save(mentor);
+
+        // 중요: 여기서 회원 역할을 MENTOR로 변경하지 않음
+        // 관리자 승인 후에 변경해야 함
 
     }
 
@@ -56,7 +59,17 @@ public class MentorService {
         Mentor mentor = mentorRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("멘토를 찾을 수 없습니다: " + memberId));
 
-        // 멘토 정보 업데이트
+        // 승인된 멘토만 정보 수정 요청 가능
+        if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
+            throw new IllegalStateException("승인되지 않은 멘토는 정보를 수정할 수 없습니다: " + memberId);
+        }
+
+        // 현재 정보 수정 요청 중인지 확인
+        if (mentor.getModificationStatus() == Mentor.ModificationStatus.PENDING) {
+            throw new IllegalStateException("이미 정보 수정 요청 중입니다: " + memberId);
+        }
+
+        // 멘토 정보 업데이트 (임시 저장)
         requestDto.updateMentor(mentor);
 
         // 첨부파일 업데이트 - TODO: 파일 처리 로직 구현 필요
@@ -66,6 +79,11 @@ public class MentorService {
     public MentorInfoResponse getMentorInfo(Long memberId) {
         Mentor mentor = mentorRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 멘토를 찾을 수 없습니다: " + memberId));
+
+        // 승인된 멘토만 정보 조회 가능하도록 체크
+        if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
+            throw new IllegalStateException("승인되지 않은 멘토 정보는 조회할 수 없습니다: " + memberId);
+        }
 
         // 멘토링 클래스 통계 계산
         Integer totalClasses = mentor.getMentorings() != null ? mentor.getMentorings().size() : 0;
