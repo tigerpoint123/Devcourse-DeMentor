@@ -47,10 +47,16 @@ public class SecurityConfig {
 			)
 
 			.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-				.requestMatchers("/api/user/signup").permitAll()
-				.requestMatchers("/api/user/login").permitAll()
+				.requestMatchers("/api/signup/**").permitAll()
+				.requestMatchers("/api/member/login").permitAll()
 				.requestMatchers("/api/authenticate").permitAll()
-				.requestMatchers("/swagger-ui").permitAll()
+				// this is from 김호남남
+				.requestMatchers("/api/class").permitAll() // 모든 수업 조회 허용
+				.requestMatchers("/api/class/{classId}").permitAll() // 특정 수업 조회 허용
+				.requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
+				// end of 김호남남
+				.requestMatchers("/swagger-ui/**").permitAll() // swagger 주소 허용
+				.requestMatchers("/actuator/**").permitAll()
 				.anyRequest().authenticated()
 			)
 
