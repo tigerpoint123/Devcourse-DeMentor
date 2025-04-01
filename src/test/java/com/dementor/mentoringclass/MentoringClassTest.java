@@ -96,8 +96,8 @@ public class MentoringClassTest {
                 .career(5)
                 .phone("010-1234-5678")
                 .introduction("테스트 멘토 소개")
-                .isApproved(Mentor.ApprovalStatus.Y)
-                .isModified(Mentor.ApprovalStatus.N)
+                .approvalStatus(Mentor.ApprovalStatus.APPROVED)
+                .modificationStatus(Mentor.ModificationStatus.NONE)
                 .job(job)
                 .build();
         mentorEntity = mentorRepository.save(mentorEntity);

@@ -10,16 +10,11 @@ import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,30 +44,6 @@ public class MentorService {
         Mentor mentor = requestDto.toEntity(member, job);
 
         // 첨부파일 연결 - TODO: 파일 처리 로직 구현 필요
-        if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
-            List<PostAttachment> attachments = attachmentRepository.findAllById(requestDto.attachmentId());
-
-            // 새 첨부파일마다 새 객체 생성 및 저장
-            List<PostAttachment> updatedAttachments = attachments.stream()
-                    .map(attachment -> PostAttachment.builder()
-                            .filename(attachment.getFilename())
-                            .originalFilename(attachment.getOriginalFilename())
-                            .storeFilePath(attachment.getStoreFilePath())
-                            .fileSize(attachment.getFileSize())
-                            .member(attachment.getMember())
-                            .mentor(mentor)
-                            .imageType(attachment.getImageType())
-                            .build())
-                    .collect(Collectors.toList());
-
-            attachmentRepository.saveAll(updatedAttachments);
-
-            // 멘토 엔티티의 attachments 필드 설정 (필요시 초기화)
-            if (mentor.getAttachments() == null) {
-                mentor.updateAttachments(new ArrayList<>());
-            }
-            mentor.getAttachments().addAll(updatedAttachments);
-        }
 
         // 멘토 저장
         mentorRepository.save(mentor);
@@ -89,25 +60,6 @@ public class MentorService {
         requestDto.updateMentor(mentor);
 
         // 첨부파일 업데이트 - TODO: 파일 처리 로직 구현 필요
-        if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
-            // 기존 첨부파일은 그대로 두고, 새 첨부파일만 추가
-            List<PostAttachment> newAttachments = attachmentRepository.findAllById(requestDto.attachmentId());
-
-            // 새 첨부파일마다 새 객체 생성 및 저장
-            List<PostAttachment> updatedAttachments = newAttachments.stream()
-                    .map(attachment -> PostAttachment.builder()
-                            .filename(attachment.getFilename())
-                            .originalFilename(attachment.getOriginalFilename())
-                            .storeFilePath(attachment.getStoreFilePath())
-                            .fileSize(attachment.getFileSize())
-                            .member(attachment.getMember())
-                            .mentor(mentor)
-                            .imageType(attachment.getImageType())
-                            .build())
-                    .collect(Collectors.toList());
-
-            attachmentRepository.saveAll(updatedAttachments);
-        }
     }
 
     //멘토 정보 조회

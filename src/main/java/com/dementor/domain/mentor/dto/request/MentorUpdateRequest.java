@@ -22,8 +22,6 @@ public class MentorUpdateRequest {
 
             String bestFor,
 
-            Mentor.ModificationStatus modificationStatus,
-
             List<Long> attachmentId
     ) {
         public void updateMentor(Mentor mentor) {
