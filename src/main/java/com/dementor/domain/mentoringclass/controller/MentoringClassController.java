@@ -5,10 +5,13 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailRespo
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -58,13 +61,15 @@ public class MentoringClassController {
     }
 
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
+    @PreAuthorize("hasRole('MENTOR')")
     @PostMapping
     public ApiResponse<?> createClass(
             @RequestBody MentoringClassCreateRequest request,
-            @CookieValue("memberId") Long memberId  // 쿠키에 저장될 멘토의 id
+            Authentication authentication
     ) {
-        // TODO : 쿠키의 토큰에 저장된 key 에 맞게 수정 필요
-//        Long memberId = 1L;
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
+
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(
                 true,
@@ -75,6 +80,7 @@ public class MentoringClassController {
     }
 
     @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
+    @PreAuthorize("hasRole('MENTOR')")
     @PutMapping("/{class_id}")
     public ApiResponse<?> updateClass(
             @PathVariable Long classId
@@ -89,6 +95,7 @@ public class MentoringClassController {
     }
 
     @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
+    @PreAuthorize("hasRole('MENTOR')")
     @DeleteMapping("/{class_id}")
     public ApiResponse<?> deleteClass(
             @PathVariable Long classId
