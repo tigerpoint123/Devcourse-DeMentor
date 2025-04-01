@@ -56,6 +56,7 @@ public class SecurityConfig {
 				// end of 김호남남
 				.requestMatchers("/swagger-ui/**").permitAll() // swagger 주소 허용
 				.requestMatchers("/actuator/**").permitAll()
+				.requestMatchers("/").permitAll()
 				.anyRequest().authenticated()
 			)
 
