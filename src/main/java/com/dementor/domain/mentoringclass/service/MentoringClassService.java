@@ -48,11 +48,9 @@ public class MentoringClassService {
 
     @Transactional
     public Long createClass(Long mentorId, MentoringClassCreateRequest request) {
-        // 1. 멘토 정보 조회
         Mentor mentor = mentorRepository.findById(mentorId)
             .orElseThrow(() -> new IllegalArgumentException("멘토를 찾을 수 없습니다: " + mentorId));
 
-        // 2. MentoringClass 엔티티 생성
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
                 .stack(request.stack())
@@ -61,17 +59,15 @@ public class MentoringClassService {
                 .mentor(mentor) // 멘토 정보 연동
                 .build();
         
-        // 3. MentoringClass 저장
         mentoringClass = mentoringClassRepository.save(mentoringClass);
-        
-        // 4. Schedule 엔티티들 생성 및 저장
+
+        // 스케줄 저장 로직 별도로 관리
         List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
         mentoringClass.setSchedules(schedules);
         
         return mentoringClass.getId();
     }
 
-    // 스케줄 저장 로직 별도로 관리
     private List<Schedule> createSchedules(List<ScheduleRequest> scheduleRequests, MentoringClass mentoringClass) {
         return scheduleRequests.stream()
                 .map(scheduleRequest -> {
