@@ -47,6 +47,7 @@ public class ApplyService {
 			throw new ApplyException(ApplyErrorCode.SCHEDULE_REQUIRED);
 		}
 
+
 		Apply apply = Apply.builder()
 			.mentoringClass(mentoringClass)
 			.inquiry(req.getInquiry())
