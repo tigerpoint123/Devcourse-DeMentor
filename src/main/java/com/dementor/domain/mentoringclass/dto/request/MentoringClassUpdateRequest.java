@@ -11,5 +11,8 @@ public record MentoringClassUpdateRequest(
     String content,
     
     @Schema(description = "수업 가격")
-    Integer price
+    Integer price,
+    
+    @Schema(description = "스케줄 정보")
+    ScheduleRequest schedule
 ) {}

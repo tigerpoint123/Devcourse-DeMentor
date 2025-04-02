@@ -34,10 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -198,7 +195,8 @@ public class MentoringClassTest {
         MentoringClassUpdateRequest request = new MentoringClassUpdateRequest(
             "수정된 수업 제목",
             "수정된 수업 내용",
-            100000
+            100000,
+            new ScheduleRequest("화요일", 14001600)  // 일정도 수정
         );
 
         // when & then
@@ -209,13 +207,12 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 클래스 수정 성공"))
-                .andExpect(jsonPath("$.data").value(testClassId));
+                .andExpect(jsonPath("$.data.title").value("수정된 수업 제목"))
+                .andExpect(jsonPath("$.data.content").value("수정된 수업 내용"))
+                .andExpect(jsonPath("$.data.price").value(100000))
+                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
+                .andExpect(jsonPath("$.data.schedule.time").value(14001600));
 
-        // 수정된 내용 검증
-        MentoringClass updatedClass = mentoringClassRepository.findById(testClassId).get();
-        assertThat(updatedClass.getTitle()).isEqualTo("수정된 수업 제목");
-        assertThat(updatedClass.getContent()).isEqualTo("수정된 수업 내용");
-        assertThat(updatedClass.getPrice()).isEqualTo(100000);
     }
 
 }
