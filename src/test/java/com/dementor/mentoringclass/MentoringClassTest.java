@@ -1,11 +1,22 @@
 package com.dementor.mentoringclass;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
+import com.dementor.config.TestSecurityConfig;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
+import com.dementor.domain.member.repository.MemberRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
+import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.entity.Schedule;
+import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+import com.dementor.global.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,22 +31,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dementor.config.TestSecurityConfig;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.entity.UserRole;
-import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
-import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.mentoringclass.entity.Schedule;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
-import com.dementor.global.security.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -187,4 +188,31 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.message").value("멘토링 클래스 생성 성공"))
                 .andExpect(jsonPath("$.data").isNumber());
     }
+
+    @Test
+    void updateMentoringClass() throws Exception {
+        // given
+        MentoringClassUpdateRequest request = new MentoringClassUpdateRequest(
+            "수정된 수업 제목",
+            "수정된 수업 내용",
+            100000,
+            new ScheduleRequest("화요일", 14001600)  // 일정도 수정
+        );
+
+        // when & then
+        mockMvc.perform(put("/api/class/{class_id}", testClassId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(new ObjectMapper().writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.message").value("멘토링 클래스 수정 성공"))
+                .andExpect(jsonPath("$.data.title").value("수정된 수업 제목"))
+                .andExpect(jsonPath("$.data.content").value("수정된 수업 내용"))
+                .andExpect(jsonPath("$.data.price").value(100000))
+                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
+                .andExpect(jsonPath("$.data.schedule.time").value(14001600));
+
+    }
+
 }

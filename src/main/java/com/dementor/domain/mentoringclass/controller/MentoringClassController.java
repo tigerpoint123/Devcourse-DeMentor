@@ -1,8 +1,10 @@
 package com.dementor.domain.mentoringclass.controller;
 
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
+import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
@@ -84,22 +86,27 @@ public class MentoringClassController {
 
     @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
     @PreAuthorize("hasRole('MENTOR')")
-    @PutMapping("/{class_id}")
+    @PutMapping("/{classId}")
     public ApiResponse<?> updateClass(
-            @PathVariable Long classId
+            @PathVariable Long classId,
+            @RequestBody MentoringClassUpdateRequest request,
+            Authentication authentication
     ) {
-        // TODO: 실제 생성 로직 구현
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
+        
+        MentoringClassUpdateResponse response = mentoringClassService.updateClass(classId, memberId, request);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 클래스 수정 성공",
-                "생성된 클래스 ID"
+                response
         );
     }
 
     @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
     @PreAuthorize("hasRole('MENTOR')")
-    @DeleteMapping("/{class_id}")
+    @DeleteMapping("/{classId}")
     public ApiResponse<?> deleteClass(
             @PathVariable Long classId
     ) {

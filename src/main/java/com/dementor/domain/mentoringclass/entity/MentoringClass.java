@@ -33,4 +33,17 @@ public class MentoringClass {
     @ManyToOne
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
+
+    public void updateDescription(String description) {
+        this.content = description;
+    }
+
+    public void updatePrice(Integer price) {
+        this.price = price;
+    }
+
 }
