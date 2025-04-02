@@ -1,5 +1,8 @@
 package com.dementor.domain.apply.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,5 +73,18 @@ public class ApplyService {
 
 		applyRepository.delete(apply);
 
+	}
+
+
+	//내가 신청한 멘토링 목록 조회 (페이징)
+	public ApplyResponse.GetApplyPageList getApplyList(Long memberId, int page, int size) {
+		memberRepository.findById(memberId)
+			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+		Pageable pageable = PageRequest.of(page, size);
+
+		Page<Apply> applyPage = applyRepository.findByMemberId(memberId, pageable);
+
+		return ApplyResponse.GetApplyPageList.from(applyPage, page, size);
 	}
 }
