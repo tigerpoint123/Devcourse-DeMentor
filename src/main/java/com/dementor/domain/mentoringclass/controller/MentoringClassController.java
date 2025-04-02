@@ -73,7 +73,6 @@ public class MentoringClassController {
     ) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
-        log.info("memberId : {}", memberId);
 
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(

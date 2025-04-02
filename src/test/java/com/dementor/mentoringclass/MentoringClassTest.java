@@ -63,8 +63,6 @@ public class MentoringClassTest {
     private ScheduleRepository scheduleRepository;
 
     private Long testClassId;
-    private Long testJobId;
-    private Long testMentorId;
     private CustomUserDetails mentorPrincipal;
 
     @BeforeEach
@@ -78,7 +76,6 @@ public class MentoringClassTest {
                 .userRole(UserRole.MENTOR)
                 .build();
         mentor = memberRepository.save(mentor);
-        testMentorId = mentor.getId();
         mentorPrincipal = CustomUserDetails.of(mentor);
 
         // Job 생성
@@ -86,7 +83,6 @@ public class MentoringClassTest {
                 .name("백엔드 개발자")
                 .build();
         job = jobRepository.save(job);
-        testJobId = job.getId();
 
         // Mentor 생성
         Mentor mentorEntity = Mentor.builder()
