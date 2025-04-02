@@ -2,6 +2,7 @@ package com.dementor.domain.job.service;
 
 import com.dementor.domain.job.dto.request.JobCreaeteRequest;
 import com.dementor.domain.job.dto.response.JobFindResponse;
+import com.dementor.domain.job.dto.response.JobUpdateResponse;
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +31,21 @@ public class JobService {
         job = jobRepository.save(job);
 
         return job.getId();
+    }
+
+    public JobUpdateResponse updateJob(Long jobId, JobCreaeteRequest request) {
+        Job job = jobRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("직무를 찾을 수 없습니다: " + jobId));
+
+        if (job.getName() != null) {
+            job.updateName(request.jobName());
+            jobRepository.save(job);
+        }
+
+        return new JobUpdateResponse(job.getName());
+    }
+
+    public void deleteJob(Long jobId) {
+        jobRepository.deleteById(jobId);
     }
 }

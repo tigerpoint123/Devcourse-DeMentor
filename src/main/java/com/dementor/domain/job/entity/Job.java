@@ -23,5 +23,9 @@ public class Job {
     // Mentor 엔티티와의 관계 (일대다)
     @OneToMany(mappedBy = "job", cascade = CascadeType.ALL)
     private List<Mentor> mentors;
+
+    public void updateName(String name) {
+        this.name = name;
+    }
 }
 
