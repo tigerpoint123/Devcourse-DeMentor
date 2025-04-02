@@ -145,7 +145,7 @@ public class ApplyServiceTest {
 
 		assertThrows(IllegalArgumentException.class, () -> {
 			applyService.createApply(request, testMember.getId());
-		});;
+		});
 	}
 
 	@Test
