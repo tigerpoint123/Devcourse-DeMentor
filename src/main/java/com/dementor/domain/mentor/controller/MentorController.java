@@ -8,6 +8,7 @@ import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,11 +52,16 @@ public class MentorController {
     @GetMapping("/{memberId}/info")
     @Operation(summary = "멘토 정보 조회", description = "특정 멘토의 상세 정보 조회 API")
     public ResponseEntity<ApiResponse<?>> getMentorInfo(@PathVariable Long memberId) {
-        MentorInfoResponse mentorInfo = mentorService.getMentorInfo(memberId);
-        Map<String, Object> responseData = getResponseData(mentorInfo);
+        try {
+            MentorInfoResponse mentorInfo = mentorService.getMentorInfo(memberId);
+            Map<String, Object> responseData = getResponseData(mentorInfo);
 
-        return ResponseEntity.ok()
-                .body(ApiResponse.of(true, HttpStatus.OK, "대시보드 조회에 성공했습니다.", responseData));
+            return ResponseEntity.ok()
+                    .body(ApiResponse.of(true, HttpStatus.OK, "대시보드 조회에 성공했습니다.", responseData));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        }
     }
 
     private static Map<String, Object> getResponseData(MentorInfoResponse mentorInfo) {
