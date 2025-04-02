@@ -1,6 +1,7 @@
 package com.dementor.domain.job.controller;
 
 import com.dementor.domain.job.dto.request.JobCreaeteRequest;
+import com.dementor.domain.job.dto.request.JobUpdateRequest;
 import com.dementor.domain.job.dto.response.JobFindResponse;
 import com.dementor.domain.job.dto.response.JobUpdateResponse;
 import com.dementor.domain.job.service.JobService;
@@ -48,7 +49,7 @@ public class JobController {
     @PutMapping("/{jobId}")
     public ApiResponse<?> updateJob(
             @PathVariable Long jobId,
-            @RequestBody JobCreaeteRequest request
+            @RequestBody JobUpdateRequest request
     ) {
         JobUpdateResponse response = jobService.updateJob(jobId, request);
         return ApiResponse.of(

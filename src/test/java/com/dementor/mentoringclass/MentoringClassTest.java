@@ -113,7 +113,7 @@ public class MentoringClassTest {
         // Schedule 생성
         Schedule schedule = Schedule.builder()
                 .dayOfWeek("월요일")
-                .time(10001100)
+                .time("10:00-11:00")
                 .mentoringClass(mentoringClass)
                 .build();
         schedule = scheduleRepository.save(schedule);
@@ -170,7 +170,7 @@ public class MentoringClassTest {
             "스프링 부트 완전 정복",
             50000,
             List.of(
-                new ScheduleRequest("월요일", 10001100)
+                new ScheduleRequest("월요일", "10:00-11:00")
             )
         );
 
@@ -192,7 +192,7 @@ public class MentoringClassTest {
             "수정된 수업 제목",
             "수정된 수업 내용",
             100000,
-            new ScheduleRequest("화요일", 14001600)  // 일정도 수정
+            new ScheduleRequest("화요일", "14:00-16:00")  // 일정도 수정
         );
 
         // when & then
@@ -207,7 +207,7 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.data.content").value("수정된 수업 내용"))
                 .andExpect(jsonPath("$.data.price").value(100000))
                 .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
-                .andExpect(jsonPath("$.data.schedule.time").value(14001600));
+                .andExpect(jsonPath("$.data.schedule.time").value("14:00-16:00"));
 
     }
 

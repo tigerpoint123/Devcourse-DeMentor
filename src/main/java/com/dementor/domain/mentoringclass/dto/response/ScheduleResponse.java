@@ -8,7 +8,7 @@ public record ScheduleResponse(
         @Schema(description = "요일", example = "MONDAY")
         String dayOfWeek,
         @Schema(description = "시간", example = "14:00")
-        int time
+        String time
 ) {
     public static ScheduleResponse from(Schedule schedule) {
         return new ScheduleResponse(

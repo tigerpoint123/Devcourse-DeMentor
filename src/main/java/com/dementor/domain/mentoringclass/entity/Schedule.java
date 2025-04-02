@@ -16,7 +16,7 @@ public class Schedule {
     private Long id;
 
     private String dayOfWeek;
-    private int time;
+    private String time;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentoring_class_id")
@@ -27,7 +27,7 @@ public class Schedule {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public void updateTime(int time) {
+    public void updateTime(String time) {
         this.time = time;
     }
 }

@@ -43,6 +43,6 @@ public record MentoringClassUpdateResponse(
         String dayOfWeek,
         
         @Schema(description = "시간")
-        int time
+        String time
     ) {}
 }
