@@ -6,7 +6,9 @@ import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
+import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
+import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -15,6 +17,9 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -94,5 +99,25 @@ public class MentorService {
         Integer completedSessions = 0;
 
         return MentorInfoResponse.from(mentor, totalClasses, pendingRequests, completedSessions);
+    }
+
+    //멘토 정보 수정 요청 목록 조회
+    public MentorChangeResponse.ChangeListResponse getModificationRequests(
+            Long memberId,
+            MentorChangeRequest.ModificationRequestParams params) {
+        // 멘토 존재 여부 확인
+        if (!mentorRepository.existsById(memberId)) {
+            throw new EntityNotFoundException("해당 멘토를 찾을 수 없습니다: " + memberId);
+        }
+
+        // 실제 DB에서 별도로 저장된 수정 요청이 없으므로, 빈 목록 반환
+        List<MentorChangeResponse.ChangeRequestData> emptyList = new ArrayList<>();
+        MentorChangeResponse.Pagination pagination = new MentorChangeResponse.Pagination(
+                params.page(),
+                params.size(),
+                0L // 총 요소 수 0
+        );
+
+        return new MentorChangeResponse.ChangeListResponse(emptyList, pagination);
     }
 }

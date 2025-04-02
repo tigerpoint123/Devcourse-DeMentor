@@ -1,11 +1,14 @@
 package com.dementor.domain.mentor.controller;
 
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
+import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
+import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,9 +16,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,32 +40,104 @@ public class MentorController {
     }
 
     @PutMapping("/{memberId}")
-    @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API")
+    @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestBody @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto) {
-        mentorService.updateMentor(memberId, requestDto);
+            @RequestBody @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("memberId", memberId);
-        responseData.put("modificationStatus", Mentor.ModificationStatus.PENDING.name());
+        // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+        if (!memberId.equals(userDetails.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
+        }
 
-        return ResponseEntity.ok()
-                .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", responseData));
+        try {
+            mentorService.updateMentor(memberId, requestDto);
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("memberId", memberId);
+            responseData.put("modificationStatus", Mentor.ModificationStatus.PENDING.name());
+
+            return ResponseEntity.ok()
+                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", responseData));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        }
     }
 
     @GetMapping("/{memberId}/info")
-    @Operation(summary = "멘토 정보 조회", description = "특정 멘토의 상세 정보 조회 API")
-    public ResponseEntity<ApiResponse<?>> getMentorInfo(@PathVariable Long memberId) {
+    @Operation(summary = "멘토 정보 조회", description = "특정 멘토의 상세 정보 조회 API - 로그인한 멘토 본인만 가능")
+    public ResponseEntity<ApiResponse<?>> getMentorInfo(
+            @PathVariable Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+        if (!memberId.equals(userDetails.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
+        }
+
         try {
             MentorInfoResponse mentorInfo = mentorService.getMentorInfo(memberId);
             Map<String, Object> responseData = getResponseData(mentorInfo);
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "대시보드 조회에 성공했습니다.", responseData));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        }
+    }
+
+    public ResponseEntity<ApiResponse<?>> getModificationRequests(
+            @PathVariable Long memberId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+        if (!memberId.equals(userDetails.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보 수정 요청을 조회할 권한이 없습니다."));
+        }
+
+        // 페이지 번호와 크기 유효성 검사
+        if (page < 1 || size < 1) {
+            Map<String, String> errors = new HashMap<>();
+            if (page < 1) errors.put("page", "페이지 번호는 1 이상이어야 합니다.");
+            if (size < 1) errors.put("size", "페이지 크기는 1 이상이어야 합니다.");
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "멘토 정보 수정 요청 목록 조회에 실패했습니다.", errors));
+        }
+
+        // 상태 유효성 검사
+        if (status != null && !List.of("PENDING", "APPROVED", "REJECTED").contains(status)) {
+            Map<String, String> errors = new HashMap<>();
+            errors.put("status", "유효하지 않은 상태값입니다.");
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "멘토 정보 수정 요청 목록 조회에 실패했습니다.", errors));
+        }
+
+        try {
+            MentorChangeRequest.ModificationRequestParams params = new MentorChangeRequest.ModificationRequestParams(status, page, size);
+            MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(memberId, params);
+            return ResponseEntity.ok()
+                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청 목록 조회에 성공했습니다.", response));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
         }
     }
 
