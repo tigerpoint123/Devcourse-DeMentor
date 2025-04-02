@@ -97,6 +97,8 @@ public class MentorController {
         }
     }
 
+    @GetMapping("/{memberId}/modification-requests")
+    @Operation(summary = "멘토 정보 수정 요청 조회", description = "특정 멘토의 정보 수정 요청 이력과 상태를 조회합니다. - 로그인한 멘토만 가능")
     public ResponseEntity<ApiResponse<?>> getModificationRequests(
             @PathVariable Long memberId,
             @RequestParam(required = false) String status,
