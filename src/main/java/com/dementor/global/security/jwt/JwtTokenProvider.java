@@ -1,8 +1,8 @@
 package com.dementor.global.security.jwt;
 
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +16,10 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import com.dementor.domain.admin.entity.Admin;
+import com.dementor.domain.member.entity.Member;
 import com.dementor.global.security.CustomUserDetails;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -53,7 +56,7 @@ public class JwtTokenProvider implements InitializingBean {
 	}
 
 	// Authentication에 권한 정보를 이요한 토큰 생성
-	public String createToken(Authentication authentication, Long memberId, String nickname) {
+	public String createMemberToken(Authentication authentication, Long memberId, String nickname) {
 		String authorities = authentication.getAuthorities().stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
@@ -75,6 +78,26 @@ public class JwtTokenProvider implements InitializingBean {
 			.compact();
 	}
 
+	// Admin 토큰 생성 메서드
+	public String createAdminToken(Long adminId) {
+		String authorities = "ROLE_ADMIN";
+
+		Map<String, Object> claims = new HashMap<>();
+		claims.put(AUTHORITIES_KEY, authorities);
+		claims.put("adminId", adminId);
+		claims.put("sub", "admin");
+
+		long now = (new Date()).getTime();
+		Date validity = new Date(now + tokenValidityInMilliseconds);
+
+		return Jwts.builder()
+			.setClaims(claims)
+			.setIssuedAt(new Date(now))
+			.signWith(key, SignatureAlgorithm.HS512)
+			.setExpiration(validity)
+			.compact();
+	}
+
 	//Token에 담겨있는 정보를 이용해 Authentication 객체 리턴
 	public Authentication getAuthentication(String token) {
 		Claims claims = Jwts
@@ -84,19 +107,32 @@ public class JwtTokenProvider implements InitializingBean {
 			.parseClaimsJws(token)
 			.getBody();
 
-		Collection<? extends GrantedAuthority> authorities =
-			Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-				.map(SimpleGrantedAuthority::new)
-				.collect(Collectors.toList());
-
-		// this is from 김호남남
-		CustomUserDetails principal = new CustomUserDetails(
-			claims.get("memberId", Long.class),
-			claims.getSubject(),
-			"",  // password는 JWT 토큰에 저장하지 않음
-			claims.get("nickname", String.class),
-			authorities
+		Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
+			new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class))
 		);
+
+		// role에 따라 Member 또는 Admin으로 구분
+		String role = claims.get(AUTHORITIES_KEY, String.class);
+		CustomUserDetails principal;
+
+		if (role.startsWith("ROLE_ADMIN")) {
+			principal = CustomUserDetails.ofAdmin(
+				Admin.builder()
+					.id(claims.get("adminId", Long.class))
+					.username(claims.getSubject())
+					.password("")  // JWT 토큰에는 password 저장하지 않음
+					.build()
+			);
+		} else {
+			principal = CustomUserDetails.of(
+				Member.builder()
+					.id(claims.get("memberId", Long.class))
+					.email(claims.getSubject())
+					.password("")  // JWT 토큰에는 password 저장하지 않음
+					.nickname(claims.get("nickname", String.class))
+					.build()
+			);
+		}
 
 		return new UsernamePasswordAuthenticationToken(principal, token, authorities);
 	}
