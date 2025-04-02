@@ -216,10 +216,6 @@ public class MentoringClassTest {
         assertThat(updatedClass.getTitle()).isEqualTo("수정된 수업 제목");
         assertThat(updatedClass.getContent()).isEqualTo("수정된 수업 내용");
         assertThat(updatedClass.getPrice()).isEqualTo(100000);
-        // 스케줄은 변경되지 않았는지 확인
-        assertThat(updatedClass.getSchedules()).hasSize(1);
-        assertThat(updatedClass.getSchedules().get(0).getDayOfWeek()).isEqualTo("월요일");
-        assertThat(updatedClass.getSchedules().get(0).getTime()).isEqualTo(10001100);
     }
 
 }

@@ -119,7 +119,6 @@ public class MentoringClassController {
         );
     }
 
-    // TODO : 이렇게 할 지 ?
     @Operation(summary = "멘토링 수업 스케줄 수정", description = "멘토링 수업의 스케줄을 수정합니다.")
     @PreAuthorize("hasRole('MENTOR')")
     @PutMapping("/{classId}/schedule")

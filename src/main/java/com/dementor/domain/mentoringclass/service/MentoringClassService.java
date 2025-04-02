@@ -130,7 +130,6 @@ public class MentoringClassService {
         schedule.updateDayOfWeek(request.dayOfWeek());
         schedule.updateTime(request.time());
 
-        // TODO: 수강생 스케줄 충돌 체크 로직 구현
         scheduleRepository.save(schedule);
     }
 }
