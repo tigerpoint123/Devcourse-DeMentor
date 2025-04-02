@@ -25,6 +25,10 @@ import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
 
 @SpringBootTest
 @Transactional
@@ -43,13 +47,20 @@ public class ApplyServiceTest {
 	@Autowired
 	private MemberRepository memberRepository;
 
+	@Autowired
+	private MentorRepository mentorRepository;
+
+	@Autowired
+	private JobRepository jobRepository;
+
 	private MentoringClass mentoringClass;
 	private Long mentoringClassId;
 	private Member testMember;
+	private Member testMentor;
 
 	@BeforeEach
 	void setUp() {
-
+		// 테스트 멘티 생성
 		testMember = Member.builder()
 			.email("test@test.com")
 			.password("password")
@@ -59,14 +70,41 @@ public class ApplyServiceTest {
 			.build();
 		testMember = memberRepository.save(testMember);
 
+		// 테스트용 멘토 추가
+		testMentor = Member.builder()
+			.email("mentor@test.com")
+			.password("password")
+			.nickname("testMentor")
+			.name("테스트멘토")
+			.userRole(UserRole.MENTOR)
+			.build();
+		testMentor = memberRepository.save(testMentor);
+		
+		// Job 생성
+		Job job = Job.builder()
+			.name("백엔드")
+			.build();
+		job = jobRepository.save(job);
+		
+		// 멘토 객체 생성
+		Mentor mentor = Mentor.builder()
+			.member(testMentor)
+			.name("테스트멘토")
+			.job(job)
+			.career(3)
+			.phone("010-1234-5678")
+			.introduction("테스트 멘토 소개")
+			.build();
+		mentor = mentorRepository.save(mentor);
 
+		// 멘토링 클래스 생성
 		MentoringClass mentoring = new MentoringClass();
 		mentoring.setTitle("테스트 멘토링");
 		mentoring.setContent("테스트 내용");
 		mentoring.setPrice(10000);
 		mentoring.setStack("Java");
-
-
+		mentoring.setMentor(mentor); // 멘토 설정
+		
 		this.mentoringClass = mentoringClassRepository.save(mentoring);
 		this.mentoringClassId = this.mentoringClass.getId();
 	}
@@ -174,6 +212,39 @@ public class ApplyServiceTest {
 
 		assertEquals(ApplyErrorCode.NOT_YOUR_APPLY, exception.getErrorCode());
 	}
+
+	@Test
+	@DisplayName("멘토링 신청 목록 조회 성공 - 페이징")
+	void getApplyListSuccess() {
+
+		for (int i = 0; i < 15; i++) {
+			Apply apply = Apply.builder()
+				.mentoringClass(mentoringClass)
+				.member(testMember)
+				.inquiry("테스트 문의 " + i)
+				.applyStatus(ApplyStatus.PENDING)
+				.schedule(LocalDateTime.now().plusDays(i % 5 + 1))
+				.build();
+			applyRepository.save(apply);
+		}
+
+
+		ApplyResponse.GetApplyPageList page1Result = applyService.getApplyList(testMember.getId(), 0, 10);
+
+
+		assertEquals(15L, page1Result.getPagination().get("total_elements"));
+		assertEquals(2, page1Result.getPagination().get("total_pages"));
+		assertEquals(10, page1Result.getApplyments().size());
+
+
+		ApplyResponse.GetApplyPageList page2Result = applyService.getApplyList(testMember.getId(), 1, 10);
+
+
+		assertEquals(15L, page2Result.getPagination().get("total_elements"));
+		assertEquals(2, page2Result.getPagination().get("total_pages"));
+		assertEquals(5, page2Result.getApplyments().size());
+	}
+
 
 }
 
