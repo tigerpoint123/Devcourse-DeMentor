@@ -42,11 +42,16 @@ public class MentoringClassService {
 
         return mentoringClasses.map(mentoringClass -> new MentoringClassFindResponse(
                 mentoringClass.getId(),
+                new MentoringClassFindResponse.MentorInfo(
+                        mentoringClass.getMentor().getId(),
+                        mentoringClass.getMentor().getName(),
+                        mentoringClass.getMentor().getJob().getName(),
+                        mentoringClass.getMentor().getCareer()
+                ),
                 mentoringClass.getStack().split(","),
                 mentoringClass.getContent(),
                 mentoringClass.getTitle(),
-                mentoringClass.getPrice(),
-                mentoringClass.getMentor().getJob().getName()
+                mentoringClass.getPrice()
         ));
     }
 
