@@ -36,7 +36,7 @@ public class MentoringClassController {
             @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") SortDirection order
     ) {
-        Page<MentoringClassFindResponse> result = mentoringClassService.findClass(jobId, page, size, sortBy, order);
+        Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobId, page, size, sortBy, order);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,

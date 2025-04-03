@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.dto.response;
 
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "멘토링 수업 조회 응답")
@@ -26,7 +27,24 @@ public record MentoringClassFindResponse(
             String job,
             @Schema(description = "멘토 경력")
             int career
-    ) {}
+    ) {
+    }
+
+    public static MentoringClassFindResponse from(MentoringClass mentoringClass) {
+        return new MentoringClassFindResponse(
+                mentoringClass.getId(),
+                new MentoringClassFindResponse.MentorInfo(
+                        mentoringClass.getMentor().getId(),
+                        mentoringClass.getMentor().getName(),
+                        mentoringClass.getMentor().getJob().getName(),
+                        mentoringClass.getMentor().getCareer()
+                ),
+                mentoringClass.getStack().split(","),
+                mentoringClass.getContent(),
+                mentoringClass.getTitle(),
+                mentoringClass.getPrice()
+        );
+    }
 }
 
 

@@ -31,7 +31,7 @@ public class MentoringClassService {
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
 
-    public Page<MentoringClassFindResponse> findClass(Long jobId, int page, int size, String sortBy, SortDirection order) {
+    public Page<MentoringClassFindResponse> findAllClass(Long jobId, int page, int size, String sortBy, SortDirection order) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(order.name()), sortBy));
 
         Page<MentoringClass> mentoringClasses;
@@ -40,19 +40,7 @@ public class MentoringClassService {
         else
             mentoringClasses = mentoringClassRepository.findAll(pageRequest);
 
-        return mentoringClasses.map(mentoringClass -> new MentoringClassFindResponse(
-                mentoringClass.getId(),
-                new MentoringClassFindResponse.MentorInfo(
-                        mentoringClass.getMentor().getId(),
-                        mentoringClass.getMentor().getName(),
-                        mentoringClass.getMentor().getJob().getName(),
-                        mentoringClass.getMentor().getCareer()
-                ),
-                mentoringClass.getStack().split(","),
-                mentoringClass.getContent(),
-                mentoringClass.getTitle(),
-                mentoringClass.getPrice()
-        ));
+        return mentoringClasses.map(MentoringClassFindResponse::from);
     }
 
     @Transactional
