@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import com.dementor.domain.admin.entity.Admin;
 import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
 import com.dementor.global.security.CustomUserDetails;
 
 import io.jsonwebtoken.Claims;
@@ -166,6 +167,7 @@ public class JwtTokenProvider implements InitializingBean {
 					.email(claims.getSubject())
 					.password("")
 					.nickname(claims.get("nickname", String.class))
+					.userRole(UserRole.fromRole(claims.get(AUTHORITIES_KEY, String.class)))
 					.build()
 			);
 		}
