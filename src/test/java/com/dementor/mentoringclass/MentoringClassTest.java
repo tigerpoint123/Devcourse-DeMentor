@@ -170,7 +170,7 @@ public class MentoringClassTest {
     void createMentoringClass() throws Exception {
         // given
         MentoringClassCreateRequest request = new MentoringClassCreateRequest(
-            "Spring Boot",
+            new String[]{"Spring Boot", "Java", "MySQL"},  // 기술 스택 배열로 정의
             "스프링 부트 기초부터 실전까지",
             "스프링 부트 완전 정복",
             50000,
@@ -197,7 +197,8 @@ public class MentoringClassTest {
             "수정된 수업 제목",
             "수정된 수업 내용",
             100000,
-            new ScheduleRequest("화요일", "14:00-16:00")  // 일정도 수정
+            new String[]{"Spring Boot", "Java", "MySQL", "JPA"},  // 기술 스택 배열로 정의
+            new ScheduleRequest("화요일", "14:00-16:00")
         );
 
         // when & then
@@ -213,7 +214,6 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.data.price").value(100000))
                 .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
                 .andExpect(jsonPath("$.data.schedule.time").value("14:00-16:00"));
-
     }
 
 }

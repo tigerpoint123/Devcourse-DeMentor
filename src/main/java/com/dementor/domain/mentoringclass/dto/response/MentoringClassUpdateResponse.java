@@ -9,8 +9,8 @@ public record MentoringClassUpdateResponse(
     @Schema(description = "멘토 정보")
     MentorInfo mentor,
     
-    @Schema(description = "기술 스택")
-    String stack,
+    @Schema(description = "기술 스택 목록", example = "[\"Java\", \"Spring Boot\", \"MySQL\"]")
+    String[] stack,
     
     @Schema(description = "수업 내용")
     String content,

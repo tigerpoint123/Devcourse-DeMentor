@@ -42,9 +42,9 @@ public class MentoringClassService {
 
         return mentoringClasses.map(mentoringClass -> new MentoringClassFindResponse(
                 mentoringClass.getId(),
-                mentoringClass.getTitle(),
-                mentoringClass.getStack(),
+                mentoringClass.getStack().split(","),
                 mentoringClass.getContent(),
+                mentoringClass.getTitle(),
                 mentoringClass.getPrice(),
                 mentoringClass.getMentor().getJob().getName()
         ));
@@ -57,10 +57,10 @@ public class MentoringClassService {
 
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
-                .stack(request.stack())
+                .stack(String.join(",", request.stack()))
                 .content(request.content())
                 .price(request.price())
-                .mentor(mentor) // 멘토 정보 연동
+                .mentor(mentor)
                 .build();
         
         mentoringClass = mentoringClassRepository.save(mentoringClass);
@@ -110,6 +110,8 @@ public class MentoringClassService {
             mentoringClass.updateDescription(request.content());
         if (request.price() != null)
             mentoringClass.updatePrice(request.price());
+        if (request.stack() != null)
+            mentoringClass.setStack(String.join(",", request.stack()));
 
         // 일정 정보
         if (request.schedule() != null) {
@@ -129,7 +131,7 @@ public class MentoringClassService {
                 mentoringClass.getMentor().getJob().getName(),
                 mentoringClass.getMentor().getCareer()
             ),
-            mentoringClass.getStack(),
+            mentoringClass.getStack().split(","),
             mentoringClass.getContent(),
             mentoringClass.getTitle(),
             mentoringClass.getPrice(),
