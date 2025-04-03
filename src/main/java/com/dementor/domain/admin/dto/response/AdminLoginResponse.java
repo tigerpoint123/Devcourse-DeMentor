@@ -16,5 +16,8 @@ public class AdminLoginResponse {
 	private String message;
 
 	@Schema(description = "JWT 토큰")
-	private String token;
+	private String accessToken;
+
+	@Schema(description = "JWT refresh 토큰")
+	private String refreshToken;
 } 
