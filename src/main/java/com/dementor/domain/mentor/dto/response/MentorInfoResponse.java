@@ -3,7 +3,7 @@ package com.dementor.domain.mentor.dto.response;
 import com.dementor.domain.mentor.entity.Mentor;
 
 public record MentorInfoResponse (
-        Long Id,
+        Long memberId,
         String name,
         String job,
         Integer career,

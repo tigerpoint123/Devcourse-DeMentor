@@ -220,9 +220,9 @@ public class MentorControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.message").value("멘토 정보 조회에 성공했습니다."))
-                .andExpect(jsonPath("$.data.memberInfo.memberId").value(testMentorId))
-                .andExpect(jsonPath("$.data.memberInfo.name").value("테스트멘토"))
-                .andExpect(jsonPath("$.data.memberInfo.job").value("백엔드 개발자"));
+                .andExpect(jsonPath("$.data.memberId").value(testMentorId))
+                .andExpect(jsonPath("$.data.name").value("테스트멘토"))
+                .andExpect(jsonPath("$.data.job").value("백엔드 개발자"));
     }
 
     @Test

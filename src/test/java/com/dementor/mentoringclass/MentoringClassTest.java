@@ -86,14 +86,16 @@ public class MentoringClassTest {
 
         Mentor mentorEntity = Mentor.builder()
                 .member(mentor)
+                .job(job)
                 .name("테스트 멘토")
                 .currentCompany("테스트 회사")
                 .career(5)
                 .phone("010-1234-5678")
+                .email("mentor@example.com")
                 .introduction("테스트 멘토 소개")
+                .bestFor("테스트 추천대상")
                 .approvalStatus(Mentor.ApprovalStatus.APPROVED)
                 .modificationStatus(Mentor.ModificationStatus.NONE)
-                .job(job)
                 .build();
         mentorEntity = mentorRepository.save(mentorEntity);
 
@@ -144,10 +146,10 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 수업 조회 성공"))
                 .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.totalElements").isNumber())
-                .andExpect(jsonPath("$.data.totalPages").isNumber())
-                .andExpect(jsonPath("$.data.size").value(10))
-                .andExpect(jsonPath("$.data.number").value(0));
+                .andExpect(jsonPath("$.data.page.totalElements").isNumber())
+                .andExpect(jsonPath("$.data.page.totalPages").isNumber())
+                .andExpect(jsonPath("$.data.page.size").value(10))
+                .andExpect(jsonPath("$.data.page.number").value(0));
     }
 
     @Test
