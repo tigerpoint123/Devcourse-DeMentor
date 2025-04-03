@@ -188,7 +188,13 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 클래스 생성 성공"))
-                .andExpect(jsonPath("$.data").isNumber());
+                .andExpect(jsonPath("$.data.classId").exists())
+                .andExpect(jsonPath("$.data.mentor").exists())
+                .andExpect(jsonPath("$.data.stack").exists())
+                .andExpect(jsonPath("$.data.content").exists())
+                .andExpect(jsonPath("$.data.title").exists())
+                .andExpect(jsonPath("$.data.price").exists())
+                .andExpect(jsonPath("$.data.schedules").exists());
     }
 
     @Test

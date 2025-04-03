@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.controller;
 
+import com.dementor.domain.mentoringclass.dto.SortDirection;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
@@ -7,13 +8,15 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindRespons
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
-import com.dementor.domain.mentoringclass.dto.SortDirection;
 import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class MentoringClassController {
     private final MentoringClassService mentoringClassService;
+    private final PagedResourcesAssembler<MentoringClassFindResponse> pagedResourcesAssembler;
 
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
     @GetMapping
@@ -37,11 +41,13 @@ public class MentoringClassController {
             @RequestParam(defaultValue = "desc") SortDirection order
     ) {
         Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobId, page, size, sortBy, order);
+        PagedModel<EntityModel<MentoringClassFindResponse>> pagedModel = pagedResourcesAssembler.toModel(result);
+
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 수업 조회 성공",
-                result
+                pagedModel
         );
     }
 
