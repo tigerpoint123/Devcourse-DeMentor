@@ -14,9 +14,7 @@ import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Transactional
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MentorControllerTest {
 
     @Autowired
@@ -129,6 +128,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(1)
     @DisplayName("멘토 지원 성공")
     @WithMockUser(roles = "MENTEE")
     void applyMentorSuccess() throws Exception {
@@ -166,6 +166,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(2)
     @DisplayName("멘토 정보 수정 성공")
     @WithMockUser(roles = "MENTOR")
     void updateMentorSuccess() throws Exception {
@@ -202,6 +203,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(3)
     @DisplayName("멘토 정보 조회 성공")
     @WithMockUser(roles = "MENTOR")
     void getMentorInfoSuccess() throws Exception {
@@ -224,6 +226,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(4)
     @DisplayName("존재하지 않는 멘토 정보 조회시 실패")
     @WithMockUser(roles = "MENTOR")
     void getMentorInfoFail() throws Exception {
@@ -240,12 +243,13 @@ public class MentorControllerTest {
 
         // Then
         resultActions
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.isSuccess").value(false))
-                .andExpect(jsonPath("$.message").value("해당 멘토 정보를 수정할 권한이 없습니다."));
+                .andExpect(jsonPath("$.message").value("해당 멘토를 찾을 수 없습니다: " + nonExistentMentorId));
     }
 
     @Test
+    @Order(5)
     @DisplayName("멘토 정보 수정 요청 조회 성공")
     @WithMockUser(roles = "MENTOR")
     void getModificationRequestsSuccess() throws Exception {
@@ -280,6 +284,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(6)
     @DisplayName("멘토 정보 수정 요청 조회 - 상태별 필터링 성공")
     @WithMockUser(roles = "MENTOR")
     void getModificationRequestsWithStatusFilterSuccess() throws Exception {
@@ -320,7 +325,8 @@ public class MentorControllerTest {
     }
 
     @Test
-    @DisplayName("다른 회원의 멘토 정보 수정 요청 조회 시 실패")
+    @Order(7)
+    @DisplayName("멘토가 아닌 회원의 ID로 정보 조회 시 실패")
     @WithMockUser(roles = "MENTOR")
     void getModificationRequestsFailWithForbidden() throws Exception {
         // When - 다른 사용자의 ID로 요청
@@ -335,12 +341,13 @@ public class MentorControllerTest {
 
         // Then
         resultActions
-                .andExpect(status().isForbidden())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.isSuccess").value(false))
-                .andExpect(jsonPath("$.message").value("해당 멘토 정보 수정 요청을 조회할 권한이 없습니다."));
+                .andExpect(jsonPath("$.message").value("해당 멘토를 찾을 수 없습니다: " + testMemberId));
     }
 
     @Test
+    @Order(8)
     @DisplayName("잘못된 페이지 매개변수로 멘토 정보 수정 요청 조회 시 실패")
     @WithMockUser(roles = "MENTOR")
     void getModificationRequestsFailWithInvalidPage() throws Exception {
@@ -362,6 +369,7 @@ public class MentorControllerTest {
     }
 
     @Test
+    @Order(9)
     @DisplayName("잘못된 상태 매개변수로 멘토 정보 수정 요청 조회 시 실패")
     @WithMockUser(roles = "MENTOR")
     void getModificationRequestsFailWithInvalidStatus() throws Exception {

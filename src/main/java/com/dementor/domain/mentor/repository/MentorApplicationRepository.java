@@ -27,4 +27,8 @@ public interface MentorApplicationRepository extends JpaRepository<MentorApplica
     //특정 상태의 멘토 지원 목록 조회
     @Query("SELECT ma FROM MentorApplication ma WHERE ma.status = :status")
     Page<MentorApplication> findByStatus(@Param("status") MentorApplication.ApplicationStatus status, Pageable pageable);
+
+    // 가장 최근 지원서 조회 메소드 추가
+    @Query("SELECT ma FROM MentorApplication ma WHERE ma.member.id = :memberId ORDER BY ma.createdAt DESC")
+    Optional<MentorApplication> findLatestByMemberId(@Param("memberId") Long memberId);
 }

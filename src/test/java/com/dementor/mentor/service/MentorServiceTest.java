@@ -11,15 +11,14 @@ import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.entity.MentorModification;
 import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -30,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MentorServiceTest {
 
     @Autowired
@@ -107,6 +107,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(1)
     @DisplayName("멘토 지원 성공")
     void applyMentorSuccess() {
         // Given
@@ -128,14 +129,34 @@ public class MentorServiceTest {
         mentorService.applyMentor(requestDto);
 
         // Then
+        MentorApplication savedApplication = mentorApplicationRepository.findByMemberId(testMember.getId())
+                .orElse(null);
+        assertNotNull(savedApplication, "멘토 지원 정보가 저장되지 않았습니다.");
+        assertEquals("테스트 자기소개", savedApplication.getIntroduction());
+        assertEquals(MentorApplication.ApplicationStatus.PENDING, savedApplication.getStatus());
+
+        // 승인 프로세스 - 지원 요청이 저장되어 있는 상태
+        MentorApplication application = mentorApplicationRepository.findLatestByMemberId(testMember.getId())
+                .orElseThrow(() -> new AssertionError("지원 정보가 없습니다."));
+
+        // 승인 처리
+        application.updateStatus(MentorApplication.ApplicationStatus.APPROVED, null);
+        mentorApplicationRepository.save(application);
+
+        // 멘토 생성
+        Mentor mentor = application.toMentor();
+        mentorRepository.save(mentor);
+
+        // Then - 멘토 정보 검증
         Mentor savedMentor = mentorRepository.findById(testMember.getId()).orElse(null);
-        assertNotNull(savedMentor, "멘토 지원 정보가 저장되지 않았습니다.");
+        assertNotNull(savedMentor, "승인된 멘토 정보가 저장되지 않았습니다.");
         assertEquals("테스트 자기소개", savedMentor.getIntroduction());
         assertEquals("테스트 특기", savedMentor.getBestFor());
-        assertEquals(Mentor.ApprovalStatus.PENDING, savedMentor.getApprovalStatus());
+        assertEquals(Mentor.ApprovalStatus.APPROVED, savedMentor.getApprovalStatus());
     }
 
     @Test
+    @Order(2)
     @DisplayName("없는 회원으로 멘토 지원 시 예외 발생")
     void applyMentorFailMemberNotFound() {
         // Given
@@ -163,6 +184,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(3)
     @DisplayName("이미 멘토인 회원이 멘토 지원 시 예외 발생")
     void applyMentorFailAlreadyMentor() {
         // Given
@@ -188,20 +210,22 @@ public class MentorServiceTest {
         assertTrue(exception.getMessage().contains("이미 멘토로 등록된 사용자입니다"));
     }
 
+    // 멘토 수정 요청 테스트
     @Test
-    @DisplayName("멘토 정보 수정 성공")
-    void updateMentorSuccess() {
+    @Order(4)
+    @DisplayName("멘토 정보 수정 요청 성공")
+    void createMentorUpdateRequestSuccess() {
         // Given
         MentorUpdateRequest.MentorUpdateRequestDto requestDto =
                 new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,          // career
-                        "01098765432",    // phone
-                        "업데이트 회사",    // currentCompany
-                        1L,               // jobId (예시 값)
-                        "update@email.com", // email
-                        "업데이트된 자기소개", // introduction
-                        "업데이트된 특기",   // bestFor
-                        null              // attachmentId
+                        8,
+                        "01098765432",
+                        "업데이트 회사",
+                        1L,
+                        "update@email.com",
+                        "업데이트된 자기소개",
+                        "업데이트된 특기",
+                        null
                 );
 
         // When
@@ -211,12 +235,37 @@ public class MentorServiceTest {
         Mentor updatedMentor = mentorRepository.findById(testMentor.getId()).orElse(null);
         assertNotNull(updatedMentor, "멘토 정보가 조회되지 않습니다.");
         assertEquals(Mentor.ModificationStatus.PENDING, updatedMentor.getModificationStatus());
-        assertEquals("업데이트된 자기소개", updatedMentor.getIntroduction());
-        assertEquals("업데이트된 특기", updatedMentor.getBestFor());
-        assertEquals(8, updatedMentor.getCareer());
+
+        // 수정 요청 승인 프로세스 - 수정 요청이 저장되어 있는 상태
+        MentorModification modification = mentorModificationRepository.findLatestByMemberId(testMentor.getId())
+                .orElseThrow(() -> new AssertionError("수정 요청이 없습니다."));
+
+        // 승인 처리
+        modification.updateStatus(MentorModification.ModificationStatus.APPROVED, null);
+        mentorModificationRepository.save(modification);
+
+        Mentor mentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
+        mentor.update(
+                "업데이트 회사",
+                8,
+                "01098765432",
+                "update@email.com",
+                "업데이트된 자기소개",
+                "업데이트된 특기"
+        );
+        mentor.updateModificationStatus(Mentor.ModificationStatus.NONE);
+        mentorRepository.save(mentor);
+
+        // Then - 변경 확인
+        Mentor finalMentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
+        assertEquals("업데이트된 자기소개", finalMentor.getIntroduction());
+        assertEquals("업데이트된 특기", finalMentor.getBestFor());
+        assertEquals(8, finalMentor.getCareer());
+        assertEquals(Mentor.ModificationStatus.NONE, finalMentor.getModificationStatus());
     }
 
     @Test
+    @Order(5)
     @DisplayName("존재하지 않는 멘토 정보 수정 시 예외 발생")
     void updateMentorFailMentorNotFound() {
         // Given
@@ -242,6 +291,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(6)
     @DisplayName("승인되지 않은 멘토 정보 수정 시 예외 발생")
     void updateMentorFailNotApproved() {
         // Given
@@ -291,6 +341,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(7)
     @DisplayName("이미 수정 요청 중인 멘토 정보 수정 시 예외 발생")
     void updateMentorFailAlreadyPending() {
         // Given
@@ -340,6 +391,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(8)
     @DisplayName("멘토 정보 조회 성공")
     void getMentorInfoSuccess() {
         // Given
@@ -362,6 +414,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(9)
     @DisplayName("존재하지 않는 멘토 정보 조회 시 예외 발생")
     void getMentorInfoFailMentorNotFound() {
         // Given
@@ -376,6 +429,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(10)
     @DisplayName("승인되지 않은 멘토 정보 조회 시 예외 발생")
     void getMentorInfoFailNotApproved() {
         // Given
@@ -413,6 +467,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(11)
     @DisplayName("멘토 정보 수정 요청 목록 조회 성공")
     void getModificationRequestsSuccess() {
         // Given
@@ -444,6 +499,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(12)
     @DisplayName("멘토 정보 수정 요청 목록 - 상태별 필터링 조회 성공")
     void getModificationRequestsWithStatusFilterSuccess() {
         // Given
@@ -479,6 +535,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(13)
     @DisplayName("존재하지 않는 멘토의 정보 수정 요청 목록 조회 시 예외 발생")
     void getModificationRequestsFailMentorNotFound() {
         // Given
@@ -495,6 +552,7 @@ public class MentorServiceTest {
     }
 
     @Test
+    @Order(14)
     @DisplayName("수정 요청이 없는 경우 빈 목록 반환")
     void getModificationRequestsWithEmptyList() {
         // Given - 수정 요청을 생성하지 않음

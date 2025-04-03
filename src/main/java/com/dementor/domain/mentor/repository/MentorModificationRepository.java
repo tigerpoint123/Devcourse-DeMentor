@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface MentorModificationRepository extends JpaRepository<MentorModification, Long> {
     //특정 멘토의 정보 수정 요청 목록을 조회합니다.
@@ -26,9 +28,7 @@ public interface MentorModificationRepository extends JpaRepository<MentorModifi
             "WHERE mm.member.id = :memberId AND mm.status = 'PENDING'")
     boolean existsPendingModificationByMemberId(@Param("memberId") Long memberId);
 
-    //특정 회원(멘토)의 가장 최근 수정 요청 조회
-    @Query("SELECT mm FROM MentorModification mm " +
-            "WHERE mm.member.id = :memberId " +
-            "ORDER BY mm.createdAt DESC")
-    Page<MentorModification> findLatestByMemberId(@Param("memberId") Long memberId, Pageable pageable);
+    // 특정 멘토의 가장 최근 수정 요청 조회
+    @Query("SELECT m FROM MentorModification m WHERE m.member.id = :memberId ORDER BY m.createdAt DESC")
+    Optional<MentorModification> findLatestByMemberId(@Param("memberId") Long memberId);
 }
