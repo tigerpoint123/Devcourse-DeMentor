@@ -5,6 +5,7 @@ import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
+import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
@@ -82,12 +83,10 @@ public class MentorController {
 
             mentorService.updateMentor(memberId, requestDto);
 
-            Map<String, Object> responseData = new HashMap<>();
-            responseData.put("memberId", memberId);
-            responseData.put("modificationStatus", Mentor.ModificationStatus.PENDING.name());
+            MentorUpdateResponse response = MentorUpdateResponse.of(memberId, Mentor.ModificationStatus.PENDING);
 
             return ResponseEntity.ok()
-                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", responseData));
+                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", response));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
@@ -116,14 +115,13 @@ public class MentorController {
             // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
             if (!memberId.equals(userDetails.getId())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 조회할 권한이 없습니다."));
             }
 
             MentorInfoResponse mentorInfo = mentorService.getMentorInfo(memberId);
-            Map<String, Object> responseData = getResponseData(mentorInfo);
 
             return ResponseEntity.ok()
-                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 조회에 성공했습니다.", responseData));
+                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 조회에 성공했습니다.", mentorInfo));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
@@ -186,26 +184,5 @@ public class MentorController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
         }
-    }
-
-    private static Map<String, Object> getResponseData(MentorInfoResponse mentorInfo) {
-        Map<String, Object> memberInfo = new HashMap<>();
-        memberInfo.put("memberId", mentorInfo.Id());
-        memberInfo.put("name", mentorInfo.name());
-        memberInfo.put("job", mentorInfo.job());
-        memberInfo.put("career", mentorInfo.career());
-        memberInfo.put("phone", mentorInfo.phone());
-        memberInfo.put("email", mentorInfo.email());
-        memberInfo.put("currentCompany", mentorInfo.currentCompany());
-        memberInfo.put("introduction", mentorInfo.introduction());
-        memberInfo.put("bestFor", mentorInfo.bestFor());
-        memberInfo.put("isApproved", mentorInfo.approvalStatus() == com.dementor.domain.mentor.entity.Mentor.ApprovalStatus.APPROVED);
-        memberInfo.put("totalClasses", mentorInfo.totalClasses());
-        memberInfo.put("pendingRequests", mentorInfo.pendingRequests());
-        memberInfo.put("completedSessions", mentorInfo.completedSessions());
-
-        Map<String, Object> responseData = new HashMap<>();
-        responseData.put("memberInfo", memberInfo);
-        return responseData;
     }
 }
