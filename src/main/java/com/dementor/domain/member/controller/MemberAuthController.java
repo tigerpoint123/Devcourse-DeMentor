@@ -88,4 +88,6 @@ public class MemberAuthController {
 			.headers(headers)
 			.body(new LoginResponse(null, null, "로그아웃 성공", null));
 	}
+
+
 }
