@@ -8,6 +8,9 @@ import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.MentorModification;
+import com.dementor.domain.mentor.repository.MentorApplicationRepository;
+import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +64,17 @@ public class MentorControllerTest {
     private Long testMemberId;
     private Long testMentorId;
     private Long testJobId;
+    @Autowired
+    private MentorModificationRepository mentorModificationRepository;
+
+    @Autowired
+    private MentorApplicationRepository mentorApplicationRepository;
 
     @BeforeEach
     void setUp() {
         // 기존 데이터 정리
+        mentorModificationRepository.deleteAll();
+        mentorApplicationRepository.deleteAll();
         mentorRepository.deleteAll();
         memberRepository.deleteAll();
         jobRepository.deleteAll();
@@ -108,6 +118,7 @@ public class MentorControllerTest {
                 .currentCompany("현재 회사")
                 .career(5)
                 .phone("01012345678")
+                .email("testmentor@test.com")
                 .introduction("자기소개")
                 .bestFor("특기")
                 .approvalStatus(Mentor.ApprovalStatus.APPROVED)
@@ -206,7 +217,7 @@ public class MentorControllerTest {
         resultActions
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.message").value("대시보드 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.message").value("멘토 정보 조회에 성공했습니다."))
                 .andExpect(jsonPath("$.data.memberInfo.memberId").value(testMentorId))
                 .andExpect(jsonPath("$.data.memberInfo.name").value("테스트멘토"))
                 .andExpect(jsonPath("$.data.memberInfo.job").value("백엔드 개발자"));
@@ -229,8 +240,146 @@ public class MentorControllerTest {
 
         // Then
         resultActions
-                .andExpect(status().isNotFound())
+                .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.isSuccess").value(false))
-                .andExpect(jsonPath("$.message").value("해당 멘토를 찾을 수 없습니다: " + nonExistentMentorId));
+                .andExpect(jsonPath("$.message").value("해당 멘토 정보를 수정할 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("멘토 정보 수정 요청 조회 성공")
+    @WithMockUser(roles = "MENTOR")
+    void getModificationRequestsSuccess() throws Exception {
+        // Given
+        // 수정 요청을 생성 (이미 setUp 메서드에서 testMentor가 APPROVED 상태)
+        MentorModification modification = MentorModification.builder()
+                .member(testMentor)
+                .changes("{\"career\":{\"before\":5,\"after\":8},\"phone\":{\"before\":\"01012345678\",\"after\":\"01098765432\"}}")
+                .status(MentorModification.ModificationStatus.PENDING)
+                .build();
+        mentorModificationRepository.save(modification);
+
+        // When
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/mentor/" + testMentorId + "/modification-requests")
+                                .param("page", "1")
+                                .param("size", "10")
+                                .with(user(mentorPrincipal))
+                )
+                .andDo(print());
+
+        // Then
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.message").value("멘토 정보 수정 요청 목록 조회에 성공했습니다."))
+                .andExpect(jsonPath("$.data.modificationRequests").isArray())
+                .andExpect(jsonPath("$.data.modificationRequests[0].status").value("PENDING"))
+                .andExpect(jsonPath("$.data.pagination.page").value(1))
+                .andExpect(jsonPath("$.data.pagination.size").value(10));
+    }
+
+    @Test
+    @DisplayName("멘토 정보 수정 요청 조회 - 상태별 필터링 성공")
+    @WithMockUser(roles = "MENTOR")
+    void getModificationRequestsWithStatusFilterSuccess() throws Exception {
+        // Given
+        // PENDING 상태의 수정 요청 생성
+        MentorModification pendingModification = MentorModification.builder()
+                .member(testMentor)
+                .changes("{\"career\":{\"before\":5,\"after\":8}}")
+                .status(MentorModification.ModificationStatus.PENDING)
+                .build();
+        mentorModificationRepository.save(pendingModification);
+
+        // APPROVED 상태의 수정 요청 생성
+        MentorModification approvedModification = MentorModification.builder()
+                .member(testMentor)
+                .changes("{\"phone\":{\"before\":\"01012345678\",\"after\":\"01098765432\"}}")
+                .status(MentorModification.ModificationStatus.APPROVED)
+                .build();
+        mentorModificationRepository.save(approvedModification);
+
+        // When - APPROVED 상태만 필터링하여 조회
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/mentor/" + testMentorId + "/modification-requests")
+                                .param("status", "APPROVED")
+                                .param("page", "1")
+                                .param("size", "10")
+                                .with(user(mentorPrincipal))
+                )
+                .andDo(print());
+
+        // Then
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.data.modificationRequests").isArray())
+                .andExpect(jsonPath("$.data.modificationRequests[0].status").value("APPROVED"));
+    }
+
+    @Test
+    @DisplayName("다른 회원의 멘토 정보 수정 요청 조회 시 실패")
+    @WithMockUser(roles = "MENTOR")
+    void getModificationRequestsFailWithForbidden() throws Exception {
+        // When - 다른 사용자의 ID로 요청
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/mentor/" + testMemberId + "/modification-requests") // 다른 회원의 ID
+                                .param("page", "1")
+                                .param("size", "10")
+                                .with(user(mentorPrincipal)) // 테스트 멘토로 로그인
+                )
+                .andDo(print());
+
+        // Then
+        resultActions
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.message").value("해당 멘토 정보 수정 요청을 조회할 권한이 없습니다."));
+    }
+
+    @Test
+    @DisplayName("잘못된 페이지 매개변수로 멘토 정보 수정 요청 조회 시 실패")
+    @WithMockUser(roles = "MENTOR")
+    void getModificationRequestsFailWithInvalidPage() throws Exception {
+        // When - 유효하지 않은 페이지 번호로 요청
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/mentor/" + testMentorId + "/modification-requests")
+                                .param("page", "0") // 1 미만의 페이지 번호
+                                .param("size", "10")
+                                .with(user(mentorPrincipal))
+                )
+                .andDo(print());
+
+        // Then
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.data.page").value("페이지 번호는 1 이상이어야 합니다."));
+    }
+
+    @Test
+    @DisplayName("잘못된 상태 매개변수로 멘토 정보 수정 요청 조회 시 실패")
+    @WithMockUser(roles = "MENTOR")
+    void getModificationRequestsFailWithInvalidStatus() throws Exception {
+        // When - 유효하지 않은 상태값으로 요청
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/mentor/" + testMentorId + "/modification-requests")
+                                .param("status", "INVALID_STATUS") // 유효하지 않은 상태값
+                                .param("page", "1")
+                                .param("size", "10")
+                                .with(user(mentorPrincipal))
+                )
+                .andDo(print());
+
+        // Then
+        resultActions
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.data.status").value("유효하지 않은 상태값입니다."));
     }
 }

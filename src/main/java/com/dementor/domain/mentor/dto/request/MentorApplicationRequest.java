@@ -1,28 +1,28 @@
 package com.dementor.domain.mentor.dto.request;
 
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.mentor.entity.Mentor;
 import jakarta.validation.constraints.*;
 
 import java.util.List;
 
 public class MentorApplicationRequest {
     public record MentorApplicationRequestDto(
-            @NotNull(message = "사용자 ID는 필수 입력 항목입니다.")
+            @NotNull(message = "회원 ID는 필수 입력 항목입니다.")
             Long memberId,
 
-            @NotBlank(message = "이름은 필수 입력 항목입니다.")
+            @NotBlank(message = "이름은 필수입니다.")
+            @Size(max = 10, message = "이름은 10자 이내로 입력해주세요.")
             String name,
 
             @NotNull(message = "직무 ID는 필수 입력 항목입니다.")
             Long jobId,
 
             @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
+            @Size(max = 20, message = "전화번호는 20자 이내로 입력해주세요.")
             @Pattern(regexp = "^\\d{10,11}$", message = "전화번호는 10~11자리 숫자만 입력 가능합니다.")
             String phone,
 
             @NotBlank(message = "이메일은 필수 입력 항목입니다.")
+            @Size(max = 50, message = "이메일은 50자 이내로 입력해주세요.")
             @Email(message = "유효한 이메일 형식이 아닙니다.")
             String email,
 
@@ -30,28 +30,17 @@ public class MentorApplicationRequest {
             @Positive(message = "경력은 0보다 큰 정수여야 합니다.")
             Integer career,
 
+            @Size(max = 50, message = "현재 회사는 50자 이내로 입력해주세요.")
             String currentCompany,
 
             @NotBlank(message = "소개글은 필수 입력 항목입니다.")
+            @Size(max = 500, message = "자기소개는 500자 이내로 입력해주세요.")
             String introduction,
 
+            @Size(max = 500, message = "추천대상은 500자 이내로 입력해주세요.")
             String bestFor,
 
             List<Long> attachmentId
     ) {
-            public Mentor toEntity(Member member, Job job) {
-                    return Mentor.builder()
-                            .member(member)
-                            .job(job)
-                            .name(name)
-                            .phone(phone)
-                            .email(email)
-                            .career(career)
-                            .currentCompany(currentCompany)
-                            .introduction(introduction)
-                            .bestFor(bestFor)
-                            .approvalStatus(Mentor.ApprovalStatus.PENDING)
-                            .build();
-            }
     }
 }

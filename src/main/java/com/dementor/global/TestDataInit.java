@@ -40,7 +40,7 @@ public class TestDataInit implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
-        if (memberRepository.count() == 0) {
+        if (memberRepository.count() == 0 && mentorRepository.count() == 0 && jobRepository.count() == 0) {
 
 			Job job = Job.builder()
 				.name("백엔드 개발자")
@@ -72,6 +72,7 @@ public class TestDataInit implements CommandLineRunner {
                     .currentCompany("테스트회사")
                     .career(5)
                     .phone("010-1234-5678")
+					.email("mentor@test.com")
                     .introduction("테스트 멘토 소개입니다. 경력 5년차 개발자입니다.")
                     .bestFor("코딩 테스트, 알고리즘, 백엔드 개발")
                     .approvalStatus(Mentor.ApprovalStatus.APPROVED) // 승인 상태로 설정

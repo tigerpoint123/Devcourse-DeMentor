@@ -174,36 +174,38 @@ public class MentorService {
         Pageable pageable = PageRequest.of(
                 params.page() - 1, // 0-based page index
                 params.size(),
-                Sort.by(Sort.Direction.DESC, "requestDate")
+                Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        // 상태 필터가 있으면 상태별로 조회, 없으면 전체 조회
-        Page<MentorModification> modificationPage;
+        try {
+            // 상태 필터가 있으면 상태별로 조회, 없으면 전체 조회
+            Page<MentorModification> modificationPage;
 
-        if (params.status() != null) {
-            try {
+            if (params.status() != null) {
                 MentorModification.ModificationStatus status = MentorModification.ModificationStatus.valueOf(params.status());
                 modificationPage = mentorModificationRepository.findByMemberIdAndStatus(memberId, status, pageable);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("유효하지 않은 상태값입니다: " + params.status());
+            } else {
+                modificationPage = mentorModificationRepository.findByMemberId(memberId, pageable);
             }
-        } else {
-            modificationPage = mentorModificationRepository.findByMemberId(memberId, pageable);
+
+            // 결과 변환 및 반환
+            List<MentorChangeResponse.ChangeRequestData> changeRequests = modificationPage.getContent().stream()
+                    .map(this::convertToChangeRequestData)
+                    .collect(Collectors.toList());
+
+            return new MentorChangeResponse.ChangeListResponse(
+                    changeRequests,
+                    new MentorChangeResponse.Pagination(
+                            params.page(),
+                            params.size(),
+                            modificationPage.getTotalElements()
+                    )
+            );
+        } catch (Exception e) {
+            // 디버깅을 위해 예외 로깅
+            e.printStackTrace();
+            throw new RuntimeException("멘토 정보 수정 요청 목록 조회 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
-
-        // 결과 변환 및 반환
-        List<MentorChangeResponse.ChangeRequestData> changeRequests = modificationPage.getContent().stream()
-                .map(this::convertToChangeRequestData)
-                .collect(Collectors.toList());
-
-        return new MentorChangeResponse.ChangeListResponse(
-                changeRequests,
-                new MentorChangeResponse.Pagination(
-                        params.page(),
-                        params.size(),
-                        modificationPage.getTotalElements()
-                )
-        );
     }
 
     //멘토 정보 수정 요청을 DTO로 변환합니다.
