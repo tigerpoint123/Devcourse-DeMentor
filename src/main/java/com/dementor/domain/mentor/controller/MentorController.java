@@ -33,10 +33,29 @@ public class MentorController {
     @PostMapping
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
-            @RequestBody @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto) {
-        mentorService.applyMentor(requestDto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
+            @RequestBody @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        // 권한 체크: 멘토 지원 시 자신의 ID로만 지원 가능
+        if (!requestDto.memberId().equals(userDetails.getId())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "멘토 지원은 본인만 가능합니다."));
+        }
+
+        try {
+            mentorService.applyMentor(requestDto);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
+        }
     }
 
     @PutMapping("/{memberId}")
@@ -62,11 +81,14 @@ public class MentorController {
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", responseData));
         } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
         }
     }
 
@@ -87,13 +109,16 @@ public class MentorController {
             Map<String, Object> responseData = getResponseData(mentorInfo);
 
             return ResponseEntity.ok()
-                    .body(ApiResponse.of(true, HttpStatus.OK, "대시보드 조회에 성공했습니다.", responseData));
+                    .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 조회에 성공했습니다.", responseData));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
         }
     }
 
@@ -130,8 +155,11 @@ public class MentorController {
         }
 
         try {
-            MentorChangeRequest.ModificationRequestParams params = new MentorChangeRequest.ModificationRequestParams(status, page, size);
-            MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(memberId, params);
+            MentorChangeRequest.ModificationRequestParams params =
+                    new MentorChangeRequest.ModificationRequestParams(status, page, size);
+            MentorChangeResponse.ChangeListResponse response =
+                    mentorService.getModificationRequests(memberId, params);
+
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청 목록 조회에 성공했습니다.", response));
         } catch (EntityNotFoundException e) {

@@ -12,7 +12,6 @@ public record MentorInfoResponse (
         String introduction,
         String bestFor,
         Mentor.ApprovalStatus approvalStatus,
-        Mentor.ModificationStatus modificationStatus,
         Integer totalClasses,
         Integer pendingRequests,
         Integer completedSessions
@@ -29,7 +28,6 @@ public record MentorInfoResponse (
                 mentor.getIntroduction(),
                 mentor.getBestFor(),
                 mentor.getApprovalStatus(),
-                mentor.getModificationStatus(),
                 totalClasses,
                 pendingRequests,
                 completedSessions

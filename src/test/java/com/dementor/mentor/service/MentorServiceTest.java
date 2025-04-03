@@ -176,13 +176,14 @@ public class MentorServiceTest {
         // Given
         MentorUpdateRequest.MentorUpdateRequestDto requestDto =
                 new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,
-                        "01098765432",
-                        "업데이트 회사",
-                        "Java, Spring",
-                        "업데이트된 자기소개",
-                        "업데이트된 특기",
-                        null
+                        8,          // career
+                        "01098765432",    // phone
+                        "업데이트 회사",    // currentCompany
+                        1L,               // jobId (예시 값)
+                        "update@email.com", // email
+                        "업데이트된 자기소개", // introduction
+                        "업데이트된 특기",   // bestFor
+                        null              // attachmentId
                 );
 
         // When
@@ -204,13 +205,14 @@ public class MentorServiceTest {
         final Long nonExistingMentorId = 9999L;
         MentorUpdateRequest.MentorUpdateRequestDto requestDto =
                 new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,
-                        "01098765432",
-                        "업데이트 회사",
-                        "Java, Spring",
-                        "업데이트된 자기소개",
-                        "업데이트된 특기",
-                        null
+                        8,          // career
+                        "01098765432",    // phone
+                        "업데이트 회사",    // currentCompany
+                        1L,               // jobId (예시 값)
+                        "update@email.com", // email
+                        "업데이트된 자기소개", // introduction
+                        "업데이트된 특기",   // bestFor
+                        null              // attachmentId
                 );
 
         // When & Then
@@ -252,13 +254,14 @@ public class MentorServiceTest {
 
         MentorUpdateRequest.MentorUpdateRequestDto requestDto =
                 new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,
-                        "01098765432",
-                        "업데이트 회사",
-                        "Java, Spring",
-                        "업데이트된 자기소개",
-                        "업데이트된 특기",
-                        null
+                        8,          // career
+                        "01098765432",    // phone
+                        "업데이트 회사",    // currentCompany
+                        1L,               // jobId (예시 값)
+                        "update@email.com", // email
+                        "업데이트된 자기소개", // introduction
+                        "업데이트된 특기",   // bestFor
+                        null              // attachmentId
                 );
 
         // When & Then
@@ -300,13 +303,14 @@ public class MentorServiceTest {
 
         MentorUpdateRequest.MentorUpdateRequestDto requestDto =
                 new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,
-                        "01098765432",
-                        "업데이트 회사",
-                        "Java, Spring",
-                        "업데이트된 자기소개",
-                        "업데이트된 특기",
-                        null
+                        8,          // career
+                        "01098765432",    // phone
+                        "업데이트 회사",    // currentCompany
+                        1L,               // jobId (예시 값)
+                        "update@email.com", // email
+                        "업데이트된 자기소개", // introduction
+                        "업데이트된 특기",   // bestFor
+                        null              // attachmentId
                 );
 
         // When & Then

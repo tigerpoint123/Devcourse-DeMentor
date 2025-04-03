@@ -1,6 +1,7 @@
 package com.dementor.domain.mentor.dto.request;
 
 import com.dementor.domain.mentor.entity.Mentor;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
@@ -16,7 +17,10 @@ public class MentorUpdateRequest {
 
             String currentCompany,
 
-            String stack,
+            Long jobId,
+
+            @Email(message = "유효한 이메일 형식이 아닙니다.")
+            String email,
 
             String introduction,
 
@@ -24,26 +28,22 @@ public class MentorUpdateRequest {
 
             List<Long> attachmentId
     ) {
+        //멘토 엔티티 업데이트 (실제 업데이트는 수정 요청 승인 후 적용)
         public void updateMentor(Mentor mentor) {
-            mentor.update(
-                    currentCompany,
-                    career,
-                    phone,
-                    introduction,
-                    bestFor
-            );
-
             // 수정 상태를 PENDING으로 변경
             mentor.updateModificationStatus(Mentor.ModificationStatus.PENDING);
+            // 이메일은 멤버의 필드이므로 멘토 수정 승인 시 별도로 처리해야 합니다.
+        }
 
-            // stack 업데이트 로직
-            if (this.stack() != null && !this.stack().isEmpty()) {
-                // 멘토링 클래스가 있는 경우, 모든 클래스에 동일한 스택 정보 적용
-                // 또는 첫 번째 클래스만 업데이트하거나, 특정 로직에 따라 처리
-                if (mentor.getMentorings() != null && !mentor.getMentorings().isEmpty()) {
-                    mentor.getMentorings().forEach(mc -> mc.setStack(this.stack()));
-                }
-            }
+        //변경된 필드가 있는지 확인
+        public boolean hasChanges(Mentor mentor) {
+            return (career != null && !career.equals(mentor.getCareer())) ||
+                    (phone != null && !phone.equals(mentor.getPhone())) ||
+                    (currentCompany != null && !currentCompany.equals(mentor.getCurrentCompany())) ||
+                    (jobId != null && !jobId.equals(mentor.getJob().getId())) ||
+                    (email != null && !email.equals(mentor.getMember().getEmail())) ||
+                    (introduction != null && !introduction.equals(mentor.getIntroduction())) ||
+                    (bestFor != null && !bestFor.equals(mentor.getBestFor()));
         }
     }
 }

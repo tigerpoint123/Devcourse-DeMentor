@@ -24,7 +24,11 @@ public class MentorChangeResponse {
             Integer page,
             Integer size,
             Long totalElements
-    ) {}
+    ) {
+        public Long getTotalPages() {
+            return (totalElements + size - 1) / size;
+        }
+    }
 
     // 응답 데이터 DTO
     public record ChangeListResponse(
