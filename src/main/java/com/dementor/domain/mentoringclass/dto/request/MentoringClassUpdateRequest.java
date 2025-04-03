@@ -13,6 +13,9 @@ public record MentoringClassUpdateRequest(
     @Schema(description = "수업 가격")
     Integer price,
     
+    @Schema(description = "기술 스택 목록", example = "[\"Java\", \"Spring Boot\", \"MySQL\"]")
+    String[] stack,
+    
     @Schema(description = "스케줄 정보")
     ScheduleRequest schedule
 ) {}

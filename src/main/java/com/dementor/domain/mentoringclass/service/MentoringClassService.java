@@ -12,7 +12,11 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+import com.dementor.domain.mentoringclass.dto.SortDirection;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,36 +31,29 @@ public class MentoringClassService {
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
 
-    public List<MentoringClassFindResponse> findClass(Long jobId) {
-        List<MentoringClass> mentoringClasses;
-        if (jobId != null)
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId);
-        else
-            mentoringClasses = mentoringClassRepository.findAll();
+    public Page<MentoringClassFindResponse> findAllClass(Long jobId, int page, int size, String sortBy, SortDirection order) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(order.name()), sortBy));
 
-        return mentoringClasses.stream()
-                .map(mentoringClass -> new MentoringClassFindResponse(
-                        mentoringClass.getId(),
-                        mentoringClass.getStack(),
-                        mentoringClass.getContent(),
-                        mentoringClass.getTitle(),
-                        mentoringClass.getPrice(),
-                        mentoringClass.getMentor().getJob().getName()
-                ))
-                .collect(Collectors.toList());
+        Page<MentoringClass> mentoringClasses;
+        if (jobId != null)
+            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId, pageRequest);
+        else
+            mentoringClasses = mentoringClassRepository.findAll(pageRequest);
+
+        return mentoringClasses.map(MentoringClassFindResponse::from);
     }
 
     @Transactional
-    public Long createClass(Long mentorId, MentoringClassCreateRequest request) {
+    public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
         Mentor mentor = mentorRepository.findById(mentorId)
             .orElseThrow(() -> new IllegalArgumentException("멘토를 찾을 수 없습니다: " + mentorId));
 
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
-                .stack(request.stack())
+                .stack(String.join(",", request.stack()))
                 .content(request.content())
                 .price(request.price())
-                .mentor(mentor) // 멘토 정보 연동
+                .mentor(mentor)
                 .build();
         
         mentoringClass = mentoringClassRepository.save(mentoringClass);
@@ -65,7 +62,7 @@ public class MentoringClassService {
         List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
         mentoringClass.setSchedules(schedules);
         
-        return mentoringClass.getId();
+        return MentoringClassDetailResponse.from(mentoringClass);
     }
 
     private List<Schedule> createSchedules(List<ScheduleRequest> scheduleRequests, MentoringClass mentoringClass) {
@@ -106,6 +103,8 @@ public class MentoringClassService {
             mentoringClass.updateDescription(request.content());
         if (request.price() != null)
             mentoringClass.updatePrice(request.price());
+        if (request.stack() != null)
+            mentoringClass.setStack(String.join(",", request.stack()));
 
         // 일정 정보
         if (request.schedule() != null) {
@@ -125,7 +124,7 @@ public class MentoringClassService {
                 mentoringClass.getMentor().getJob().getName(),
                 mentoringClass.getMentor().getCareer()
             ),
-            mentoringClass.getStack(),
+            mentoringClass.getStack().split(","),
             mentoringClass.getContent(),
             mentoringClass.getTitle(),
             mentoringClass.getPrice(),
