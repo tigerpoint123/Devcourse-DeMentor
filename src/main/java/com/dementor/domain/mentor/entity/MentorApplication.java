@@ -43,6 +43,9 @@ public class MentorApplication extends BaseEntity {
     @Column(length = 20, nullable = false)
     private String phone;
 
+    @Column(length = 20, nullable = false)
+    private String email;
+
     @Column(length = 255, nullable = false)
     private String introduction;
 
@@ -59,13 +62,14 @@ public class MentorApplication extends BaseEntity {
 
     @Builder
     public MentorApplication(Member member, Job job, String name, String currentCompany, Integer career,
-                             String phone, String introduction, String bestFor) {
+                             String phone, String email, String introduction, String bestFor) {
         this.member = member;
         this.job = job;
         this.name = name;
         this.currentCompany = currentCompany;
         this.career = career;
         this.phone = phone;
+        this.email = email;
         this.introduction = introduction;
         this.bestFor = bestFor;
         this.status = ApplicationStatus.PENDING;
@@ -88,6 +92,7 @@ public class MentorApplication extends BaseEntity {
                 .name(this.name)
                 .career(this.career)
                 .phone(this.phone)
+                .email(this.email)
                 .currentCompany(this.currentCompany)
                 .introduction(this.introduction)
                 .bestFor(this.bestFor)

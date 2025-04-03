@@ -49,6 +49,9 @@ public class Mentor {
     @Column(length = 20, nullable = false)
     private String phone;
 
+    @Column(length = 20, nullable = false)
+    private String email;
+
     @Column(length = 255, nullable = false)
     private String introduction;
 
@@ -97,10 +100,11 @@ public class Mentor {
 
     // 필드 수정 메서드
     public void update(String currentCompany, Integer career, String phone,
-                       String introduction, String bestFor) {
+                       String email, String introduction, String bestFor) {
         this.currentCompany = currentCompany;
         this.career = career;
         this.phone = phone;
+        this.email = email;
         this.introduction = introduction;
         this.bestFor = bestFor;
         this.modificationStatus = ModificationStatus.PENDING;

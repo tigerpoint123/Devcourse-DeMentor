@@ -73,6 +73,7 @@ public class MentorService {
                 .name(requestDto.name())
                 .career(requestDto.career())
                 .phone(requestDto.phone())
+                .email(requestDto.email())
                 .currentCompany(requestDto.currentCompany())
                 .introduction(requestDto.introduction())
                 .bestFor(requestDto.bestFor())
@@ -272,10 +273,10 @@ public class MentorService {
             changes.put("jobId", fieldChange);
         }
 
-        // email 변경 확인
-        if (dto.email() != null && !dto.email().equals(mentor.getMember().getEmail())) {
+        // email 변경 확인 - 이제 멘토 엔티티에서 직접 확인
+        if (dto.email() != null && !dto.email().equals(mentor.getEmail())) {
             Map<String, Object> fieldChange = new HashMap<>();
-            fieldChange.put("before", mentor.getMember().getEmail());
+            fieldChange.put("before", mentor.getEmail());
             fieldChange.put("after", dto.email());
             changes.put("email", fieldChange);
         }

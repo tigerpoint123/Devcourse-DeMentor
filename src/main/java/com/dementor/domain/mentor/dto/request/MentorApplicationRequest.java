@@ -45,6 +45,7 @@ public class MentorApplicationRequest {
                             .job(job)
                             .name(name)
                             .phone(phone)
+                            .email(email)
                             .career(career)
                             .currentCompany(currentCompany)
                             .introduction(introduction)
