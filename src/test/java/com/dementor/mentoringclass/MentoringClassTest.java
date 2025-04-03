@@ -8,6 +8,7 @@ import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
@@ -35,9 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -108,7 +109,7 @@ public class MentoringClassTest {
         testClassId = mentoringClass.getId();
 
         Schedule schedule = Schedule.builder()
-                .dayOfWeek("월요일")
+                .dayOfWeek(DayOfWeek.MONDAY)
                 .time("10:00-11:00")
                 .mentoringClass(mentoringClass)
                 .build();
@@ -175,7 +176,7 @@ public class MentoringClassTest {
             "스프링 부트 완전 정복",
             50000,
             List.of(
-                new ScheduleRequest("월요일", "10:00-11:00")
+                new ScheduleRequest(DayOfWeek.TUESDAY, "10:00-11:00")
             )
         );
 
@@ -198,7 +199,7 @@ public class MentoringClassTest {
             "수정된 수업 내용",
             100000,
             new String[]{"Spring Boot", "Java", "MySQL", "JPA"},  // 기술 스택 배열로 정의
-            new ScheduleRequest("화요일", "14:00-16:00")
+            new ScheduleRequest(DayOfWeek.WEDNESDAY, "14:00-16:00")
         );
 
         // when & then
@@ -212,7 +213,7 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.data.title").value("수정된 수업 제목"))
                 .andExpect(jsonPath("$.data.content").value("수정된 수업 내용"))
                 .andExpect(jsonPath("$.data.price").value(100000))
-                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
+                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("WEDNESDAY"))
                 .andExpect(jsonPath("$.data.schedule.time").value("14:00-16:00"));
     }
 

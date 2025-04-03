@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.dto.response;
 
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MentoringClassUpdateResponse(
@@ -40,7 +41,7 @@ public record MentoringClassUpdateResponse(
     
     public record ScheduleInfo(
         @Schema(description = "요일")
-        String dayOfWeek,
+        DayOfWeek dayOfWeek,
         
         @Schema(description = "시간")
         String time

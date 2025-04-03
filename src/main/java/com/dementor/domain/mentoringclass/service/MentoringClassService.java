@@ -12,7 +12,7 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
-import com.dementor.global.pagination.SortDirection;
+import com.dementor.domain.mentoringclass.dto.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;

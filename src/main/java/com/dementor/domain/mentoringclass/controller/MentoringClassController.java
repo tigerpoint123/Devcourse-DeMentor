@@ -7,7 +7,7 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindRespons
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.pagination.SortDirection;
+import com.dementor.domain.mentoringclass.dto.SortDirection;
 import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
