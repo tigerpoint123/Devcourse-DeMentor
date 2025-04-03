@@ -1,6 +1,7 @@
 package com.dementor.domain.admin.controller;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,8 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.dementor.domain.admin.dto.request.AdminLoginRequest;
 import com.dementor.domain.admin.dto.response.AdminLoginResponse;
-import com.dementor.domain.admin.service.AdminService;
+import com.dementor.domain.admin.dto.response.AdminLogoutResponse;
+import com.dementor.global.security.CustomUserDetails;
 import com.dementor.global.security.cookie.CookieUtil;
+import com.dementor.global.security.jwt.dto.TokenDto;
+import com.dementor.global.security.jwt.dto.request.RefreshTokenRequest;
+import com.dementor.global.security.jwt.dto.response.TokenRefreshResponse;
+import com.dementor.global.security.jwt.service.TokenService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,9 +33,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminAuthController {
 
-	private final AdminService adminService;
 	private final AuthenticationManager authenticationManager;
 	private final CookieUtil cookieUtil;
+	private final TokenService tokenService;
 
 	@Operation(summary = "관리자 로그인", description = "관리자 계정으로 로그인합니다.")
 	@PostMapping("/login")
@@ -46,31 +52,43 @@ public class AdminAuthController {
 			// Security Context에 인증 정보 저장
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 
-			// JWT 토큰 생성
-			String jwt = adminService.loginAdmin(loginRequest);
+			// 사용자 정보 가져오기
+			CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+			Long adminId = userDetails.getId();
+			String username = userDetails.getUsername();
 
-			// 쿠키 생성
+			// 두 토큰 모두 생성
+			TokenDto tokens = tokenService.createAdminTokens(adminId, username);
+
+			// 쿠키에는 액세스 토큰만 저장, refresh 토큰도?
 			HttpHeaders headers = new HttpHeaders();
-			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createJwtCookie(jwt).toString());
+			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createJwtCookie(tokens.getAccessToken()).toString());
 
 			return ResponseEntity.ok()
 				.headers(headers)
 				.body(AdminLoginResponse.builder()
 					.message("로그인 성공")
-					.token(jwt)
+					.accessToken(tokens.getAccessToken())
+					.refreshToken(tokens.getRefreshToken())
 					.build());
 
 		} catch (AuthenticationException e) {
 			return ResponseEntity.badRequest()
 				.body(AdminLoginResponse.builder()
 					.message("로그인 실패: " + e.getMessage())
-					.token(null)
+					.accessToken(null)
 					.build());
 		}
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<?> logout() {
+	public ResponseEntity<?> logout(Authentication authentication) {
+
+		if (authentication != null) {
+			String username = authentication.getName();
+			tokenService.logout(username);
+		}
+
 		SecurityContextHolder.clearContext();
 
 		HttpHeaders headers = new HttpHeaders();
@@ -78,6 +96,27 @@ public class AdminAuthController {
 
 		return ResponseEntity.ok()
 			.headers(headers)
-			.body(new AdminLoginResponse("로그아웃 성공", null));
+			.body(new AdminLogoutResponse(true,"로그아웃 성공"));
+	}
+
+	// 리프레시 토큰 엔드포인트 추가
+	@PostMapping("/refresh")
+	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+		try {
+			TokenDto tokens = tokenService.refreshAccessToken(request.getRefreshToken());
+
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createJwtCookie(tokens.getAccessToken()).toString());
+
+			return ResponseEntity.ok()
+				.headers(headers)
+				.body(new TokenRefreshResponse(tokens.getAccessToken(), tokens.getRefreshToken(),"token refreshed"));
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(AdminLogoutResponse.builder()
+					.success(false)
+					.message("토큰 갱신 실패: " + e.getMessage())
+					.build());
+		}
 	}
 }

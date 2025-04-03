@@ -28,6 +28,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 
 @Component
 public class JwtTokenProvider implements InitializingBean {
@@ -40,11 +41,17 @@ public class JwtTokenProvider implements InitializingBean {
 	@Value("${jwt.expiration}")
 	private final long tokenValidityInMilliseconds;
 
+	@Getter
+	@Value("${jwt.refresh.expiration}")
+	private long refreshTokenValidityInMilliseconds;
+
+	@Getter
 	private Key key;
 
 	public JwtTokenProvider(
 			@Value("${jwt.secret}") String secret,
-			@Value("${jwt.expiration}") long tokenValidityInMilliseconds) {
+			@Value("${jwt.expiration}") long tokenValidityInMilliseconds
+	) {
 		this.secret = secret;
 		this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
 	}
@@ -54,6 +61,32 @@ public class JwtTokenProvider implements InitializingBean {
 		byte[] ketBytes = Decoders.BASE64.decode(secret);
 		this.key = Keys.hmacShaKeyFor(ketBytes);
 	}
+
+	// 리프레시 토큰 생성
+	public String createRefreshToken(String userIdentifier, RefreshToken_Role role) {
+		long now = (new Date()).getTime();
+
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("sub", role.name());
+
+		return Jwts.builder()
+			.setClaims(claims)
+			.setSubject(userIdentifier)
+			.setIssuedAt(new Date(now))
+			.signWith(key, SignatureAlgorithm.HS512)
+			.compact();
+	}
+
+	// 리프레시 토큰에서 사용자 이메일 추출
+	public String getUserIdentifierFromRefreshToken(String token) {
+		return Jwts.parserBuilder()
+			.setSigningKey(key)
+			.build()
+			.parseClaimsJws(token)
+			.getBody()
+			.getSubject();
+	}
+
 
 	// Authentication에 권한 정보를 이요한 토큰 생성
 	public String createMemberToken(Authentication authentication, Long memberId, String nickname) {
@@ -100,12 +133,15 @@ public class JwtTokenProvider implements InitializingBean {
 
 	//Token에 담겨있는 정보를 이용해 Authentication 객체 리턴
 	public Authentication getAuthentication(String token) {
+
 		Claims claims = Jwts
 			.parserBuilder()
 			.setSigningKey(key)
 			.build()
 			.parseClaimsJws(token)
 			.getBody();
+
+		String userIdentifier = claims.getSubject();
 
 		Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
 			new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class))
@@ -120,7 +156,7 @@ public class JwtTokenProvider implements InitializingBean {
 				Admin.builder()
 					.id(claims.get("adminId", Long.class))
 					.username(claims.getSubject())
-					.password("")  // JWT 토큰에는 password 저장하지 않음
+					.password("")
 					.build()
 			);
 		} else {
@@ -128,7 +164,7 @@ public class JwtTokenProvider implements InitializingBean {
 				Member.builder()
 					.id(claims.get("memberId", Long.class))
 					.email(claims.getSubject())
-					.password("")  // JWT 토큰에는 password 저장하지 않음
+					.password("")
 					.nickname(claims.get("nickname", String.class))
 					.build()
 			);
@@ -138,7 +174,7 @@ public class JwtTokenProvider implements InitializingBean {
 	}
 
 	//토큰 유효성 검증
-	public boolean validateToken(String token) {
+	public boolean validateAccessToken(String token) {
 		try {
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;
