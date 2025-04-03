@@ -60,9 +60,11 @@ public class AdminAuthController {
 			// 두 토큰 모두 생성
 			TokenDto tokens = tokenService.createAdminTokens(adminId, username);
 
-			// 쿠키에는 액세스 토큰만 저장, refresh 토큰도?
+			// 쿠키에는 액세스 토큰, refresh 토큰
 			HttpHeaders headers = new HttpHeaders();
-			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createJwtCookie(tokens.getAccessToken()).toString());
+			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createAccessTokenCookie(tokens.getAccessToken()).toString());
+			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createRefreshTokenCookie(tokens.getRefreshToken()).toString());
+
 
 			return ResponseEntity.ok()
 				.headers(headers)
@@ -92,7 +94,8 @@ public class AdminAuthController {
 		SecurityContextHolder.clearContext();
 
 		HttpHeaders headers = new HttpHeaders();
-		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteJwtCookie().toString());
+		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteAccessTokenCookie().toString());
+		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteRefreshTokenCookie().toString());
 
 		return ResponseEntity.ok()
 			.headers(headers)
@@ -106,7 +109,7 @@ public class AdminAuthController {
 			TokenDto tokens = tokenService.refreshAccessToken(request.getRefreshToken());
 
 			HttpHeaders headers = new HttpHeaders();
-			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createJwtCookie(tokens.getAccessToken()).toString());
+			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createAccessTokenCookie(tokens.getAccessToken()).toString());
 
 			return ResponseEntity.ok()
 				.headers(headers)
