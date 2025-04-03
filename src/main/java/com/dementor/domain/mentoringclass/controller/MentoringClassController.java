@@ -78,12 +78,12 @@ public class MentoringClassController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
 
-        Long classId = mentoringClassService.createClass(memberId, request);
+        MentoringClassDetailResponse response = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 클래스 생성 성공",
-                classId
+                response
         );
     }
 

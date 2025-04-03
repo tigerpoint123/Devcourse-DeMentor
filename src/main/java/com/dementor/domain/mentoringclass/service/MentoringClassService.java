@@ -44,7 +44,7 @@ public class MentoringClassService {
     }
 
     @Transactional
-    public Long createClass(Long mentorId, MentoringClassCreateRequest request) {
+    public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
         Mentor mentor = mentorRepository.findById(mentorId)
             .orElseThrow(() -> new IllegalArgumentException("멘토를 찾을 수 없습니다: " + mentorId));
 
@@ -62,7 +62,7 @@ public class MentoringClassService {
         List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
         mentoringClass.setSchedules(schedules);
         
-        return mentoringClass.getId();
+        return MentoringClassDetailResponse.from(mentoringClass);
     }
 
     private List<Schedule> createSchedules(List<ScheduleRequest> scheduleRequests, MentoringClass mentoringClass) {
