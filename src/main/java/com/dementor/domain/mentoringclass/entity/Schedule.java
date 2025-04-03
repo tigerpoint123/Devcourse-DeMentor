@@ -21,4 +21,13 @@ public class Schedule {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentoring_class_id")
     private MentoringClass mentoringClass;
-} 
+
+
+    public void updateDayOfWeek(String dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public void updateTime(int time) {
+        this.time = time;
+    }
+}

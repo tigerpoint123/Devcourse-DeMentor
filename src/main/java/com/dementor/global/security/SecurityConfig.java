@@ -57,6 +57,9 @@ public class SecurityConfig {
 				.requestMatchers("/api/member/login").permitAll()
 				.requestMatchers("/api/authenticate").permitAll()
 
+				.requestMatchers("/api/admin/login").permitAll()
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
+
 				.requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
 				.requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
 				.requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
@@ -89,6 +92,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowedOrigins(Arrays.asList("https://dementor.site"));
+		configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080"));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 		configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
 		configuration.setExposedHeaders(Arrays.asList("Authorization"));

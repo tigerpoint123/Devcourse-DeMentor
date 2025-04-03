@@ -31,6 +31,10 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -53,6 +57,12 @@ public class ApplyControllerTest {
 	@Autowired
 	private ApplyRepository applyRepository;
 
+	@Autowired
+	private MentorRepository mentorRepository;
+
+	@Autowired
+	private JobRepository jobRepository;
+
 	private Member testMentee;
 	private Member testMentor;
 	private Long testMentoringClassId;
@@ -66,7 +76,6 @@ public class ApplyControllerTest {
 		testMentee = Member.builder()
 			.nickname("testMentee")
 			.password("password")
-			.nickname("테스트멘티")
 			.name("테스트멘티")
 			.email("123@1233.com")
 			.userRole(UserRole.MENTEE)
@@ -78,7 +87,6 @@ public class ApplyControllerTest {
 		testMentor = Member.builder()
 			.nickname("testMentor")
 			.password("password")
-			.nickname("테스트멘토")
 			.name("테스트멘토")
 			.email("1234@1233.com")
 			.userRole(UserRole.MENTOR)
@@ -86,19 +94,36 @@ public class ApplyControllerTest {
 		memberRepository.save(testMentor);
 		mentorPrincipal = CustomUserDetails.of(testMentor);
 
-		// 멘토링 클래스
-		MentoringClass testMentoringClass = new MentoringClass();
+		Job job = Job.builder()
+			.name("백엔드")
+			.build();
+		job = jobRepository.save(job);
+		
+		// 멘토 객체 생성
+		Mentor mentor = Mentor.builder()
+			.member(testMentor)
+			.name("테스트멘토")
+			.job(job)
+			.career(3)
+			.phone("010-1234-5678")
+			.introduction("테스트 멘토 소개")
+			.build();
+		mentor = mentorRepository.save(mentor);
+
+		// 멘토링 클래스 생성
+		testMentoringClass = new MentoringClass();
 		testMentoringClass.setTitle("테스트 멘토링");
 		testMentoringClass.setStack("Java, Spring");
 		testMentoringClass.setContent("테스트 멘토링 내용입니다");
 		testMentoringClass.setPrice(50000);
+		testMentoringClass.setMentor(mentor);
 
 		testMentoringClass = mentoringClassRepository.save(testMentoringClass);
 		testMentoringClassId = testMentoringClass.getId();
 	}
 
 	@Test
-	@DisplayName("멘티가 멘토링 신청 성공")
+	@DisplayName("멘토링 신청 성공 - 멘티")
 	@WithMockUser(roles = "MENTEE")
 	void createApply1() throws Exception {
 
@@ -127,7 +152,7 @@ public class ApplyControllerTest {
 	}
 
 	@Test
-	@DisplayName("멘토가 멘토링 신청 성공")
+	@DisplayName("멘토링 신청 성공 - 멘토")
 	@WithMockUser(roles = "MENTOR")
 	void createApply2() throws Exception {
 
@@ -155,7 +180,7 @@ public class ApplyControllerTest {
 	}
 
 	@Test
-	@DisplayName("멘티가 멘토링 신청 취소 성공")
+	@DisplayName("멘토링 신청 취소 성공 - 멘티")
 	@WithMockUser(roles = "MENTEE")
 	void deleteApply() throws Exception {
 
@@ -183,7 +208,7 @@ public class ApplyControllerTest {
 	}
 
 	@Test
-	@DisplayName("멘토가 멘토링 신청 취소 성공")
+	@DisplayName("멘토링 신청 취소 성공 - 멘토")
 	@WithMockUser(roles = "MENTOR")
 	void deleteApply2() throws Exception {
 
@@ -209,6 +234,136 @@ public class ApplyControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.message").value("멘토링 신청이 취소되었습니다"));
+	}
+
+	@Test
+	@DisplayName("멘토링 신청 목록 조회 테스트 - 멘티")
+	@WithMockUser(roles = "MENTEE")
+	void getApplyListTest() throws Exception {
+
+		for (int i = 0; i < 15; i++) {
+			Apply apply = Apply.builder()
+				.mentoringClass(testMentoringClass)
+				.member(testMentee)
+				.inquiry("조회 테스트용 문의 " + i)
+				.applyStatus(ApplyStatus.PENDING)
+				.schedule(LocalDateTime.now().plusDays(i + 1))
+				.build();
+			applyRepository.save(apply);
+		}
+
+		// 1페이지 조회 테스트
+		ResultActions resultActions = mvc
+			.perform(
+				get("/api/apply")
+					.param("page", "1")
+					.param("size", "10")
+					.with(user(menteePrincipal))
+			)
+			.andDo(print());
+
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.message").value("멘토링 신청 목록을 조회했습니다"))
+			.andExpect(jsonPath("$.data.applyments").exists())
+			.andExpect(jsonPath("$.data.applyments").isArray())
+			.andExpect(jsonPath("$.data.applyments.length()").value(10))
+			.andExpect(jsonPath("$.data.applyments[0].mentorId").exists())
+			.andExpect(jsonPath("$.data.applyments[0].name").exists())
+			.andExpect(jsonPath("$.data.pagination").exists())
+			.andExpect(jsonPath("$.data.pagination.page").value(1))
+			.andExpect(jsonPath("$.data.pagination.size").value(10))
+			.andExpect(jsonPath("$.data.pagination.total_elements").value(15))
+			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
+
+		// 2페이지
+		ResultActions page2Results = mvc
+			.perform(
+				get("/api/apply")
+					.param("page", "2")
+					.param("size", "10")
+					.with(user(menteePrincipal))
+			)
+			.andDo(print());
+
+		page2Results
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.data.applyments").exists())
+			.andExpect(jsonPath("$.data.applyments").isArray())
+			.andExpect(jsonPath("$.data.applyments.length()").value(5))
+			.andExpect(jsonPath("$.data.applyments[0].mentorId").exists())
+			.andExpect(jsonPath("$.data.applyments[0].name").exists())
+			.andExpect(jsonPath("$.data.pagination.page").value(2))
+			.andExpect(jsonPath("$.data.pagination.size").value(10))
+			.andExpect(jsonPath("$.data.pagination.total_elements").value(15))
+			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
+	}
+
+	@Test
+	@DisplayName("멘토링 신청 목록 조회 테스트 - 멘토")
+	@WithMockUser(roles = "MENTOR")
+	void getApplyListTest2() throws Exception {
+		
+		for (int i = 0; i < 15; i++) {
+			Apply apply = Apply.builder()
+				.mentoringClass(testMentoringClass)
+				.member(testMentor)
+				.inquiry("멘토 자신의 신청 테스트 " + i)
+				.applyStatus(ApplyStatus.PENDING)
+				.schedule(LocalDateTime.now().plusDays(i + 1))
+				.build();
+			applyRepository.save(apply);
+		}
+		
+		// 1페이지
+		ResultActions resultActions = mvc
+			.perform(
+				get("/api/apply")
+					.param("page", "1")
+					.param("size", "10")
+					.with(user(mentorPrincipal))
+			)
+			.andDo(print());
+
+		resultActions
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.message").value("멘토링 신청 목록을 조회했습니다"))
+			.andExpect(jsonPath("$.data.applyments").exists())
+			.andExpect(jsonPath("$.data.applyments").isArray())
+			.andExpect(jsonPath("$.data.applyments.length()").value(10))
+			.andExpect(jsonPath("$.data.applyments[0].mentorId").exists())
+			.andExpect(jsonPath("$.data.applyments[0].name").exists())
+			.andExpect(jsonPath("$.data.pagination").exists())
+			.andExpect(jsonPath("$.data.pagination.page").value(1))
+			.andExpect(jsonPath("$.data.pagination.size").value(10))
+			.andExpect(jsonPath("$.data.pagination.total_elements").value(15))
+			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
+			
+		// 2페이지
+		ResultActions page2Results = mvc
+			.perform(
+				get("/api/apply")
+					.param("page", "2")
+					.param("size", "10")
+					.with(user(mentorPrincipal))
+			)
+			.andDo(print());
+
+		page2Results
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.isSuccess").value(true))
+			.andExpect(jsonPath("$.data.applyments").exists())
+			.andExpect(jsonPath("$.data.applyments").isArray())
+			.andExpect(jsonPath("$.data.applyments.length()").value(5))
+			.andExpect(jsonPath("$.data.applyments[0].mentorId").exists())
+			.andExpect(jsonPath("$.data.applyments[0].name").exists())
+			.andExpect(jsonPath("$.data.pagination.page").value(2))
+			.andExpect(jsonPath("$.data.pagination.size").value(10))
+			.andExpect(jsonPath("$.data.pagination.total_elements").value(15))
+			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
 	}
 
 }

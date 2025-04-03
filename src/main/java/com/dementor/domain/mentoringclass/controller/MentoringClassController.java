@@ -1,21 +1,33 @@
 package com.dementor.domain.mentoringclass.controller;
 
+import java.util.List;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
+import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 @RestController
@@ -71,7 +83,6 @@ public class MentoringClassController {
     ) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
-        log.info("memberId : {}", memberId);
 
         Long classId = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(
@@ -84,22 +95,27 @@ public class MentoringClassController {
 
     @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
     @PreAuthorize("hasRole('MENTOR')")
-    @PutMapping("/{class_id}")
+    @PutMapping("/{classId}")
     public ApiResponse<?> updateClass(
-            @PathVariable Long classId
+            @PathVariable Long classId,
+            @RequestBody MentoringClassUpdateRequest request,
+            Authentication authentication
     ) {
-        // TODO: 실제 생성 로직 구현
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
+        
+        MentoringClassUpdateResponse response = mentoringClassService.updateClass(classId, memberId, request);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 클래스 수정 성공",
-                "생성된 클래스 ID"
+                response
         );
     }
 
     @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
     @PreAuthorize("hasRole('MENTOR')")
-    @DeleteMapping("/{class_id}")
+    @DeleteMapping("/{classId}")
     public ApiResponse<?> deleteClass(
             @PathVariable Long classId
     ) {

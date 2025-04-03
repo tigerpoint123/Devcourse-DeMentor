@@ -3,10 +3,12 @@ package com.dementor.domain.apply.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,15 +45,28 @@ public class ApplyController {
 
 
 	@Operation(summary = "멘토링 신청 취소", description = "멘토링 신청을 취소합니다")
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/{applyId}")
 	@ResponseStatus(HttpStatus.OK)
 	public ApiResponse<?> deleteApply(
-		@PathVariable(name = "id") Long applyId,
+		@PathVariable(name = "applyId") Long applyId,
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
 		applyService.deleteApply(applyId, userDetails.getId());
 
 		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청이 취소되었습니다");
+	}
+
+
+	@Operation(summary = "멘토링 신청 목록 조회", description = "내가 신청한 멘토링 목록을 조회합니다")
+	@GetMapping
+	@ResponseStatus(HttpStatus.OK)
+	public ApiResponse<?> getApply(
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		ApplyResponse.GetApplyPageList response = applyService.getApplyList(userDetails.getId(), page-1, size);
+		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 목록을 조회했습니다", response);
 	}
 
 }
