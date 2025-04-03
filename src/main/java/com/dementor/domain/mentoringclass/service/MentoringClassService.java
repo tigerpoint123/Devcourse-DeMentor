@@ -12,7 +12,11 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+import com.dementor.global.pagination.SortDirection;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,23 +31,23 @@ public class MentoringClassService {
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
 
-    public List<MentoringClassFindResponse> findClass(Long jobId) {
-        List<MentoringClass> mentoringClasses;
-        if (jobId != null)
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId);
-        else
-            mentoringClasses = mentoringClassRepository.findAll();
+    public Page<MentoringClassFindResponse> findClass(Long jobId, int page, int size, String sortBy, SortDirection order) {
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(order.name()), sortBy));
 
-        return mentoringClasses.stream()
-                .map(mentoringClass -> new MentoringClassFindResponse(
-                        mentoringClass.getId(),
-                        mentoringClass.getStack(),
-                        mentoringClass.getContent(),
-                        mentoringClass.getTitle(),
-                        mentoringClass.getPrice(),
-                        mentoringClass.getMentor().getJob().getName()
-                ))
-                .collect(Collectors.toList());
+        Page<MentoringClass> mentoringClasses;
+        if (jobId != null)
+            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId, pageRequest);
+        else
+            mentoringClasses = mentoringClassRepository.findAll(pageRequest);
+
+        return mentoringClasses.map(mentoringClass -> new MentoringClassFindResponse(
+                mentoringClass.getId(),
+                mentoringClass.getTitle(),
+                mentoringClass.getStack(),
+                mentoringClass.getContent(),
+                mentoringClass.getPrice(),
+                mentoringClass.getMentor().getJob().getName()
+        ));
     }
 
     @Transactional

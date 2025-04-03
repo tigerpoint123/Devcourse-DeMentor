@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(TestSecurityConfig.class)
 @Transactional
-public class JobControllerTest {
+public class JobControllerTest { // TODO : fixture monkey 전부 적용하면 낙관적 락 에러가 뜸. 지금은 하나만 적용했는데, 나중에 해결해야 함
     @Autowired
     private MockMvc mockMvc;
 

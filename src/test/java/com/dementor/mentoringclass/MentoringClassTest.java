@@ -37,6 +37,7 @@ import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -67,7 +68,6 @@ public class MentoringClassTest {
 
     @BeforeEach
     void setUp() {
-        // 테스트용 멘토 생성
         Member mentor = Member.builder()
                 .email("test@test.com")
                 .password("password")
@@ -78,13 +78,11 @@ public class MentoringClassTest {
         mentor = memberRepository.save(mentor);
         mentorPrincipal = CustomUserDetails.of(mentor);
 
-        // Job 생성
         Job job = Job.builder()
                 .name("백엔드 개발자")
                 .build();
         job = jobRepository.save(job);
 
-        // Mentor 생성
         Mentor mentorEntity = Mentor.builder()
                 .member(mentor)
                 .name("테스트 멘토")
@@ -98,7 +96,6 @@ public class MentoringClassTest {
                 .build();
         mentorEntity = mentorRepository.save(mentorEntity);
 
-        // MentoringClass 생성
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title("테스트 수업")
                 .stack("Spring Boot")
@@ -110,7 +107,6 @@ public class MentoringClassTest {
         mentoringClass = mentoringClassRepository.save(mentoringClass);
         testClassId = mentoringClass.getId();
 
-        // Schedule 생성
         Schedule schedule = Schedule.builder()
                 .dayOfWeek("월요일")
                 .time("10:00-11:00")
@@ -136,12 +132,21 @@ public class MentoringClassTest {
         // given
         // when & then
         mockMvc.perform(get("/api/class")
+                .param("page", "0")
+                .param("size", "10")
+                .param("sortBy", "createdAt")
+                .param("order", "DESC")
                 .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 수업 조회 성공"))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.totalElements").isNumber())
+                .andExpect(jsonPath("$.data.totalPages").isNumber())
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.number").value(0));
     }
 
     @Test
