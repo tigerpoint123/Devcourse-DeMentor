@@ -1,20 +1,6 @@
 package com.dementor.domain.mentoringclass.controller;
 
-import java.util.List;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.dementor.domain.mentoringclass.dto.SortDirection;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
@@ -23,11 +9,18 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateRespo
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 @RestController
@@ -36,18 +29,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MentoringClassController {
     private final MentoringClassService mentoringClassService;
+    private final PagedResourcesAssembler<MentoringClassFindResponse> pagedResourcesAssembler;
 
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
     @GetMapping
     public ApiResponse<?> getClass(
-            @RequestParam(required = false) Long jobId
+            @RequestParam(required = false) Long jobId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") SortDirection order
     ) {
-        List<MentoringClassFindResponse> list = mentoringClassService.findClass(jobId);
+        Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobId, page, size, sortBy, order);
+        PagedModel<EntityModel<MentoringClassFindResponse>> pagedModel = pagedResourcesAssembler.toModel(result);
+
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 수업 조회 성공",
-                list
+                pagedModel
         );
     }
 
@@ -84,12 +84,12 @@ public class MentoringClassController {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
 
-        Long classId = mentoringClassService.createClass(memberId, request);
+        MentoringClassDetailResponse response = mentoringClassService.createClass(memberId, request);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
                 "멘토링 클래스 생성 성공",
-                classId
+                response
         );
     }
 

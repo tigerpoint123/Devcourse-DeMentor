@@ -8,6 +8,7 @@ import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -67,7 +69,6 @@ public class MentoringClassTest {
 
     @BeforeEach
     void setUp() {
-        // 테스트용 멘토 생성
         Member mentor = Member.builder()
                 .email("test@test.com")
                 .password("password")
@@ -78,13 +79,11 @@ public class MentoringClassTest {
         mentor = memberRepository.save(mentor);
         mentorPrincipal = CustomUserDetails.of(mentor);
 
-        // Job 생성
         Job job = Job.builder()
                 .name("백엔드 개발자")
                 .build();
         job = jobRepository.save(job);
 
-        // Mentor 생성
         Mentor mentorEntity = Mentor.builder()
                 .member(mentor)
                 .name("테스트 멘토")
@@ -98,7 +97,6 @@ public class MentoringClassTest {
                 .build();
         mentorEntity = mentorRepository.save(mentorEntity);
 
-        // MentoringClass 생성
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title("테스트 수업")
                 .stack("Spring Boot")
@@ -110,10 +108,9 @@ public class MentoringClassTest {
         mentoringClass = mentoringClassRepository.save(mentoringClass);
         testClassId = mentoringClass.getId();
 
-        // Schedule 생성
         Schedule schedule = Schedule.builder()
-                .dayOfWeek("월요일")
-                .time(10001100)
+                .dayOfWeek(DayOfWeek.MONDAY)
+                .time("10:00-11:00")
                 .mentoringClass(mentoringClass)
                 .build();
         schedule = scheduleRepository.save(schedule);
@@ -136,12 +133,21 @@ public class MentoringClassTest {
         // given
         // when & then
         mockMvc.perform(get("/api/class")
+                .param("page", "0")
+                .param("size", "10")
+                .param("sortBy", "createdAt")
+                .param("order", "DESC")
                 .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 수업 조회 성공"))
-                .andExpect(jsonPath("$.data").isArray());
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.totalElements").isNumber())
+                .andExpect(jsonPath("$.data.totalPages").isNumber())
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.number").value(0));
     }
 
     @Test
@@ -165,12 +171,12 @@ public class MentoringClassTest {
     void createMentoringClass() throws Exception {
         // given
         MentoringClassCreateRequest request = new MentoringClassCreateRequest(
-            "Spring Boot",
+            new String[]{"Spring Boot", "Java", "MySQL"},  // 기술 스택 배열로 정의
             "스프링 부트 기초부터 실전까지",
             "스프링 부트 완전 정복",
             50000,
             List.of(
-                new ScheduleRequest("월요일", 10001100)
+                new ScheduleRequest(DayOfWeek.TUESDAY, "10:00-11:00")
             )
         );
 
@@ -182,7 +188,13 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 클래스 생성 성공"))
-                .andExpect(jsonPath("$.data").isNumber());
+                .andExpect(jsonPath("$.data.classId").exists())
+                .andExpect(jsonPath("$.data.mentor").exists())
+                .andExpect(jsonPath("$.data.stack").exists())
+                .andExpect(jsonPath("$.data.content").exists())
+                .andExpect(jsonPath("$.data.title").exists())
+                .andExpect(jsonPath("$.data.price").exists())
+                .andExpect(jsonPath("$.data.schedules").exists());
     }
 
     @Test
@@ -192,7 +204,8 @@ public class MentoringClassTest {
             "수정된 수업 제목",
             "수정된 수업 내용",
             100000,
-            new ScheduleRequest("화요일", 14001600)  // 일정도 수정
+            new String[]{"Spring Boot", "Java", "MySQL", "JPA"},  // 기술 스택 배열로 정의
+            new ScheduleRequest(DayOfWeek.WEDNESDAY, "14:00-16:00")
         );
 
         // when & then
@@ -206,9 +219,8 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.data.title").value("수정된 수업 제목"))
                 .andExpect(jsonPath("$.data.content").value("수정된 수업 내용"))
                 .andExpect(jsonPath("$.data.price").value(100000))
-                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("화요일"))
-                .andExpect(jsonPath("$.data.schedule.time").value(14001600));
-
+                .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("WEDNESDAY"))
+                .andExpect(jsonPath("$.data.schedule.time").value("14:00-16:00"));
     }
 
 }

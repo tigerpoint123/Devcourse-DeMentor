@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.dto.response;
 
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record MentoringClassUpdateResponse(
@@ -9,8 +10,8 @@ public record MentoringClassUpdateResponse(
     @Schema(description = "멘토 정보")
     MentorInfo mentor,
     
-    @Schema(description = "기술 스택")
-    String stack,
+    @Schema(description = "기술 스택 목록", example = "[\"Java\", \"Spring Boot\", \"MySQL\"]")
+    String[] stack,
     
     @Schema(description = "수업 내용")
     String content,
@@ -40,9 +41,9 @@ public record MentoringClassUpdateResponse(
     
     public record ScheduleInfo(
         @Schema(description = "요일")
-        String dayOfWeek,
+        DayOfWeek dayOfWeek,
         
         @Schema(description = "시간")
-        int time
+        String time
     ) {}
 }

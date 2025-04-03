@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.entity;
 
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,19 +16,19 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String dayOfWeek;
-    private int time;
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;
+    private String time;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mentoring_class_id")
     private MentoringClass mentoringClass;
 
-
-    public void updateDayOfWeek(String dayOfWeek) {
+    public void updateDayOfWeek(DayOfWeek dayOfWeek) {
         this.dayOfWeek = dayOfWeek;
     }
 
-    public void updateTime(int time) {
+    public void updateTime(String time) {
         this.time = time;
     }
 }
