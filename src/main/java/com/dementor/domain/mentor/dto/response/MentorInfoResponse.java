@@ -3,16 +3,16 @@ package com.dementor.domain.mentor.dto.response;
 import com.dementor.domain.mentor.entity.Mentor;
 
 public record MentorInfoResponse (
-        Long Id,
+        Long memberId,
         String name,
-        String job,
+        String jobName,
         Integer career,
         String phone,
+        String email,
         String currentCompany,
         String introduction,
         String bestFor,
         Mentor.ApprovalStatus approvalStatus,
-        Mentor.ModificationStatus modificationStatus,
         Integer totalClasses,
         Integer pendingRequests,
         Integer completedSessions
@@ -25,11 +25,11 @@ public record MentorInfoResponse (
                 mentor.getJob().getName(),
                 mentor.getCareer(),
                 mentor.getPhone(),
+                mentor.getEmail(),
                 mentor.getCurrentCompany(),
                 mentor.getIntroduction(),
                 mentor.getBestFor(),
                 mentor.getApprovalStatus(),
-                mentor.getModificationStatus(),
                 totalClasses,
                 pendingRequests,
                 completedSessions

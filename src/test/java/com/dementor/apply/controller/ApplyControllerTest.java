@@ -1,12 +1,20 @@
 package com.dementor.apply.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.time.LocalDateTime;
-
+import com.dementor.domain.apply.dto.request.ApplyRequest;
+import com.dementor.domain.apply.entity.Apply;
+import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.repository.ApplyRepository;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
+import com.dementor.domain.member.repository.MemberRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.global.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,21 +28,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dementor.domain.apply.dto.request.ApplyRequest;
-import com.dementor.domain.apply.entity.Apply;
-import com.dementor.domain.apply.entity.ApplyStatus;
-import com.dementor.domain.apply.repository.ApplyRepository;
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.entity.UserRole;
-import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.global.security.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
+import java.time.LocalDateTime;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -98,15 +98,20 @@ public class ApplyControllerTest {
 			.name("백엔드")
 			.build();
 		job = jobRepository.save(job);
-		
+
 		// 멘토 객체 생성
 		Mentor mentor = Mentor.builder()
 			.member(testMentor)
-			.name("테스트멘토")
 			.job(job)
+			.name("테스트멘토")
+			.currentCompany("테스트 회사")
 			.career(3)
 			.phone("010-1234-5678")
+			.email("mentor@example.com")
 			.introduction("테스트 멘토 소개")
+			.bestFor("테스트 특기")
+			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
+			.modificationStatus(Mentor.ModificationStatus.NONE)
 			.build();
 		mentor = mentorRepository.save(mentor);
 

@@ -1,17 +1,5 @@
 package com.dementor.apply.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.LocalDateTime;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.dementor.domain.apply.dto.request.ApplyRequest;
 import com.dementor.domain.apply.dto.response.ApplyResponse;
 import com.dementor.domain.apply.entity.Apply;
@@ -20,15 +8,26 @@ import com.dementor.domain.apply.exception.ApplyErrorCode;
 import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.apply.service.ApplyService;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -89,11 +88,16 @@ public class ApplyServiceTest {
 		// 멘토 객체 생성
 		Mentor mentor = Mentor.builder()
 			.member(testMentor)
-			.name("테스트멘토")
 			.job(job)
+			.name("테스트멘토")
+			.currentCompany("테스트 회사")
 			.career(3)
 			.phone("010-1234-5678")
+			.email("mentor@example.com")
 			.introduction("테스트 멘토 소개")
+			.bestFor("테스트 특기")
+			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
+			.modificationStatus(Mentor.ModificationStatus.NONE)
 			.build();
 		mentor = mentorRepository.save(mentor);
 
