@@ -12,8 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.dementor.domain.apply.dto.request.ApplyRequest;
-import com.dementor.domain.apply.dto.response.ApplyResponse;
+import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
+import com.dementor.domain.apply.dto.response.ApplyIdResponse;
+import com.dementor.domain.apply.dto.response.ApplyPageResponse;
 import com.dementor.domain.apply.service.ApplyService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
@@ -34,11 +35,11 @@ public class ApplyController {
 	@Operation(summary = "멘토링 신청", description = "멘토링을 신청합니다")
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ApiResponse<?> createApply(
-		@RequestBody ApplyRequest.ApplyCreateRequest req,
+	public ApiResponse<ApplyIdResponse> createApply(
+		@RequestBody ApplyCreateRequest req,
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
-		ApplyResponse.GetApplyId response = applyService.createApply(req, userDetails.getId());
+		ApplyIdResponse response = applyService.createApply(req, userDetails.getId());
 
 		return ApiResponse.of(true, HttpStatus.CREATED, "멘토링 신청이 완료되었습니다", response);
 	}
@@ -47,7 +48,7 @@ public class ApplyController {
 	@Operation(summary = "멘토링 신청 취소", description = "멘토링 신청을 취소합니다")
 	@DeleteMapping("/{applyId}")
 	@ResponseStatus(HttpStatus.OK)
-	public ApiResponse<?> deleteApply(
+	public ApiResponse<Void> deleteApply(
 		@PathVariable(name = "applyId") Long applyId,
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
@@ -60,12 +61,12 @@ public class ApplyController {
 	@Operation(summary = "멘토링 신청 목록 조회", description = "내가 신청한 멘토링 목록을 조회합니다")
 	@GetMapping
 	@ResponseStatus(HttpStatus.OK)
-	public ApiResponse<?> getApply(
+	public ApiResponse<ApplyPageResponse> getApply(
 		@AuthenticationPrincipal CustomUserDetails userDetails,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "10") int size
 	) {
-		ApplyResponse.GetApplyPageList response = applyService.getApplyList(userDetails.getId(), page-1, size);
+		ApplyPageResponse response = applyService.getApplyList(userDetails.getId(), page-1, size);
 		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 목록을 조회했습니다", response);
 	}
 
