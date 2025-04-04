@@ -20,21 +20,21 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.dementor.domain.apply.dto.request.ApplyRequest;
+import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.repository.ApplyRepository;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -76,6 +76,7 @@ public class ApplyControllerTest {
 		testMentee = Member.builder()
 			.nickname("testMentee")
 			.password("password")
+			.nickname("테스트멘티")
 			.name("테스트멘티")
 			.email("123@1233.com")
 			.userRole(UserRole.MENTEE)
@@ -87,6 +88,7 @@ public class ApplyControllerTest {
 		testMentor = Member.builder()
 			.nickname("testMentor")
 			.password("password")
+			.nickname("테스트멘토")
 			.name("테스트멘토")
 			.email("1234@1233.com")
 			.userRole(UserRole.MENTOR)
@@ -127,7 +129,7 @@ public class ApplyControllerTest {
 	@WithMockUser(roles = "MENTEE")
 	void createApply1() throws Exception {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(testMentoringClassId);
 		request.setInquiry("멘티의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
@@ -156,11 +158,42 @@ public class ApplyControllerTest {
 	@WithMockUser(roles = "MENTOR")
 	void createApply2() throws Exception {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClassId(testMentoringClassId);
+		// 자신의 클래스는 신청이 안되게 예외 처리를 해서 다른 멘토의 클래스를 생성 후 신청
+		Member otherMentor = Member.builder()
+			.email("othermento@test.com")
+			.password("password")
+			.name("다른멘토")
+			.nickname("다른멘토닉네임")
+			.userRole(UserRole.MENTOR)
+			.build();
+		memberRepository.save(otherMentor);
+
+		Job job = jobRepository.findAll().get(0);
+
+		Mentor mentor = Mentor.builder()
+			.member(otherMentor)
+			.name("다른멘토")
+			.job(job)
+			.career(3)
+			.phone("010-1234-5678")
+			.introduction("다른 멘토 소개")
+			.build();
+		mentorRepository.save(mentor);
+
+		// 다른 멘토의 클래스 생성
+		MentoringClass otherClass = new MentoringClass();
+		otherClass.setTitle("다른 멘토링 클래스");
+		otherClass.setStack("Java, Spring");
+		otherClass.setContent("다른 멘토링 내용입니다");
+		otherClass.setPrice(40000);
+		otherClass.setMentor(mentor);
+		Long otherClassId = mentoringClassRepository.save(otherClass).getId();
+
+		// 신청 요청 생성 (다른 멘토의 클래스에 신청)
+		ApplyCreateRequest request = new ApplyCreateRequest();
+		request.setClassId(otherClassId);
 		request.setInquiry("멘토의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
-
 
 		ResultActions resultActions = mvc
 			.perform(
