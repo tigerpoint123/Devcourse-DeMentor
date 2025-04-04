@@ -59,6 +59,7 @@ dependencies {
 
     // spring hateoas
     implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+    implementation 'org.springframework.hateoas:spring-hateoas:2.1.0'
 }
 
 tasks.named('test') {
