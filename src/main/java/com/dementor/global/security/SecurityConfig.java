@@ -56,9 +56,9 @@ public class SecurityConfig {
 
 				.requestMatchers("/api/signup/**").permitAll()
 				.requestMatchers("/api/member/login").permitAll()
-				// .requestMatchers("/api/member/refresh").permitAll()
 
 				.requestMatchers("/api/admin/refresh").permitAll()
+				.requestMatchers("/api/member/refresh").permitAll()
 
 				.requestMatchers("/api/admin/login").permitAll()
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")

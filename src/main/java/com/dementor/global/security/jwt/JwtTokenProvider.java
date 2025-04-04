@@ -23,6 +23,7 @@ import com.dementor.global.security.CustomUserDetails;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -148,6 +149,8 @@ public class JwtTokenProvider implements InitializingBean {
 			new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class))
 		);
 
+
+
 		// role에 따라 Member 또는 Admin으로 구분
 		String role = claims.get(AUTHORITIES_KEY, String.class);
 		CustomUserDetails principal;
@@ -175,6 +178,39 @@ public class JwtTokenProvider implements InitializingBean {
 		return new UsernamePasswordAuthenticationToken(principal, token, authorities);
 	}
 
+	public Authentication getRefreshAuthentication(String token) {
+		Claims claims = Jwts
+			.parserBuilder()
+			.setSigningKey(key)
+			.build()
+			.parseClaimsJws(token)
+			.getBody();
+
+		String userIdentifier = claims.getSubject();
+		String role = claims.get(AUTHORITIES_KEY, String.class);
+		CustomUserDetails principal;
+
+		if (role.startsWith("ROLE_ADMIN")) {
+			principal = CustomUserDetails.ofAdmin(
+				Admin.builder()
+					.id(claims.get("adminId", Long.class))
+					.username(claims.getSubject())
+					.password("")
+					.build()
+			);
+		} else {
+			principal = CustomUserDetails.of(
+				Member.builder()
+					.id(claims.get("memberId", Long.class))
+					.email(claims.getSubject())
+					.password("")
+					.build()
+			);
+		}
+
+		return new UsernamePasswordAuthenticationToken(principal, token, Collections.emptyList());
+	}
+
 	//토큰 유효성 검증
 	public boolean validateAccessToken(String token) {
 		try {
@@ -190,6 +226,19 @@ public class JwtTokenProvider implements InitializingBean {
 			System.out.println("잘못된 JWT 토큰"); //log 로 변경
 		}
 		return false;
+	}
+
+	public boolean validateRefreshToken(String token) {
+		try {
+			Jws<Claims> claims = Jwts.parserBuilder()
+				.setSigningKey(key)
+				.build()
+				.parseClaimsJws(token);
+
+			return !claims.getBody().getExpiration().before(new Date());
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 }
