@@ -1,9 +1,6 @@
 package com.dementor.apply.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +32,11 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -76,7 +78,6 @@ public class ApplyControllerTest {
 		testMentee = Member.builder()
 			.nickname("testMentee")
 			.password("password")
-			.nickname("테스트멘티")
 			.name("테스트멘티")
 			.email("123@1233.com")
 			.userRole(UserRole.MENTEE)
@@ -88,7 +89,6 @@ public class ApplyControllerTest {
 		testMentor = Member.builder()
 			.nickname("testMentor")
 			.password("password")
-			.nickname("테스트멘토")
 			.name("테스트멘토")
 			.email("1234@1233.com")
 			.userRole(UserRole.MENTOR)
@@ -106,9 +106,15 @@ public class ApplyControllerTest {
 			.member(testMentor)
 			.name("테스트멘토")
 			.job(job)
+			.name("테스트멘토")
+			.currentCompany("테스트 회사")
 			.career(3)
 			.phone("010-1234-5678")
+			.email("mentor@example.com")
 			.introduction("테스트 멘토 소개")
+			.bestFor("테스트 특기")
+			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
+			.modificationStatus(Mentor.ModificationStatus.NONE)
 			.build();
 		mentor = mentorRepository.save(mentor);
 
@@ -194,6 +200,7 @@ public class ApplyControllerTest {
 		request.setClassId(otherClassId);
 		request.setInquiry("멘토의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
+
 
 		ResultActions resultActions = mvc
 			.perform(

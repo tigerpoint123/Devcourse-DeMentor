@@ -1,8 +1,5 @@
 package com.dementor.global.exception;
 
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.dementor.domain.apply.exception.ApplyErrorCode;
 import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.member.exception.MemberErrorCode;
@@ -10,6 +7,9 @@ import com.dementor.domain.member.exception.MemberException;
 import com.dementor.global.ApiResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -30,27 +30,27 @@ public class GlobalExceptionHandler {
 			errorCode.getMessage());
 	}
 
-	// EntityNotFoundException 처리 추가
+	// EntityNotFoundException 처리
 	@ExceptionHandler(EntityNotFoundException.class)
-	public ApiResponse<?> handleEntityNotFoundException(EntityNotFoundException e) {
-		return ApiResponse.of(false,
-				HttpStatus.NOT_FOUND,
-				e.getMessage());
+	public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(EntityNotFoundException e) {
+		return ResponseEntity
+				.status(HttpStatus.NOT_FOUND)
+				.body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
 	}
 
-	// IllegalStateException 처리 추가
+	// IllegalStateException 처리
 	@ExceptionHandler(IllegalStateException.class)
-	public ApiResponse<?> handleIllegalStateException(IllegalStateException e) {
-		return ApiResponse.of(false,
-				HttpStatus.BAD_REQUEST,
-				e.getMessage());
+	public ResponseEntity<ApiResponse<?>> handleIllegalStateException(IllegalStateException e) {
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST)
+				.body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
 	}
 
-	// 일반 예외 처리 추가
+	// 일반 예외 처리
 	@ExceptionHandler(Exception.class)
-	public ApiResponse<?> handleGeneralException(Exception e) {
-		return ApiResponse.of(false,
-				HttpStatus.INTERNAL_SERVER_ERROR,
-				"서버 오류가 발생했습니다: " + e.getMessage());
+	public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
+		return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
 	}
 }

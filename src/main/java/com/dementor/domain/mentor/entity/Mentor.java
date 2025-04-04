@@ -22,11 +22,11 @@ public class Mentor {
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId // member_id를 PK이자 FK로 사용
-    @JoinColumn
+    @JoinColumn(name = "member_id")
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
 
     // PostAttachment 엔티티와의 관계 (일대다)
@@ -34,7 +34,7 @@ public class Mentor {
     private List<PostAttachment> attachments;
 
     // Mentoring 수업 엔티티와의 관계 (일대다)
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "mentor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MentoringClass> mentorings;
 
     @Column(length = 10, nullable = false)
@@ -48,6 +48,9 @@ public class Mentor {
 
     @Column(length = 20, nullable = false)
     private String phone;
+
+    @Column(length = 20, nullable = false)
+    private String email;
 
     @Column(length = 255, nullable = false)
     private String introduction;
@@ -97,10 +100,11 @@ public class Mentor {
 
     // 필드 수정 메서드
     public void update(String currentCompany, Integer career, String phone,
-                       String introduction, String bestFor) {
+                       String email, String introduction, String bestFor) {
         this.currentCompany = currentCompany;
         this.career = career;
         this.phone = phone;
+        this.email = email;
         this.introduction = introduction;
         this.bestFor = bestFor;
         this.modificationStatus = ModificationStatus.PENDING;

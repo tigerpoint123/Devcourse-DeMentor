@@ -90,11 +90,16 @@ public class ApplyServiceTest {
 		// 멘토 객체 생성
 		Mentor mentor = Mentor.builder()
 			.member(testMentor)
-			.name("테스트멘토")
 			.job(job)
+			.name("테스트멘토")
+			.currentCompany("테스트 회사")
 			.career(3)
 			.phone("010-1234-5678")
+			.email("mentor@example.com")
 			.introduction("테스트 멘토 소개")
+			.bestFor("테스트 특기")
+			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
+			.modificationStatus(Mentor.ModificationStatus.NONE)
 			.build();
 		mentor = mentorRepository.save(mentor);
 
