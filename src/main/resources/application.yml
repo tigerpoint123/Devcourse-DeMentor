@@ -43,7 +43,7 @@ jwt:
   secret: ${JWT_SECRET_KEY}
   refresh:
        expiration: 604800000
-  expiration: 600000 #10분
+  expiration: 1800000 #30분
 
   cookie:
     name: jwt
@@ -51,8 +51,9 @@ jwt:
       name: accessToken
     refresh-cookie:
       name: refreshToken
-    domain : dementor.site
+    domain : localhost
     http-only: true # XSS 공격 방어를 위한 핵심 설정
     secure: false  # 개발환경에서는 false, 운영환경에서는 true, HTTPS 연결에서만 쿠키 전송 허용
     path: / # 쿠키가 유효한 경로 지정
     max-age-seconds: 86400
+

@@ -27,17 +27,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
 		FilterChain filterChain) throws ServletException, IOException {
 
-		// 리프레시 엔드포인트는 토큰 검증 건너뛰기
-		if (request.getRequestURI().equals("/api/admin/refresh")) {
+		String token = resolveToken(request);
+
+		// 리프레시 엔드포인트는 리프레시 토큰 검증
+		if (request.getRequestURI().equals("/api/admin/refresh")||request.getRequestURI().equals("/api/member/refresh")) {
+			if (StringUtils.hasText(token) && jwtTokenProvider.validateRefreshToken(token)) {
+				Authentication auth = jwtTokenProvider.getRefreshAuthentication(token);
+				SecurityContextHolder.getContext().setAuthentication(auth);
+			}
 			filterChain.doFilter(request, response);
 			return;
 		}
 
-		String token = resolveToken(request);
-
-		// 토큰 유효성 검사 및 인증 설정
+		// 일반 엔드포인트는 액세스 토큰 검증
 		if (StringUtils.hasText(token) && jwtTokenProvider.validateAccessToken(token)) {
 			Authentication auth = jwtTokenProvider.getAuthentication(token);
+			System.out.println("Authorities: " + auth.getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(auth);
 		}
 

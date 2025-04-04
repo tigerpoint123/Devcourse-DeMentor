@@ -60,6 +60,9 @@ public class AdminAuthController {
 			// 두 토큰 모두 생성
 			TokenDto tokens = tokenService.createAdminTokens(adminId, username);
 
+			System.out.println(cookieUtil.createAccessTokenCookie(tokens.getAccessToken()).toString());
+			System.out.println(cookieUtil.createRefreshTokenCookie(tokens.getRefreshToken()).toString());
+
 			// 쿠키에는 액세스 토큰, refresh 토큰
 			HttpHeaders headers = new HttpHeaders();
 			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createAccessTokenCookie(tokens.getAccessToken()).toString());
