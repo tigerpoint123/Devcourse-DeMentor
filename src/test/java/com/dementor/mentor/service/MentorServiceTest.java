@@ -404,7 +404,7 @@ public class MentorServiceTest {
         assertNotNull(response, "멘토 정보가 조회되지 않습니다");
         assertEquals(testMentor.getId(), response.memberId());
         assertEquals("테스트멘토", response.name());
-        assertEquals("백엔드 개발자", response.job());
+        assertEquals("백엔드 개발자", response.jobName());
         assertEquals(5, response.career());
         assertEquals("01012345678", response.phone());
         assertEquals("테스트 회사", response.currentCompany());

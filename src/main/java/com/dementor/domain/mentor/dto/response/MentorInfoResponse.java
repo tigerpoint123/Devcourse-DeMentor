@@ -5,7 +5,7 @@ import com.dementor.domain.mentor.entity.Mentor;
 public record MentorInfoResponse (
         Long memberId,
         String name,
-        String job,
+        String jobName,
         Integer career,
         String phone,
         String email,

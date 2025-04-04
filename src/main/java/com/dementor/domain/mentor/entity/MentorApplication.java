@@ -4,15 +4,14 @@ import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "mentor_application")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
 public class MentorApplication extends BaseEntity {
 
     @Id
@@ -58,21 +57,6 @@ public class MentorApplication extends BaseEntity {
 
     public enum ApplicationStatus {
         PENDING, APPROVED, REJECTED
-    }
-
-    @Builder
-    public MentorApplication(Member member, Job job, String name, String currentCompany, Integer career,
-                             String phone, String email, String introduction, String bestFor) {
-        this.member = member;
-        this.job = job;
-        this.name = name;
-        this.currentCompany = currentCompany;
-        this.career = career;
-        this.phone = phone;
-        this.email = email;
-        this.introduction = introduction;
-        this.bestFor = bestFor;
-        this.status = ApplicationStatus.PENDING;
     }
 
     // 지원 상태 업데이트
