@@ -5,12 +5,15 @@ import com.dementor.domain.mentor.repository.MentorRepoFromHo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class MentorServiceFromHo {
     private final MentorRepoFromHo mentorRepoFromHo;
 
-    public MyMentoringResponse getMentorClassFromMentor(Long menberId) {
-        return mentorRepoFromHo.findByMemerId(menberId);
+    public List<MyMentoringResponse> getMentorClassFromMentor(Long menberId) {
+        List<MyMentoringResponse> response = mentorRepoFromHo.findByMemerId(menberId);
+        return response;
     }
 }
