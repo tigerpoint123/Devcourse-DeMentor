@@ -77,6 +77,7 @@ public class MentorService {
                 .currentCompany(requestDto.currentCompany())
                 .introduction(requestDto.introduction())
                 .bestFor(requestDto.bestFor())
+                .status(MentorApplication.ApplicationStatus.PENDING)
                 .build();
 
         // 첨부파일 연결 - TODO: 파일 처리 로직 구현 필요

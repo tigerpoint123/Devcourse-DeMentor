@@ -18,7 +18,7 @@ public class MentorApplicationRequest {
 
             @NotBlank(message = "전화번호는 필수 입력 항목입니다.")
             @Size(max = 20, message = "전화번호는 20자 이내로 입력해주세요.")
-            @Pattern(regexp = "^\\d{10,11}$", message = "전화번호는 10~11자리 숫자만 입력 가능합니다.")
+            @Pattern(regexp = "^[\\d-]{10,13}$", message = "전화번호는 10~11자리 숫자와 하이픈(-)을 포함할 수 있습니다.")
             String phone,
 
             @NotBlank(message = "이메일은 필수 입력 항목입니다.")
