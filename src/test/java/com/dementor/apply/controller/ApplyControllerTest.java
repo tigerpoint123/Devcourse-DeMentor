@@ -1,6 +1,26 @@
 package com.dementor.apply.controller;
 
-import com.dementor.domain.apply.dto.request.ApplyRequest;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.repository.ApplyRepository;
@@ -15,26 +35,6 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -98,10 +98,11 @@ public class ApplyControllerTest {
 			.name("백엔드")
 			.build();
 		job = jobRepository.save(job);
-
+		
 		// 멘토 객체 생성
 		Mentor mentor = Mentor.builder()
 			.member(testMentor)
+			.name("테스트멘토")
 			.job(job)
 			.name("테스트멘토")
 			.currentCompany("테스트 회사")
@@ -132,7 +133,7 @@ public class ApplyControllerTest {
 	@WithMockUser(roles = "MENTEE")
 	void createApply1() throws Exception {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(testMentoringClassId);
 		request.setInquiry("멘티의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
@@ -161,8 +162,45 @@ public class ApplyControllerTest {
 	@WithMockUser(roles = "MENTOR")
 	void createApply2() throws Exception {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
-		request.setClassId(testMentoringClassId);
+		// 자신의 클래스는 신청이 안되게 예외 처리를 해서 다른 멘토의 클래스를 생성 후 신청
+		Member otherMentor = Member.builder()
+			.email("othermento@test.com")
+			.password("password")
+			.name("다른멘토")
+			.nickname("다른멘토닉네임")
+			.userRole(UserRole.MENTOR)
+			.build();
+		memberRepository.save(otherMentor);
+
+		Job job = jobRepository.findAll().get(0);
+
+		Mentor mentor = Mentor.builder()
+			.member(otherMentor)
+			.name("다른멘토")
+			.job(job)
+			.currentCompany("다른 멘토 회사")
+			.career(3)
+			.phone("010-9876-5432")
+			.email("othermentor@test.com")
+			.introduction("다른 멘토 소개")
+			.bestFor("다른 멘토 특기")
+			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
+			.modificationStatus(Mentor.ModificationStatus.NONE)
+			.build();
+		mentorRepository.save(mentor);
+
+		// 다른 멘토의 클래스 생성
+		MentoringClass otherClass = new MentoringClass();
+		otherClass.setTitle("다른 멘토링 클래스");
+		otherClass.setStack("Java, Spring");
+		otherClass.setContent("다른 멘토링 내용입니다");
+		otherClass.setPrice(40000);
+		otherClass.setMentor(mentor);
+		Long otherClassId = mentoringClassRepository.save(otherClass).getId();
+
+		// 신청 요청 생성 (다른 멘토의 클래스에 신청)
+		ApplyCreateRequest request = new ApplyCreateRequest();
+		request.setClassId(otherClassId);
 		request.setInquiry("멘토의 테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 

@@ -1,22 +1,9 @@
 package com.dementor.apply.service;
 
-import com.dementor.domain.apply.dto.request.ApplyRequest;
-import com.dementor.domain.apply.dto.response.ApplyResponse;
-import com.dementor.domain.apply.entity.Apply;
-import com.dementor.domain.apply.entity.ApplyStatus;
-import com.dementor.domain.apply.exception.ApplyErrorCode;
-import com.dementor.domain.apply.exception.ApplyException;
-import com.dementor.domain.apply.repository.ApplyRepository;
-import com.dementor.domain.apply.service.ApplyService;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.entity.UserRole;
-import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,9 +12,24 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
+import com.dementor.domain.apply.dto.response.ApplyIdResponse;
+import com.dementor.domain.apply.dto.response.ApplyPageResponse;
+import com.dementor.domain.apply.entity.Apply;
+import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.exception.ApplyErrorCode;
+import com.dementor.domain.apply.exception.ApplyException;
+import com.dementor.domain.apply.repository.ApplyRepository;
+import com.dementor.domain.apply.service.ApplyService;
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
+import com.dementor.domain.member.repository.MemberRepository;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
 
 @SpringBootTest
 @Transactional
@@ -117,13 +119,13 @@ public class ApplyServiceTest {
 	@DisplayName("멘토링 신청 성공")
 	void createApplySuccess() {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(mentoringClassId);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
 
-		ApplyResponse.GetApplyId result = applyService.createApply(request, testMember.getId());
+		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
 
 
 		assertNotNull(result);
@@ -141,7 +143,7 @@ public class ApplyServiceTest {
 	@DisplayName("존재하지 않는 멘토링 클래스로 신청 시 예외 발생")
 	void createApplyFail1() {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(99999L);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
@@ -156,7 +158,7 @@ public class ApplyServiceTest {
 	@DisplayName("멘토링 일정을 입력하지 않고 신청 시 예외 발생")
 	void createApplyFail2() {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(mentoringClassId);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(null);
@@ -173,12 +175,12 @@ public class ApplyServiceTest {
 	@DisplayName("멘토링 신청 취소 성공")
 	void deleteApplySuccess() {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(mentoringClassId);
 		request.setInquiry("취소 테스트용 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
-		ApplyResponse.GetApplyId result = applyService.createApply(request, testMember.getId());
+		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
 		Long applyId = result.getApplymentId();
 
 		applyService.deleteApply(applyId, testMember.getId());
@@ -192,12 +194,12 @@ public class ApplyServiceTest {
 	@DisplayName("권한 없는 사용자가 멘토링 신청 취소 시 예외 발생")
 	void deleteApplyFail() {
 
-		ApplyRequest.ApplyCreateRequest request = new ApplyRequest.ApplyCreateRequest();
+		ApplyCreateRequest request = new ApplyCreateRequest();
 		request.setClassId(mentoringClassId);
 		request.setInquiry("취소 테스트용 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
-		ApplyResponse.GetApplyId result = applyService.createApply(request, testMember.getId());
+		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
 		Long applyId = result.getApplymentId();
 
 		Member anotherMember = Member.builder()
@@ -233,19 +235,17 @@ public class ApplyServiceTest {
 		}
 
 
-		ApplyResponse.GetApplyPageList page1Result = applyService.getApplyList(testMember.getId(), 0, 10);
+		ApplyPageResponse page1Result = applyService.getApplyList(testMember.getId(), 0, 10);
 
 
-		assertEquals(15L, page1Result.getPagination().get("total_elements"));
-		assertEquals(2, page1Result.getPagination().get("total_pages"));
+		assertEquals(15L, page1Result.getPagination().getTotal_elements());
+		assertEquals(2, page1Result.getPagination().getTotal_pages());
 		assertEquals(10, page1Result.getApplyments().size());
 
+		ApplyPageResponse page2Result = applyService.getApplyList(testMember.getId(), 1, 10);
 
-		ApplyResponse.GetApplyPageList page2Result = applyService.getApplyList(testMember.getId(), 1, 10);
-
-
-		assertEquals(15L, page2Result.getPagination().get("total_elements"));
-		assertEquals(2, page2Result.getPagination().get("total_pages"));
+		assertEquals(15L, page2Result.getPagination().getTotal_elements());
+		assertEquals(2, page2Result.getPagination().getTotal_pages());
 		assertEquals(5, page2Result.getApplyments().size());
 	}
 
