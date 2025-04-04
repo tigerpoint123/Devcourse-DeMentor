@@ -16,11 +16,11 @@ import java.util.List;
 public class MentorControllerFromHo {
     private final MentorServiceFromHo mentorService;
 
-    @GetMapping("/api/mentor/class/{menberId}")
+    @GetMapping("/api/mentor/class/{memberId}")
     public ApiResponse<List<MyMentoringResponse>> getMentorClassFromMentor(
-            @PathVariable Long menberId
+            @PathVariable Long memberId
     ) {
-        List<MyMentoringResponse> response = mentorService.getMentorClassFromMentor(menberId);
+        List<MyMentoringResponse> response = mentorService.getMentorClassFromMentor(memberId);
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,
