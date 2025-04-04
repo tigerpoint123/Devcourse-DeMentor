@@ -49,7 +49,7 @@ public class MemberController {
 		return ApiResponse.of(true, HttpStatus.OK, "Nickname exists", isNickname);
 	}
 
-	@PostMapping("/signup/verifyCode")
+	@PostMapping("/verifyCode")
 	public ApiResponse<?> sendVerificationEmail(@RequestParam("email") String email) throws MessagingException {
 		emailService.sendVerificationEmail(email);
 		return ApiResponse.of(true, HttpStatus.OK, "Send verification code");
