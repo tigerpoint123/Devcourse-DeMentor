@@ -7,7 +7,7 @@ import lombok.*;
 @Entity
 @Table(name = "schedule")
 @Getter
-@Setter
+@Setter // TODO : 지워
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

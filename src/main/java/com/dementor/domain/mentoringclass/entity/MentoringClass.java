@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @Table(name = "mentoring_class")
 @Getter
-@Setter
+@Setter // TODO : 지워
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor

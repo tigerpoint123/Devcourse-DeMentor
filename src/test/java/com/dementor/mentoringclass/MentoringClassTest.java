@@ -141,10 +141,10 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.code").value("200"))
                 .andExpect(jsonPath("$.message").value("멘토링 수업 조회 성공"))
                 .andExpect(jsonPath("$.data.content").isArray())
-                .andExpect(jsonPath("$.data.page.totalElements").isNumber())
-                .andExpect(jsonPath("$.data.page.totalPages").isNumber())
-                .andExpect(jsonPath("$.data.page.size").value(10))
-                .andExpect(jsonPath("$.data.page.number").value(0));
+                .andExpect(jsonPath("$.data.totalElements").isNumber())
+                .andExpect(jsonPath("$.data.totalPages").isNumber())
+                .andExpect(jsonPath("$.data.size").value(10))
+                .andExpect(jsonPath("$.data.number").value(0));
     }
 
     @Test

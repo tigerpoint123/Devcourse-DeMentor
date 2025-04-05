@@ -14,11 +14,9 @@ import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
-import com.dementor.domain.mentoringclass.dto.SortDirection;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,18 +27,21 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MentoringClassService {
+    /*
+    * TODO : 예외처리 계층화, 공통 로직 분리, 엔티티 수정
+    *
+    * */
+
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
 
-    public Page<MentoringClassFindResponse> findAllClass(Long jobId, int page, int size, String sortBy, SortDirection order) {
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.valueOf(order.name()), sortBy));
-
+    public Page<MentoringClassFindResponse> findAllClass(Long jobId, Pageable pageable) {
         Page<MentoringClass> mentoringClasses;
         if (jobId != null)
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId, pageRequest);
+            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId, pageable);
         else
-            mentoringClasses = mentoringClassRepository.findAll(pageRequest);
+            mentoringClasses = mentoringClassRepository.findAll(pageable);
 
         return mentoringClasses.map(MentoringClassFindResponse::from);
     }
@@ -49,6 +50,16 @@ public class MentoringClassService {
     public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
         Mentor mentor = mentorRepository.findById(mentorId)
             .orElseThrow(() -> new MentoringClassException("멘토를 찾을 수 없습니다: " + mentorId));
+
+        // 입력값 검증
+        if(request.title() == null || request.content() == null)
+            throw new MentoringClassException(MentoringClassExceptionCode.TITLE_OR_CONTENT_INPUT_NULL.getMessage());
+        else if(request.price() < 0)
+            throw new MentoringClassException(MentoringClassExceptionCode.MINUS_PRICE.getMessage());
+        else if(request.schedules() == null)
+            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_SCHEDULE.getMessage());
+        else if(request.stack() == null)
+            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_STACK.getMessage());
 
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
