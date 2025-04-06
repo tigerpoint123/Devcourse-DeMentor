@@ -4,7 +4,6 @@ import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
-import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,16 +43,16 @@ public class MentoringClassService {
     @Transactional
     public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
         Mentor mentor = mentorRepository.findById(mentorId)
-            .orElseThrow(() -> new MentoringClassException("멘토를 찾을 수 없습니다: " + mentorId));
+                .orElseThrow(() -> new MentoringClassException("멘토를 찾을 수 없습니다: " + mentorId));
 
         // 입력값 검증
-        if(request.title() == null || request.content() == null)
+        if (request.title() == null || request.content() == null)
             throw new MentoringClassException(MentoringClassExceptionCode.TITLE_OR_CONTENT_INPUT_NULL.getMessage());
-        else if(request.price() < 0)
+        else if (request.price() < 0)
             throw new MentoringClassException(MentoringClassExceptionCode.MINUS_PRICE.getMessage());
-        else if(request.schedules() == null)
+        else if (request.schedules() == null)
             throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_SCHEDULE.getMessage());
-        else if(request.stack() == null)
+        else if (request.stack() == null)
             throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_STACK.getMessage());
 
         MentoringClass mentoringClass = MentoringClass.builder()
@@ -64,33 +62,27 @@ public class MentoringClassService {
                 .price(request.price())
                 .mentor(mentor)
                 .build();
-        
         mentoringClass = mentoringClassRepository.save(mentoringClass);
 
         // 스케줄 저장 로직 별도로 관리
-        List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
-        mentoringClass.updateSchedules(schedules);
-        
-        return MentoringClassDetailResponse.from(mentoringClass);
-    }
+        MentoringClass savedMentoringClass = mentoringClass;
+        List<Schedule> schedules = request.schedules().stream()
+                .map(scheduleRequest -> Schedule.builder()
+                        .mentoringClassId(savedMentoringClass.getId())
+                        .dayOfWeek(scheduleRequest.dayOfWeek())
+                        .time(scheduleRequest.time())
+                        .build())
+                .map(scheduleRepository::save)
+                .toList();
 
-    private List<Schedule> createSchedules(List<ScheduleRequest> scheduleRequests, MentoringClass mentoringClass) {
-        return scheduleRequests.stream()
-                .map(scheduleRequest -> {
-                    Schedule schedule = Schedule.builder()
-                            .dayOfWeek(scheduleRequest.dayOfWeek())
-                            .time(scheduleRequest.time())
-                            .mentoringClass(mentoringClass)
-                            .build();
-                    return scheduleRepository.save(schedule);
-                })
-                .collect(Collectors.toList());
+        return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
 
     public MentoringClassDetailResponse findOneClass(Long classId) {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
-        return MentoringClassDetailResponse.from(mentoringClass);
+        List<Schedule> schedules = scheduleRepository.findByMentoringClassId(classId);
+        return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
 
     public void deleteClass(Long classId) {
@@ -101,7 +93,7 @@ public class MentoringClassService {
     public MentoringClassUpdateResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
-        
+
         if (!mentoringClass.getMentor().getId().equals(memberId))
             throw new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_UNAUTHORIZED.getMessage());
 
@@ -114,33 +106,36 @@ public class MentoringClassService {
             mentoringClass.updatePrice(request.price());
         if (request.stack() != null)
             mentoringClass.updateStack(request.stack());
+        mentoringClassRepository.save(mentoringClass);
 
         // 일정 정보
+        Schedule schedule = scheduleRepository.findByMentoringClassId(classId)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new MentoringClassException("스케줄을 찾을 수 없습니다"));
+
         if (request.schedule() != null) {
-            Schedule schedule = mentoringClass.getSchedules().get(0);
             schedule.updateDayOfWeek(request.schedule().dayOfWeek());
             schedule.updateTime(request.schedule().time());
             scheduleRepository.save(schedule);
         }
 
-        mentoringClassRepository.save(mentoringClass);
-
         return new MentoringClassUpdateResponse(
-            mentoringClass.getId(),
-            new MentoringClassUpdateResponse.MentorInfo(
-                mentoringClass.getMentor().getId(),
-                mentoringClass.getMentor().getName(),
-                mentoringClass.getMentor().getJob().getName(),
-                mentoringClass.getMentor().getCareer()
-            ),
-            mentoringClass.getStack(),
-            mentoringClass.getContent(),
-            mentoringClass.getTitle(),
-            mentoringClass.getPrice(),
-            new MentoringClassUpdateResponse.ScheduleInfo(
-                mentoringClass.getSchedules().get(0).getDayOfWeek(),
-                mentoringClass.getSchedules().get(0).getTime()
-            )
+                mentoringClass.getId(),
+                new MentoringClassUpdateResponse.MentorInfo(
+                        mentoringClass.getMentor().getId(),
+                        mentoringClass.getMentor().getName(),
+                        mentoringClass.getMentor().getJob().getName(),
+                        mentoringClass.getMentor().getCareer()
+                ),
+                mentoringClass.getStack(),
+                mentoringClass.getContent(),
+                mentoringClass.getTitle(),
+                mentoringClass.getPrice(),
+                new MentoringClassUpdateResponse.ScheduleInfo(
+                        schedule.getDayOfWeek(),
+                        schedule.getTime()
+                )
         );
     }
 

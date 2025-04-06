@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class MentoringClassController {
     /*
-     * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정
+     * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정(setter 삭제), onetomany 삭제 ?
      *
      * */
 
@@ -39,7 +39,6 @@ public class MentoringClassController {
             @RequestParam(required = false) Long jobId,
             Pageable pageable
     ) {
-        // 도메인별 기본 정렬 적용
         Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
 
         Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobId, domainPageable);

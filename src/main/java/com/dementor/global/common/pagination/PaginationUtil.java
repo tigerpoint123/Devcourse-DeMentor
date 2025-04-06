@@ -17,5 +17,5 @@ public class PaginationUtil {
             );
     }
 
-    // TODO : 다른 도메인 페이지네이션 추가
+    // TODO : 다른 도메인 페이지네이션 추가 (멘토링 클래스 참고)
 }

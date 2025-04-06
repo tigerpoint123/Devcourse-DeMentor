@@ -3,14 +3,13 @@ package com.dementor.domain.mentoringclass.entity;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "mentoring_class")
-//@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,9 +30,9 @@ public class MentoringClass extends BaseEntity {
     @Getter
     private int price;
 
-    @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
-    @Getter
-    private List<Schedule> schedules = new ArrayList<>();
+//    @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
+//    @Getter
+//    private List<Schedule> schedules = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "mentor_id")
@@ -44,7 +43,7 @@ public class MentoringClass extends BaseEntity {
         this.title = title;
     }
 
-    public String[] getStack() {
+    public String[] getStack() { // getter 쓰면 String 배열로 지정 못함
         return this.stack.split(",");
     }
 
@@ -60,7 +59,4 @@ public class MentoringClass extends BaseEntity {
         this.stack = String.join(",", stack);
     }
 
-    public void updateSchedules(List<Schedule> schedules) {
-        this.schedules = schedules;
-    }
 }

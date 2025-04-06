@@ -1,6 +1,7 @@
 package com.dementor.domain.mentoringclass.dto.response;
 
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.entity.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public record MentoringClassDetailResponse(
             int career
     ) {}
 
-    public static MentoringClassDetailResponse from(MentoringClass mentoringClass) {
+    public static MentoringClassDetailResponse from(MentoringClass mentoringClass, List<Schedule> schedules1) {
         return new MentoringClassDetailResponse(
                 mentoringClass.getId(),
                 new MentorInfo(
@@ -45,7 +46,7 @@ public record MentoringClassDetailResponse(
                 mentoringClass.getContent(),
                 mentoringClass.getTitle(),
                 mentoringClass.getPrice(),
-                mentoringClass.getSchedules().stream()
+                schedules1.stream()
                     .map(ScheduleResponse::from)
                     .toList()
         );

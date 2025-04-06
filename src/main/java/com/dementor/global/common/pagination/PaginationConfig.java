@@ -19,6 +19,7 @@ public class PaginationConfig implements WebMvcConfigurer {
         resolverList.add(mentoringClassPageableResolver());
 
         // TODO : 다른 도메인 resolver 생성
+//        resolverList.add(다른 도메인 resolver 메소드());
     }
 
     @Bean // 멘토링 클래스용 resolver 등록
@@ -41,5 +42,5 @@ public class PaginationConfig implements WebMvcConfigurer {
         return resolver;
     }
 
-    // 다른 도메인 Bean 생성 가능
+    // 다른 도메인 Bean 생성 가능 ( 위 참고 )
 }
