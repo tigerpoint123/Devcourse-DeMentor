@@ -2,12 +2,14 @@ package com.dementor.domain.mentoringclass.entity;
 
 import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "schedule")
 @Getter
-@Setter // TODO : 지워
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,4 +33,5 @@ public class Schedule {
     public void updateTime(String time) {
         this.time = time;
     }
+
 }

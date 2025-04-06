@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class MentoringClassService {
     /*
-    * TODO : 예외처리 계층화, 공통 로직 분리, 엔티티 수정
+    * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정
     *
     * */
 
@@ -73,7 +73,7 @@ public class MentoringClassService {
 
         // 스케줄 저장 로직 별도로 관리
         List<Schedule> schedules = createSchedules(request.schedules(), mentoringClass);
-        mentoringClass.setSchedules(schedules);
+        mentoringClass.updateSchedules(schedules);
         
         return MentoringClassDetailResponse.from(mentoringClass);
     }
@@ -113,11 +113,11 @@ public class MentoringClassService {
         if (request.title() != null)
             mentoringClass.updateTitle(request.title());
         if (request.content() != null)
-            mentoringClass.updateDescription(request.content());
+            mentoringClass.updateContent(request.content());
         if (request.price() != null)
             mentoringClass.updatePrice(request.price());
         if (request.stack() != null)
-            mentoringClass.setStack(String.join(",", request.stack()));
+            mentoringClass.updateStack(request.stack());
 
         // 일정 정보
         if (request.schedule() != null) {

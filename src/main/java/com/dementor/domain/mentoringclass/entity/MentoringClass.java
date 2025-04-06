@@ -11,7 +11,6 @@ import java.util.List;
 @Entity
 @Table(name = "mentoring_class")
 @Getter
-@Setter // TODO : 지워
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -39,7 +38,7 @@ public class MentoringClass extends BaseEntity {
         this.title = title;
     }
 
-    public void updateDescription(String description) {
+    public void updateContent(String description) {
         this.content = description;
     }
 
@@ -47,4 +46,11 @@ public class MentoringClass extends BaseEntity {
         this.price = price;
     }
 
+    public void updateStack(String[] stack) {
+        this.stack = String.join(",", stack);
+    }
+
+    public void updateSchedules(List<Schedule> schedules) {
+        this.schedules = schedules;
+    }
 }
