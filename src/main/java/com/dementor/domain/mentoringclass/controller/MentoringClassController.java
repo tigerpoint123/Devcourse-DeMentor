@@ -26,6 +26,11 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassController {
+    /*
+     * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정
+     *
+     * */
+
     private final MentoringClassService mentoringClassService;
 
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")

@@ -10,32 +10,42 @@ import java.util.List;
 
 @Entity
 @Table(name = "mentoring_class")
-@Getter
+//@Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class MentoringClass extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
-    
+
+    @Getter
     private String title;
 
     private String stack;
 
+    @Getter
     private String content;
 
+    @Getter
     private int price;
 
     @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
+    @Getter
     private List<Schedule> schedules = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "mentor_id")
+    @Getter
     private Mentor mentor;
 
     public void updateTitle(String title) {
         this.title = title;
+    }
+
+    public String[] getStack() {
+        return this.stack.split(",");
     }
 
     public void updateContent(String description) {

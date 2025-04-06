@@ -27,10 +27,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MentoringClassService {
-    /*
-    * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정
-    *
-    * */
 
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
@@ -137,7 +133,7 @@ public class MentoringClassService {
                 mentoringClass.getMentor().getJob().getName(),
                 mentoringClass.getMentor().getCareer()
             ),
-            mentoringClass.getStack().split(","),
+            mentoringClass.getStack(),
             mentoringClass.getContent(),
             mentoringClass.getTitle(),
             mentoringClass.getPrice(),
