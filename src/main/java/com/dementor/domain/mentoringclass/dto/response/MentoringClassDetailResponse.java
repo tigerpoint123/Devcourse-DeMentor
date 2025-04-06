@@ -33,7 +33,7 @@ public record MentoringClassDetailResponse(
             int career
     ) {}
 
-    public static MentoringClassDetailResponse from(MentoringClass mentoringClass, List<Schedule> schedules1) {
+    public static MentoringClassDetailResponse from(MentoringClass mentoringClass, List<Schedule> schedulesInfo) {
         return new MentoringClassDetailResponse(
                 mentoringClass.getId(),
                 new MentorInfo(
@@ -46,7 +46,7 @@ public record MentoringClassDetailResponse(
                 mentoringClass.getContent(),
                 mentoringClass.getTitle(),
                 mentoringClass.getPrice(),
-                schedules1.stream()
+                schedulesInfo.stream()
                     .map(ScheduleResponse::from)
                     .toList()
         );

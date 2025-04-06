@@ -30,10 +30,6 @@ public class MentoringClass extends BaseEntity {
     @Getter
     private int price;
 
-//    @OneToMany(mappedBy = "mentoringClass", cascade = CascadeType.ALL)
-//    @Getter
-//    private List<Schedule> schedules = new ArrayList<>();
-
     @ManyToOne
     @JoinColumn(name = "mentor_id")
     @Getter

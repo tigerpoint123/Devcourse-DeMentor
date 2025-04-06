@@ -22,10 +22,6 @@ public class Schedule {
     private DayOfWeek dayOfWeek;
     private String time;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "mentoring_class_id")
-//    private MentoringClass mentoringClass;
-
     @Column(name = "mentoring_class_id")
     private Long mentoringClassId;
 

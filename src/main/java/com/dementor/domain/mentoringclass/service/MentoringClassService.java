@@ -79,9 +79,12 @@ public class MentoringClassService {
     }
 
     public MentoringClassDetailResponse findOneClass(Long classId) {
+        // 멘토링 클래스 정보 조회
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
+        // 조회한 클래스 id로 스케줄 정보 조회
         List<Schedule> schedules = scheduleRepository.findByMentoringClassId(classId);
+        // 같이 response
         return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
 
