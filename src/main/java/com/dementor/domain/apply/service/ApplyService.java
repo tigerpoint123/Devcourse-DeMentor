@@ -41,7 +41,7 @@ public class ApplyService {
 	public ApplyIdResponse createApply(ApplyCreateRequest req, Long memberId) {
 
 		MentoringClass mentoringClass = mentoringClassRepository.findById(req.getClassId())
-			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
+			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
 		Member member = memberRepository.findById(memberId)
 			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));

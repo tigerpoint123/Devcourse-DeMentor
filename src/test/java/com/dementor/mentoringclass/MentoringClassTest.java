@@ -175,9 +175,9 @@ public class MentoringClassTest {
         mockMvc.perform(post("/api/class")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(new ObjectMapper().writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.code").value("200"))
+                .andExpect(jsonPath("$.code").value("201"))
                 .andExpect(jsonPath("$.message").value("멘토링 클래스 생성 성공"))
                 .andExpect(jsonPath("$.data.classId").exists())
                 .andExpect(jsonPath("$.data.mentor").exists())
@@ -212,6 +212,17 @@ public class MentoringClassTest {
                 .andExpect(jsonPath("$.data.price").value(100000))
                 .andExpect(jsonPath("$.data.schedule.dayOfWeek").value("WEDNESDAY"))
                 .andExpect(jsonPath("$.data.schedule.time").value("14:00-16:00"));
+    }
+
+    @Test
+    void deleteMentoringClass() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/api/class/{class_id}", testClassId)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.code").value("204"))
+                .andExpect(jsonPath("$.message").value("멘토링 수업 삭제 성공"));
     }
 
 }
