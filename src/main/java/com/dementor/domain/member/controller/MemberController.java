@@ -1,10 +1,8 @@
 package com.dementor.domain.member.controller;
 
-import java.security.Principal;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,6 +16,7 @@ import com.dementor.domain.member.dto.response.MemberInfoResponse;
 import com.dementor.domain.member.service.MemberService;
 import com.dementor.email.service.EmailService;
 import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
@@ -74,18 +73,22 @@ public class MemberController {
 	}
 
 	@GetMapping("/info")
-	@PreAuthorize("isAuthenticated()")
-	public ResponseEntity<ApiResponse<MemberInfoResponse>> info(Principal principal) {
-		MemberInfoResponse memberInfo = memberService.getMemberInfo(principal.getName());
+	public ResponseEntity<ApiResponse<MemberInfoResponse>> info(Authentication authentication) {
+		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+		String email = userDetails.getUsername();
+
+		MemberInfoResponse memberInfo = memberService.getMemberInfo(email);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(ApiResponse.of(true, HttpStatus.OK, "Member Info", memberInfo));
 	}
 
 	@PutMapping("/info")
-	@PreAuthorize("isAuthenticated()")
-	public ResponseEntity<ApiResponse<Void>> modifyNickname(Principal principal, @RequestParam("nickname") String nickname) {
-		memberService.modifyNickname(principal.getName(), nickname);
+	public ResponseEntity<ApiResponse<Void>> modifyNickname(Authentication authentication, @RequestParam("nickname") String nickname) {
+		CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+		String email = userDetails.getUsername();
+
+		memberService.modifyNickname(email, nickname);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(ApiResponse.of(true, HttpStatus.OK, "Modify nickname"));

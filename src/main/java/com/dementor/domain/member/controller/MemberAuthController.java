@@ -19,8 +19,6 @@ import com.dementor.global.security.CustomUserDetails;
 import com.dementor.global.security.cookie.CookieUtil;
 import com.dementor.global.security.jwt.JwtTokenProvider;
 import com.dementor.global.security.jwt.dto.TokenDto;
-import com.dementor.global.security.jwt.dto.request.RefreshTokenRequest;
-import com.dementor.global.security.jwt.dto.response.TokenRefreshResponse;
 import com.dementor.global.security.jwt.service.TokenService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,7 +75,11 @@ public class MemberAuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<ApiResponse<Void>> logout() {
+	public ResponseEntity<ApiResponse<Void>> logout(Authentication authentication) {
+		if (authentication != null) {
+			String userIdentifier = authentication.getName();
+			tokenService.logout(userIdentifier);
+		}
 
 		SecurityContextHolder.clearContext();
 
@@ -85,33 +87,9 @@ public class MemberAuthController {
 		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteAccessTokenCookie().toString());
 		headers.add(HttpHeaders.SET_COOKIE, cookieUtil.deleteRefreshTokenCookie().toString());
 
-
 		return ResponseEntity.ok()
 			.headers(headers)
 			.body(ApiResponse.of(true, HttpStatus.OK,"로그아웃 성공"));
-	}
-
-	// 리프레시 토큰 엔드포인트 추가
-	// TODO: 삭제 예정
-	@PostMapping("/refresh")
-	public ResponseEntity<TokenRefreshResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
-		try {
-			TokenDto tokens = tokenService.refreshAccessToken(request.getRefreshToken());
-
-			HttpHeaders headers = new HttpHeaders();
-			headers.add(HttpHeaders.SET_COOKIE, cookieUtil.createAccessTokenCookie(tokens.getAccessToken()).toString());
-
-			return ResponseEntity.ok()
-				.headers(headers)
-				.body(new TokenRefreshResponse(tokens.getAccessToken(), tokens.getRefreshToken(),"token refreshed"));
-		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-				.body(TokenRefreshResponse.builder()
-					.accessToken(null)
-					.refreshToken(null)
-					.message("토큰 갱신 실패: " + e.getMessage())
-					.build());
-		}
 	}
 
 }
