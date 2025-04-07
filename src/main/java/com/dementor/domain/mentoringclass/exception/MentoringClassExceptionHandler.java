@@ -3,6 +3,7 @@ package com.dementor.domain.mentoringclass.exception;
 import com.dementor.global.ApiResponse;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -11,12 +12,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class MentoringClassExceptionHandler {
 
     @ExceptionHandler(MentoringClassException.class)
-    public ApiResponse<?> handleMentoringClassException(MentoringClassException e) {
+    public ResponseEntity<ApiResponse<?>> handleMentoringClassException(MentoringClassException e) {
         MentoringClassExceptionCode errorCode = e.getErrorCode();
-        return ApiResponse.of(
-                false,
-                errorCode.getStatus(),
-                errorCode.getMessage()
-        );
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ApiResponse.of(
+                        false,
+                        errorCode.getStatus(),
+                        errorCode.getMessage()
+                ));
     }
 }
