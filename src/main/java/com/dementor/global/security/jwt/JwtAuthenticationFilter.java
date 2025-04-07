@@ -68,17 +68,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 							response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 							response.getWriter().write("{\"error\":\"REFRESH_TOKEN_EXPIRED\",\"message\":\"리프레시 토큰이 만료되었습니다. 다시 로그인해주세요.\"}");
 							return;
-						}
-						
-						TokenDto newTokens = tokenService.refreshAccessToken(refreshToken);
-						Authentication auth = jwtTokenProvider.getAuthentication(newTokens.getAccessToken());
-						SecurityContextHolder.getContext().setAuthentication(auth);
+						}else {
+							TokenDto newTokens = tokenService.refreshAccessToken(refreshToken);
+							Authentication auth = jwtTokenProvider.getAuthentication(newTokens.getAccessToken());
+							SecurityContextHolder.getContext().setAuthentication(auth);
 
-						response.addHeader(
-							HttpHeaders.SET_COOKIE,
-							cookieUtil.createAccessTokenCookie(newTokens.getAccessToken()).toString());
-						response.addHeader(HttpHeaders.SET_COOKIE,
-							cookieUtil.createRefreshTokenCookie(newTokens.getRefreshToken()).toString());
+							response.addHeader(
+								HttpHeaders.SET_COOKIE,
+								cookieUtil.createAccessTokenCookie(newTokens.getAccessToken()).toString());
+							response.addHeader(HttpHeaders.SET_COOKIE,
+								cookieUtil.createRefreshTokenCookie(newTokens.getRefreshToken()).toString());
+						}
+
 					} catch (Exception e) {
 						// 토큰 재발급 실패 시 로그아웃 처리
 						String userIdentifier = jwtTokenProvider.getUserIdentifierFromRefreshToken(refreshToken);
