@@ -106,6 +106,29 @@ public class TestDataInit implements CommandLineRunner {
 			mentorRepository.save(mentorInfo);
 		}
 
+		if (mentorRepository.count() == 1) {
+			Member testMentor = memberRepository.findByEmail("tigerrla@naver.com")
+					.orElseThrow(() -> new RuntimeException("테스트 멘토 회원을 찾을 수 없습니다"));
+
+			Job job2 = jobRepository.findByName("프론트엔드 개발자")
+					.orElseThrow(() -> new RuntimeException("백엔드 개발자 직무를 찾을 수 없습니다"));
+
+			Mentor mentorInfo = Mentor.builder()
+					.member(testMentor)
+					.name(testMentor.getName())
+					.currentCompany("토스")
+					.career(5)
+					.phone("010-1234-5678")
+					.email("tigerrla@naver.com")
+					.introduction("어 그래 반갑다.")
+					.bestFor("리엑트 부수기")
+					.approvalStatus(Mentor.ApprovalStatus.APPROVED) // 승인 상태로 설정
+					.job(job2)
+					.build();
+
+			mentorRepository.save(mentorInfo);
+		}
+
 		if(adminRepository.count()==0){
 			Admin admin = Admin.builder()
 				.username("test1234")

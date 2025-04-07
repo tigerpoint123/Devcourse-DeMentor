@@ -10,6 +10,7 @@ import com.dementor.global.ApiResponse;
 import com.dementor.global.common.pagination.PaginationUtil;
 import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,13 @@ public class MentoringClassController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
             @RequestParam(required = false) List<String> jobId,
+            @Parameter(description = "페이지 정보", example = """
+                {
+                  "page": 1,
+                  "size": 10,
+                  "sort": "id,desc"
+                }
+                """)
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
