@@ -23,10 +23,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,27 +79,51 @@ public class PostAttachmentService {
 
         Map<ImageType, List<FileInfoDto>> result = new HashMap<>();
 
-        // 파일 업로드 처리를 하나의 유틸리티 메서드로 분리
-        processImagesForType(result, introductionImages, ImageType.MARKDOWN_SELF_INTRODUCTION,
-                memberId, markdownIntroduction);
-        processImagesForType(result, bestForImages, ImageType.MARKDOWN_RECOMMENDATION,
-                memberId, markdownBestFor);
-        processImagesForType(result, attachmentFiles, ImageType.NORMAL,
-                memberId, null);
+        // 자기소개 이미지 및 마크다운 처리
+        if (introductionImages != null && !introductionImages.isEmpty()) {
+            List<FileInfoDto> files = uploadFiles(
+                    introductionImages,
+                    ImageType.MARKDOWN_SELF_INTRODUCTION,
+                    memberId,
+                    markdownIntroduction);
+            result.put(ImageType.MARKDOWN_SELF_INTRODUCTION, files);
+        } else if (markdownIntroduction != null && !markdownIntroduction.isEmpty()) {
+            // 이미지 없이 마크다운만 있는 경우
+            List<FileInfoDto> files = processMarkdownOnly(
+                    markdownIntroduction,
+                    ImageType.MARKDOWN_SELF_INTRODUCTION,
+                    memberId);
+            result.put(ImageType.MARKDOWN_SELF_INTRODUCTION, files);
+        }
+
+        // 추천대상 이미지 및 마크다운 처리
+        if (bestForImages != null && !bestForImages.isEmpty()) {
+            List<FileInfoDto> files = uploadFiles(
+                    bestForImages,
+                    ImageType.MARKDOWN_RECOMMENDATION,
+                    memberId,
+                    markdownBestFor);
+            result.put(ImageType.MARKDOWN_RECOMMENDATION, files);
+        } else if (markdownBestFor != null && !markdownBestFor.isEmpty()) {
+            // 이미지 없이 마크다운만 있는 경우
+            List<FileInfoDto> files = processMarkdownOnly(
+                    markdownBestFor,
+                    ImageType.MARKDOWN_RECOMMENDATION,
+                    memberId);
+            result.put(ImageType.MARKDOWN_RECOMMENDATION, files);
+        }
+
+        // 일반 첨부 파일 처리
+        if (attachmentFiles != null && !attachmentFiles.isEmpty()) {
+            List<FileInfoDto> files = uploadFiles(
+                    attachmentFiles,
+                    ImageType.NORMAL,
+                    memberId,
+                    null);
+            result.put(ImageType.NORMAL, files);
+        }
 
         return result;
-    }
-
-    // 각 이미지 유형별 처리를 담당하는 도우미 메서드
-    private void processImagesForType(Map<ImageType, List<FileInfoDto>> result,
-                                      List<MultipartFile> images,
-                                      ImageType imageType,
-                                      Long memberId,
-                                      String markdownText) {
-        if (images != null && !images.isEmpty()) {
-            List<FileInfoDto> files = uploadFiles(images, imageType, memberId, markdownText);
-            result.put(imageType, files);
-        }
     }
 
     //파일 업로드 처리
@@ -195,7 +223,20 @@ public class PostAttachmentService {
 
         // 마크다운 텍스트가 제공된 경우, 이미지 참조 처리
         if (markdownText != null && !markdownText.isEmpty()) {
-            processMarkdownImages(markdownText, member, mentor, imageType);
+            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, member, mentor, imageType);
+
+            // 처리된 마크다운 이미지를 응답에 추가
+            for (PostAttachment attachment : markdownAttachments) {
+                FileInfoDto fileInfo = FileInfoDto.builder()
+                        .attachmentId(attachment.getId())
+                        .originalFilename(attachment.getOriginalFilename())
+                        .fileSize(attachment.getFileSize())
+                        .fileUrl("/api/files/markdown-images/" + attachment.getUniqueIdentifier())
+                        .uniqueIdentifier(attachment.getUniqueIdentifier())
+                        .build();
+
+                uploadedFiles.add(fileInfo);
+            }
         }
 
         return uploadedFiles;
@@ -205,20 +246,13 @@ public class PostAttachmentService {
     private List<PostAttachment> processMarkdownImages(String markdownText, Member member, Mentor mentor, ImageType imageType) {
         List<PostAttachment> processedAttachments = new ArrayList<>();
 
-        // 정규식으로 마크다운 이미지 구문 찾기
-        // ![대체텍스트](/api/files/markdown-images/uniqueIdentifier) 형식 또는
-        // ![대체텍스트](http://example.com/image.jpg) 형식 모두 처리
+        // 마크다운에서 이미지 패턴 찾기
         Pattern pattern = Pattern.compile("!\\[(.*?)\\]\\((.*?)\\)");
         Matcher matcher = pattern.matcher(markdownText);
 
         while (matcher.find()) {
             String altText = matcher.group(1);
             String imageUrl = matcher.group(2);
-
-            // 외부 URL인 경우 건너뛰기 (http://, https://)
-            if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                continue;
-            }
 
             // 내부 이미지 참조 처리
             if (imageUrl.contains("/api/files/markdown-images/")) {
@@ -234,13 +268,12 @@ public class PostAttachmentService {
                     // 이미 처리된 이미지인지 확인
                     if (!processedAttachments.contains(existingAttachment)) {
                         processedAttachments.add(existingAttachment);
-
-                        // 필요한 추가 처리 (예: 이미지와 특정 엔티티 연결)
-                        // 이 부분은 비즈니스 요구사항에 따라 달라질 수 있음
-                        log.info("마크다운 이미지 참조 처리: {}", existingAttachment.getId());
+                        log.info("처리된 이미지 목록에 추가");
+                    } else {
+                        log.info("이미 처리된 이미지 - 중복 제외");
                     }
                 } else {
-                    log.warn("마크다운 텍스트에 참조된 이미지를 찾을 수 없습니다: {}", uniqueIdentifier);
+                    log.warn("이미지를 찾을 수 없음 - uniqueIdentifier: {}", uniqueIdentifier);
                 }
             }
             // 새로운 이미지 업로드가 필요한 경우 (data:image/... 형식의 base64 인코딩 이미지)
@@ -253,9 +286,89 @@ public class PostAttachmentService {
                     log.error("Base64 이미지 처리 중 오류 발생", e);
                 }
             }
+
+            // GitHub 및 외부 URL 처리
+            else if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+                String uniqueIdentifier = UUID.randomUUID().toString();
+
+                // 확장자 추출 시도
+                String extension = ".jpg"; // 기본값
+                if (imageUrl.toLowerCase().endsWith(".png")) extension = ".png";
+                else if (imageUrl.toLowerCase().endsWith(".gif")) extension = ".gif";
+                else if (imageUrl.toLowerCase().endsWith(".svg")) extension = ".svg";
+
+                // 외부 URL은 storeFilePath에 그대로 저장하여 구분
+                PostAttachment attachment = PostAttachment.builder()
+                        .filename(uniqueIdentifier + extension)
+                        .originalFilename(altText + extension)
+                        .storeFilePath(imageUrl) // URL을 그대로 저장
+                        .fileSize(0L) // 실제 크기는 알 수 없음
+                        .member(member)
+                        .mentor(mentor)
+                        .imageType(imageType)
+                        .uniqueIdentifier(uniqueIdentifier)
+                        .build();
+
+                PostAttachment savedAttachment = postAttachmentRepository.save(attachment);
+                processedAttachments.add(savedAttachment);
+            }
         }
 
         return processedAttachments;
+    }
+
+    // 외부 URL 이미지를 다운로드하고 저장하는 메서드
+    private PostAttachment saveExternalImage(String imageUrl, String altText, Member member, Mentor mentor, ImageType imageType) {
+        try {
+            // 이미지 URL에서 파일 확장자 추출 (또는 기본값 사용)
+            String extension = ".jpg"; // 기본값
+            if (imageUrl.contains(".png")) extension = ".png";
+            else if (imageUrl.contains(".gif")) extension = ".gif";
+            else if (imageUrl.contains(".svg")) extension = ".svg";
+
+            // URL 연결 및 이미지 다운로드
+            URL url = new URL(imageUrl);
+            URLConnection connection = url.openConnection();
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // User-Agent 설정
+
+            try (InputStream in = connection.getInputStream()) {
+                // 파일명 생성 (UUID)
+                String filename = UUID.randomUUID().toString() + extension;
+
+                // 저장 경로 생성
+                String filePath = uploadDir + File.separator + filename;
+                Path targetPath = Paths.get(filePath);
+
+                // 디렉토리 생성 (없는 경우)
+                Files.createDirectories(targetPath.getParent());
+
+                // 파일 저장
+                Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+                // 파일 크기 확인
+                long fileSize = Files.size(targetPath);
+
+                // 마크다운용 고유 식별자 생성
+                String uniqueIdentifier = UUID.randomUUID().toString();
+
+                // DB 저장
+                PostAttachment attachment = PostAttachment.builder()
+                        .filename(filename)
+                        .originalFilename(altText + extension) // 대체 텍스트를 원본 파일명으로 사용
+                        .storeFilePath(filePath)
+                        .fileSize(fileSize)
+                        .member(member)
+                        .mentor(mentor)
+                        .imageType(imageType)
+                        .uniqueIdentifier(uniqueIdentifier)
+                        .build();
+
+                return postAttachmentRepository.save(attachment);
+            }
+        } catch (Exception e) {
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                    "외부 이미지 다운로드 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 
     //Base64 인코딩된 이미지를 디코딩하고 저장하는 메서드
@@ -313,6 +426,54 @@ public class PostAttachmentService {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
                     "이미지 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    // 마크다운 전용 처리 메서드
+    @Transactional
+    public List<FileInfoDto> processMarkdownOnly(String markdownText, ImageType imageType, Long memberId) {
+        if (markdownText == null || markdownText.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 멤버 확인
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.UNAUTHORIZED_ACCESS,
+                        "사용자를 찾을 수 없습니다."));
+
+        // 멘토 정보 (있는 경우)
+        Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
+
+        List<FileInfoDto> result = new ArrayList<>();
+
+        // 마크다운에서 이미지 추출 및 처리
+        List<PostAttachment> processedAttachments = processMarkdownImages(markdownText, member, mentor, imageType);
+
+        // 이미지가 없는 경우 빈 리스트 반환
+        if (processedAttachments.isEmpty()) {
+            return result;
+        }
+
+        // 파일 개수 제한 확인
+        long currentFileCount = postAttachmentRepository.countByMemberId(memberId);
+        if (currentFileCount + processedAttachments.size() > maxFilesPerUser) {
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
+                    "파일 업로드 제한을 초과했습니다. 최대 " + maxFilesPerUser + "개까지 가능합니다.");
+        }
+
+        // 추출된 이미지들을 DTO로 변환
+        for (PostAttachment attachment : processedAttachments) {
+            FileInfoDto fileInfo = FileInfoDto.builder()
+                    .attachmentId(attachment.getId())
+                    .originalFilename(attachment.getOriginalFilename())
+                    .fileSize(attachment.getFileSize())
+                    .fileUrl("/api/files/markdown-images/" + attachment.getUniqueIdentifier())
+                    .uniqueIdentifier(attachment.getUniqueIdentifier())
+                    .build();
+
+            result.add(fileInfo);
+        }
+
+        return result;
     }
 
     //파일 삭제 처리
@@ -390,6 +551,14 @@ public class PostAttachmentService {
         // 식별자로 파일 조회
         PostAttachment attachment = postAttachmentRepository.findByUniqueIdentifier(uniqueIdentifier)
                 .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.FILE_NOT_FOUND, "이미지를 찾을 수 없습니다."));
+
+        // storeFilePath가 http로 시작하면 외부 URL로 판단
+        if (attachment.getStoreFilePath().startsWith("http")) {
+            Map<String, Object> externalInfo = new HashMap<>();
+            externalInfo.put("redirectUrl", attachment.getStoreFilePath());
+            externalInfo.put("isExternalUrl", true);
+            return externalInfo;
+        }
 
         // 마크다운 이미지인지 확인
         if (attachment.getImageType() == ImageType.NORMAL) {

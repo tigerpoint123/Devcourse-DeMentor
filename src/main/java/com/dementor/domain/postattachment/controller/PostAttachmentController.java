@@ -18,6 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -33,25 +34,53 @@ public class PostAttachmentController {
     @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')" )
     @Operation(summary = "파일 업로드", description = "새로운 파일을 업로드합니다. 회원가입한 회원(멘티)만 파일 업로드가 가능합니다.")
     public ResponseEntity<ApiResponse<?>> uploadFile(
-            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "file", required = false) List<MultipartFile> files,
+            @RequestParam(value = "introductionMarkdown", required = false) String introductionMarkdown,
+            @RequestParam(value = "recommendationMarkdown", required = false) String recommendationMarkdown,
             @RequestParam(value = "imageType", required = false, defaultValue = "NORMAL") ImageType imageType,
-            @RequestParam(value = "markdownText", required = false) String markdownText,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         try {
-            // 파일 업로드 처리
-            List<FileInfoDto> uploadedFiles = postAttachmentService.uploadFiles(
-                    List.of(file), imageType, userDetails.getId(), markdownText);
+            // 파일이나 마크다운 중 하나는 필수
+            if ((files == null || files.isEmpty()) &&
+                    (introductionMarkdown == null || introductionMarkdown.isEmpty()) &&
+                    (recommendationMarkdown == null || recommendationMarkdown.isEmpty())) {
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "파일 또는 마크다운 텍스트 중 하나는 필수입니다."));
+            }
+
+            List<FileInfoDto> allUploadedFiles = new ArrayList<>();
+
+            // 1. 일반 파일 업로드 처리
+            if (files != null && !files.isEmpty()) {
+                List<FileInfoDto> uploadedFiles = postAttachmentService.uploadFiles(
+                        files, ImageType.NORMAL, userDetails.getId(), null);
+                allUploadedFiles.addAll(uploadedFiles);
+            }
+
+            // 2. 자기소개 마크다운 처리
+            if (introductionMarkdown != null && !introductionMarkdown.isEmpty()) {
+                List<FileInfoDto> introductionImages = postAttachmentService.processMarkdownOnly(
+                        introductionMarkdown, ImageType.MARKDOWN_SELF_INTRODUCTION, userDetails.getId());
+                allUploadedFiles.addAll(introductionImages);
+            }
+
+            // 3. 추천대상 마크다운 처리
+            if (recommendationMarkdown != null && !recommendationMarkdown.isEmpty()) {
+                List<FileInfoDto> recommendationImages = postAttachmentService.processMarkdownOnly(
+                        recommendationMarkdown, ImageType.MARKDOWN_RECOMMENDATION, userDetails.getId());
+                allUploadedFiles.addAll(recommendationImages);
+            }
 
             FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()
                     .status(HttpStatus.CREATED.value())
-                    .message("파일 업로드에 성공했습니다.")
-                    .data(uploadedFiles)
+                    .message("업로드에 성공했습니다.")
+                    .data(allUploadedFiles)
                     .build();
 
-            // 응답 생성
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.of(true, HttpStatus.CREATED, "파일 업로드에 성공했습니다.", responseDto));
+                    .body(ApiResponse.of(true, HttpStatus.CREATED, "업로드에 성공했습니다.", responseDto));
 
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

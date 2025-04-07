@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class MentorController {
     private final MentorService mentorService;
     private final MentorRepository mentorRepository;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('MENTEE') and #requestDto.memberId() == authentication.principal.id")
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
@@ -59,7 +60,7 @@ public class MentorController {
         }
     }
 
-    @PutMapping("/{memberId}")
+    @PutMapping(value = "/{memberId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasRole('MENTOR') and #memberId == authentication.principal.id")
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
