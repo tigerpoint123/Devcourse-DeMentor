@@ -8,10 +8,8 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateRespo
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.common.pagination.PaginationUtil;
+import com.dementor.global.common.swaggerDocs.MentoringClassSwagger;
 import com.dementor.global.security.CustomUserDetails;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,25 +24,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 @RestController
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
 @Slf4j
-public class MentoringClassController {
+public class MentoringClassController implements MentoringClassSwagger {
     private final MentoringClassService mentoringClassService;
 
-    @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
+    @Override
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
             @RequestParam(required = false) List<String> jobId,
-            @Parameter(description = "페이지 정보", example = """
-                {
-                  "page": 1,
-                  "size": 10,
-                  "sort": "id,desc"
-                }
-                """)
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
@@ -80,7 +70,7 @@ public class MentoringClassController {
 
     }
 
-    @Operation(summary = "멘토링 수업 상세 조회", description = "특정 멘토링 수업의 상세 정보를 조회합니다.")
+    @Override
     @GetMapping("/{classId}")
     public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassById(
             @PathVariable Long classId
@@ -96,7 +86,7 @@ public class MentoringClassController {
                 ));
     }
 
-    @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
+    @Override
     @PreAuthorize("hasRole('MENTOR')")
     @PostMapping
     public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(
@@ -117,7 +107,7 @@ public class MentoringClassController {
                 ));
     }
 
-    @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
+    @Override
     @PreAuthorize("hasRole('MENTOR')")
     @PutMapping("/{classId}")
     public ResponseEntity<ApiResponse<MentoringClassUpdateResponse>> updateClass(
@@ -139,7 +129,7 @@ public class MentoringClassController {
                 ));
     }
 
-    @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
+    @Override
     @PreAuthorize("hasRole('MENTOR')")
     @DeleteMapping("/{classId}")
     public ResponseEntity<ApiResponse<?>> deleteClass(
