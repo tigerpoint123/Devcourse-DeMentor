@@ -1,18 +1,18 @@
 package com.dementor.global.exception;
 
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.security.access.AccessDeniedException;
 import com.dementor.domain.apply.exception.ApplyErrorCode;
 import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.member.exception.MemberErrorCode;
 import com.dementor.domain.member.exception.MemberException;
+import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.global.ApiResponse;
-
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,28 +33,33 @@ public class GlobalExceptionHandler {
 			errorCode.getMessage());
 	}
 
+	@ExceptionHandler(PostAttachmentException.class)
+	public ApiResponse<?> handlePostAttachmentException(PostAttachmentException e) {
+		return ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage());
+	}
+
 	// EntityNotFoundException 처리
 	@ExceptionHandler(EntityNotFoundException.class)
-	public ResponseEntity<ApiResponse<?>> handleEntityNotFoundException(EntityNotFoundException e) {
-		return ResponseEntity
-				.status(HttpStatus.NOT_FOUND)
-				.body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+	public ApiResponse<?> handleEntityNotFoundException(EntityNotFoundException e) {
+		return ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage());
 	}
 
 	// IllegalStateException 처리
 	@ExceptionHandler(IllegalStateException.class)
-	public ResponseEntity<ApiResponse<?>> handleIllegalStateException(IllegalStateException e) {
-		return ResponseEntity
-				.status(HttpStatus.BAD_REQUEST)
-				.body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
+	public ApiResponse<?> handleIllegalStateException(IllegalStateException e) {
+		return ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage());
+	}
+
+	// MaxUploadSizeExceededException 처리
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ApiResponse<?> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e) {
+		return ApiResponse.of(false, HttpStatus.PAYLOAD_TOO_LARGE, "파일 크기가 허용 범위를 초과했습니다. 최대 10MB까지 가능합니다.");
 	}
 
 	// 일반 예외 처리
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception e) {
-		return ResponseEntity
-				.status(HttpStatus.INTERNAL_SERVER_ERROR)
-				.body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
+	public ApiResponse<?> handleGeneralException(Exception e) {
+		return ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage());
 	}
 
 	@ExceptionHandler(IllegalArgumentException.class)

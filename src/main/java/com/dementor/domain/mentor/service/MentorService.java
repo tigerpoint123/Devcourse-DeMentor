@@ -80,13 +80,26 @@ public class MentorService {
                 .status(MentorApplication.ApplicationStatus.PENDING)
                 .build();
 
-        // 첨부파일 연결 - TODO: 파일 처리 로직 구현 필요
-        if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
-            // attachmentRepository.updateApplicationId(requestDto.attachmentId(), mentorApplication.getId());
-        }
+        // 멘토 애플리케이션 저장 (ID 생성)
+        MentorApplication savedApplication = mentorApplicationRepository.save(mentorApplication);
 
-        // 멘토 애플리케이션 저장 (PENDING 상태로)
-        mentorApplicationRepository.save(mentorApplication);
+        // 첨부파일 연결
+        if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
+            for (Long attachmentId : requestDto.attachmentId()) {
+                // 첨부 파일 존재 여부 확인
+                attachmentRepository.findById(attachmentId)
+                        .ifPresent(attachment -> {
+                            // 첨부파일 소유자 확인 (본인 파일만 연결 가능)
+                            if (!attachment.getMember().getId().equals(member.getId())) {
+                                throw new IllegalStateException("본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
+                            }
+
+                            // 첨부파일과 멘토 지원서 연결
+                            attachment.connectToMentorApplication(savedApplication);
+                            attachmentRepository.save(attachment);
+                        });
+            }
+        }
     }
 
     //멘토 정보 업데이트
@@ -132,8 +145,20 @@ public class MentorService {
 
         // 첨부 파일 처리
         if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
-            // TODO: 첨부 파일 연결 로직 구현
-            // attachmentRepository.updateModificationId(requestDto.attachmentId(), savedModification.getId());
+            for (Long attachmentId : requestDto.attachmentId()) {
+                // 첨부 파일 존재 여부 확인
+                attachmentRepository.findById(attachmentId)
+                        .ifPresent(attachment -> {
+                            // 첨부파일 소유자 확인 (본인 파일만 연결 가능)
+                            if (!attachment.getMember().getId().equals(mentor.getMember().getId())) {
+                                throw new IllegalStateException("본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
+                            }
+
+                            // 첨부파일과 멘토 수정 요청 연결
+                            attachment.connectToMentorModification(savedModification);
+                            attachmentRepository.save(attachment);
+                        });
+            }
         }
 
         // 멘토의 수정 상태 업데이트

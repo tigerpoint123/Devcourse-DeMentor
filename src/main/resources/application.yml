@@ -57,3 +57,8 @@ jwt:
     path: / # 쿠키가 유효한 경로 지정
     max-age-seconds: 86400
 
+file:
+  upload-dir: ./uploads
+  max-size: 10485760
+  max-per-user: 20
+
