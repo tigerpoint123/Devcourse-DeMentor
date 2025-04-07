@@ -60,6 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					try {
 						if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
 							// 리프레시 토큰이 만료된 경우 로그아웃 처리
+							String userIdentifier = jwtTokenProvider.getUserIdentifierFromRefreshToken(refreshToken);
+							tokenService.logout(userIdentifier); // Redis에서 토큰 삭제
+							
 							response.addHeader(HttpHeaders.SET_COOKIE, cookieUtil.deleteAccessTokenCookie().toString());
 							response.addHeader(HttpHeaders.SET_COOKIE, cookieUtil.deleteRefreshTokenCookie().toString());
 							response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -78,6 +81,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 							cookieUtil.createRefreshTokenCookie(newTokens.getRefreshToken()).toString());
 					} catch (Exception e) {
 						// 토큰 재발급 실패 시 로그아웃 처리
+						String userIdentifier = jwtTokenProvider.getUserIdentifierFromRefreshToken(refreshToken);
+						tokenService.logout(userIdentifier); // Redis에서 토큰 삭제
+						
 						response.addHeader(HttpHeaders.SET_COOKIE, cookieUtil.deleteAccessTokenCookie().toString());
 						response.addHeader(HttpHeaders.SET_COOKIE, cookieUtil.deleteRefreshTokenCookie().toString());
 						response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
