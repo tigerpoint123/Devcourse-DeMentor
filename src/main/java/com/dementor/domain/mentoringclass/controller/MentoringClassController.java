@@ -32,10 +32,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassController {
-    /*
-     * TODO : 예외처리 계층화, 공통 로직 분리(페이징 끝), 엔티티 수정(setter 삭제), onetomany 삭제 (멘토링 - 스케줄)
-     *
-     * */
     private final MentoringClassService mentoringClassService;
 
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
@@ -62,14 +58,26 @@ public class MentoringClassController {
 
         Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobIds, domainPageable);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ApiResponse.of(
-                        true,
-                        HttpStatus.OK,
-                        "멘토링 수업 조회 성공",
-                        result
-                ));
+        if (result.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(ApiResponse.of(
+                            true,
+                            HttpStatus.OK,
+                            "조회된 멘토링 수업이 없습니다.",
+                            result
+                    ));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(ApiResponse.of(
+                            true,
+                            HttpStatus.OK,
+                            "멘토링 수업 조회 성공",
+                            result
+                    ));
+        }
+
     }
 
     @Operation(summary = "멘토링 수업 상세 조회", description = "특정 멘토링 수업의 상세 정보를 조회합니다.")
