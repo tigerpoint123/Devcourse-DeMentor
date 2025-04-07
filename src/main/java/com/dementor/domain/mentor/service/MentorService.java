@@ -1,5 +1,7 @@
 package com.dementor.domain.mentor.service;
 
+import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
@@ -50,6 +52,7 @@ public class MentorService {
     private final MentorApplicationRepository mentorApplicationRepository;
     private final ObjectMapper objectMapper;
     private final PostAttachmentService postAttachmentService;
+    private final ApplyRepository applyRepository;
 
     //멘토 지원하기
     @Transactional
@@ -244,13 +247,19 @@ public class MentorService {
             throw new IllegalStateException("승인되지 않은 멘토 정보는 조회할 수 없습니다: " + memberId);
         }
 
-        // 멘토링 클래스 통계 계산
-        Integer totalClasses = mentor.getMentorings() != null ? mentor.getMentorings().size() : 0;
+        // 멘토의 클래스 ID 목록 조회
+        List<Long> classIds = mentorRepository.findMentoringClassIdsByMentor(mentor);
 
-        // 대기 중인 요청 및 완료된 세션 수 계산
-        // TODO: 실제 비즈니스 로직에 맞게 수정 필요
-        Integer pendingRequests = 0;
-        Integer completedSessions = 0;
+        // 멘토링 클래스 통계 계산
+        Integer totalClasses = classIds.size();
+
+        // 대기 중인 요청 수 계산
+        Integer pendingRequests = applyRepository.countByMentoringClassIdInAndStatus(
+                classIds, ApplyStatus.PENDING);
+
+        // 완료된 멘토링 수 계산 - 멘토링 신청 날짜가 오늘보다 이전이면 완료된 상태
+        Integer completedSessions = applyRepository.countCompletedSessions(classIds);
+
 
         return MentorInfoResponse.from(mentor, totalClasses, pendingRequests, completedSessions);
     }
