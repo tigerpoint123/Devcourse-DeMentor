@@ -12,16 +12,16 @@ import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,17 +35,19 @@ public class MentorController {
     private final MentorService mentorService;
     private final MentorRepository mentorRepository;
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     @PreAuthorize("hasRole('MENTEE') and #requestDto.memberId() == authentication.principal.id")
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
-            @RequestPart("mentorInfo") @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
-            @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
-            @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
-            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles) {
-
+            @RequestBody @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
-            mentorService.applyMentor(requestDto, introductionImages, bestForImages, attachmentFiles);
+            // 권한 체크: 멘토 지원 시 자신의 ID로만 지원 가능
+            if (!requestDto.memberId().equals(userDetails.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "멘토 지원은 본인만 가능합니다."));
+            }
+            mentorService.applyMentor(requestDto);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
         } catch (MentorException e) {
@@ -60,15 +62,13 @@ public class MentorController {
         }
     }
 
-    @PutMapping(value = "/{memberId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{memberId}")
     @PreAuthorize("hasRole('MENTOR') and #memberId == authentication.principal.id")
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestPart("mentorInfo") @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
-            @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
-            @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
-            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles) {
+            @RequestBody @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -76,7 +76,13 @@ public class MentorController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, "해당 멘토를 찾을 수 없습니다: " + memberId));
             }
-            mentorService.updateMentor(memberId, requestDto, introductionImages, bestForImages, attachmentFiles);
+
+            // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+            if (!memberId.equals(userDetails.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
+            }
+            mentorService.updateMentor(memberId, requestDto);
 
             MentorUpdateResponse response = MentorUpdateResponse.of(memberId, Mentor.ModificationStatus.PENDING);
 
@@ -98,7 +104,8 @@ public class MentorController {
     @PreAuthorize("hasRole('MENTOR') and #memberId == authentication.principal.id")
     @Operation(summary = "멘토 정보 조회", description = "특정 멘토의 상세 정보 조회 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> getMentorInfo(
-            @PathVariable Long memberId) {
+            @PathVariable Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -106,6 +113,13 @@ public class MentorController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, "해당 멘토를 찾을 수 없습니다: " + memberId));
             }
+
+            // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+            if (!memberId.equals(userDetails.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 조회할 권한이 없습니다."));
+            }
+
             MentorInfoResponse mentorInfo = mentorService.getMentorInfo(memberId);
 
             return ResponseEntity.ok()
@@ -126,7 +140,8 @@ public class MentorController {
             @PathVariable Long memberId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer size) {
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -134,6 +149,13 @@ public class MentorController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, "해당 멘토를 찾을 수 없습니다: " + memberId));
             }
+
+            // 권한 체크: 로그인한 사용자와 요청된 멘토 ID가 일치하는지
+            if (!memberId.equals(userDetails.getId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보 수정 요청을 조회할 권한이 없습니다."));
+            }
+
             // 페이지 번호와 크기 유효성 검사
             if (page < 1 || size < 1) {
                 Map<String, String> errors = new HashMap<>();

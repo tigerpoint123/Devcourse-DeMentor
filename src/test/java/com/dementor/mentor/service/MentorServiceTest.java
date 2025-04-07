@@ -126,7 +126,7 @@ public class MentorServiceTest {
                 );
 
         // When
-        mentorService.applyMentor(requestDto, null, null, null);
+        mentorService.applyMentor(requestDto);
 
         // Then
         MentorApplication savedApplication = mentorApplicationRepository.findByMemberId(testMember.getId())
@@ -177,7 +177,7 @@ public class MentorServiceTest {
 
         // When & Then
         Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.applyMentor(requestDto, null, null, null);
+            mentorService.applyMentor(requestDto);
         });
 
         assertTrue(exception.getMessage().contains("회원을 찾을 수 없습니다"));
@@ -204,7 +204,7 @@ public class MentorServiceTest {
 
         // When & Then
         Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.applyMentor(requestDto, null, null, null);
+            mentorService.applyMentor(requestDto);
         });
 
         assertTrue(exception.getMessage().contains("이미 멘토로 등록된 사용자입니다"));
@@ -229,7 +229,7 @@ public class MentorServiceTest {
                 );
 
         // When
-        mentorService.updateMentor(testMentor.getId(), requestDto, null, null, null);
+        mentorService.updateMentor(testMentor.getId(), requestDto);
 
         // Then
         Mentor updatedMentor = mentorRepository.findById(testMentor.getId()).orElse(null);
@@ -241,7 +241,7 @@ public class MentorServiceTest {
                 .orElseThrow(() -> new AssertionError("수정 요청이 없습니다."));
 
         // 승인 처리
-        modification.updateStatus(MentorModification.ModificationStatus.APPROVED, null);
+        modification.updateStatus(MentorModification.ModificationStatus.APPROVED);
         mentorModificationRepository.save(modification);
 
         Mentor mentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
@@ -284,7 +284,7 @@ public class MentorServiceTest {
 
         // When & Then
         Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.updateMentor(nonExistingMentorId, requestDto, null, null, null);
+            mentorService.updateMentor(nonExistingMentorId, requestDto);
         });
 
         assertTrue(exception.getMessage().contains("멘토를 찾을 수 없습니다"));
@@ -334,7 +334,7 @@ public class MentorServiceTest {
 
         // When & Then
         Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.updateMentor(unapprovedMentorId, requestDto, null, null, null);
+            mentorService.updateMentor(unapprovedMentorId, requestDto);
         });
 
         assertTrue(exception.getMessage().contains("승인되지 않은 멘토는 정보를 수정할 수 없습니다"));
@@ -384,7 +384,7 @@ public class MentorServiceTest {
 
         // When & Then
         Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.updateMentor(pendingMentorId, requestDto, null, null, null);
+            mentorService.updateMentor(pendingMentorId, requestDto);
         });
 
         assertTrue(exception.getMessage().contains("이미 정보 수정 요청 중입니다"));

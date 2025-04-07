@@ -20,10 +20,6 @@ import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.postattachment.dto.response.FileResponse;
-import com.dementor.domain.postattachment.entity.PostAttachment;
-import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
-import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -36,9 +32,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +53,7 @@ public class MentorService {
 
     //멘토 지원하기
     @Transactional
-    public void applyMentor(MentorApplicationRequest.MentorApplicationRequestDto requestDto,
-                            List<MultipartFile> introductionImages,
-                            List<MultipartFile> bestForImages,
-                            List<MultipartFile> attachmentFiles) {
+    public void applyMentor(MentorApplicationRequest.MentorApplicationRequestDto requestDto) {
         // 회원 엔티티 조회
         Member member = memberRepository.findById(requestDto.memberId())
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
@@ -102,45 +93,7 @@ public class MentorService {
         // 멘토 애플리케이션 저장 (ID 생성)
         MentorApplication savedApplication = mentorApplicationRepository.save(mentorApplication);
 
-        // 파일 업로드 및 처리
-        if ((introductionImages != null && !introductionImages.isEmpty()) ||
-                (bestForImages != null && !bestForImages.isEmpty()) ||
-                (attachmentFiles != null && !attachmentFiles.isEmpty())) {
-
-            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles;
-            try {
-                uploadedFiles = postAttachmentService.uploadMentorFiles(
-                        introductionImages,
-                        bestForImages,
-                        attachmentFiles,
-                        requestDto.memberId(),
-                        requestDto.introduction(),
-                        requestDto.bestFor()
-                );
-            } catch (Exception e) {
-                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
-                        "파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
-            }
-
-            // 업로드된 파일들을 멘토 애플리케이션과 연결
-            List<Long> allAttachmentIds = new ArrayList<>();
-
-            for (List<FileResponse.FileInfoDto> fileInfos : uploadedFiles.values()) {
-                for (FileResponse.FileInfoDto fileInfo : fileInfos) {
-                    allAttachmentIds.add(fileInfo.getAttachmentId());
-                }
-            }
-
-            for (Long attachmentId : allAttachmentIds) {
-                attachmentRepository.findById(attachmentId)
-                        .ifPresent(attachment -> {
-                            attachment.connectToMentorApplication(savedApplication);
-                            attachmentRepository.save(attachment);
-                        });
-            }
-        }
-
-        // 기존 첨부파일 연결 (이미 업로드된 파일들)
+        // 첨부파일 연결
         if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
             for (Long attachmentId : requestDto.attachmentId()) {
                 attachmentRepository.findById(attachmentId)
@@ -158,10 +111,7 @@ public class MentorService {
 
     //멘토 정보 업데이트
     @Transactional
-    public void updateMentor(Long memberId, MentorUpdateRequest.MentorUpdateRequestDto requestDto,
-                             List<MultipartFile> introductionImages,
-                             List<MultipartFile> bestForImages,
-                             List<MultipartFile> attachmentFiles) {
+    public void updateMentor(Long memberId, MentorUpdateRequest.MentorUpdateRequestDto requestDto) {
         Mentor mentor = mentorRepository.findById(memberId)
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
                         "멘토를 찾을 수 없습니다: " + memberId));
@@ -205,47 +155,10 @@ public class MentorService {
 
         MentorModification savedModification = mentorModificationRepository.save(modification);
 
-        // 새로운 파일 업로드 및 처리
-        if ((introductionImages != null && !introductionImages.isEmpty()) ||
-                (bestForImages != null && !bestForImages.isEmpty()) ||
-                (attachmentFiles != null && !attachmentFiles.isEmpty())) {
-
-            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles;
-            try {
-                uploadedFiles = postAttachmentService.uploadMentorFiles(
-                        introductionImages,
-                        bestForImages,
-                        attachmentFiles,
-                        memberId,
-                        requestDto.introduction(),
-                        requestDto.bestFor()
-                );
-            } catch (Exception e) {
-                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
-                        "파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
-            }
-
-            // 업로드된 파일들을 멘토 수정 요청과 연결
-            List<Long> allAttachmentIds = new ArrayList<>();
-
-            for (List<FileResponse.FileInfoDto> fileInfos : uploadedFiles.values()) {
-                for (FileResponse.FileInfoDto fileInfo : fileInfos) {
-                    allAttachmentIds.add(fileInfo.getAttachmentId());
-                }
-            }
-
-            for (Long attachmentId : allAttachmentIds) {
-                attachmentRepository.findById(attachmentId)
-                        .ifPresent(attachment -> {
-                            attachment.connectToMentorModification(savedModification);
-                            attachmentRepository.save(attachment);
-                        });
-            }
-        }
-
-        // 기존 첨부파일 연결
+        // 첨부 파일 처리
         if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
             for (Long attachmentId : requestDto.attachmentId()) {
+                // 첨부 파일 존재 여부 확인
                 attachmentRepository.findById(attachmentId)
                         .ifPresent(attachment -> {
                             if (!attachment.getMember().getId().equals(mentor.getMember().getId())) {

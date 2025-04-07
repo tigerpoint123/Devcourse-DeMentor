@@ -532,7 +532,6 @@ public class PostAttachmentService {
                 fileInfo.put("resource", resource);
                 fileInfo.put("contentType", contentType);
                 fileInfo.put("fileName", attachment.getOriginalFilename());
-                fileInfo.put("contentDisposition", "attachment; filename=\"" + attachment.getOriginalFilename() + "\"");
 
                 return fileInfo;
             } else {
@@ -555,6 +554,7 @@ public class PostAttachmentService {
         // storeFilePath가 http로 시작하면 외부 URL로 판단
         if (attachment.getStoreFilePath().startsWith("http")) {
             Map<String, Object> externalInfo = new HashMap<>();
+            // URL을 그대로 사용하고 파싱하지 않음
             externalInfo.put("redirectUrl", attachment.getStoreFilePath());
             externalInfo.put("isExternalUrl", true);
             return externalInfo;
