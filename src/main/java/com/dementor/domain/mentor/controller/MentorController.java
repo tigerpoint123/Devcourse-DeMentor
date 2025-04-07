@@ -7,19 +7,18 @@ import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
+import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,19 +41,18 @@ public class MentorController {
             @RequestPart("mentorInfo") @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
             @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
             @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
-            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles) {
 
         try {
             mentorService.applyMentor(requestDto, introductionImages, bestForImages, attachmentFiles);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (MentorException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
+        } catch (PostAttachmentException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
@@ -69,8 +67,7 @@ public class MentorController {
             @RequestPart("mentorInfo") @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
             @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
             @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
-            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -84,12 +81,12 @@ public class MentorController {
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", response));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (MentorException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
+        } catch (PostAttachmentException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
@@ -100,8 +97,7 @@ public class MentorController {
     @PreAuthorize("hasRole('MENTOR') and #memberId == authentication.principal.id")
     @Operation(summary = "멘토 정보 조회", description = "특정 멘토의 상세 정보 조회 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> getMentorInfo(
-            @PathVariable Long memberId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @PathVariable Long memberId) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -113,9 +109,9 @@ public class MentorController {
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 조회에 성공했습니다.", mentorInfo));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
+        } catch (MentorException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
@@ -129,8 +125,7 @@ public class MentorController {
             @PathVariable Long memberId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer size,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @RequestParam(required = false, defaultValue = "10") Integer size) {
 
         try {
             boolean exists = mentorRepository.existsById(memberId);
@@ -162,9 +157,9 @@ public class MentorController {
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청 목록 조회에 성공했습니다.", response));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, e.getMessage()));
+        } catch (MentorException e) {
+            return ResponseEntity.status(e.getErrorCode().getStatus())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));

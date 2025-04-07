@@ -15,17 +15,20 @@ import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.entity.MentorModification;
+import com.dementor.domain.mentor.exception.MentorErrorCode;
+import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.postattachment.dto.response.FileResponse;
 import com.dementor.domain.postattachment.entity.PostAttachment;
+import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
+import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -62,20 +65,24 @@ public class MentorService {
                             List<MultipartFile> attachmentFiles) {
         // 회원 엔티티 조회
         Member member = memberRepository.findById(requestDto.memberId())
-                .orElseThrow(() -> new EntityNotFoundException("회원을 찾을 수 없습니다: " + requestDto.memberId()));
+                .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
+                        "회원을 찾을 수 없습니다: " + requestDto.memberId()));
 
         // 회원의 역할이 이미 MENTOR인지 확인
         if (member.getUserRole() == UserRole.MENTOR) {
-            throw new IllegalStateException("이미 멘토로 등록된 사용자입니다: " + requestDto.memberId());
+            throw new MentorException(MentorErrorCode.MENTOR_ALREADY_EXISTS,
+                    "이미 멘토로 등록된 사용자입니다: " + requestDto.memberId());
         }
 
         // 직무 엔티티 조회
         Job job = jobRepository.findById(requestDto.jobId())
-                .orElseThrow(() -> new EntityNotFoundException("직무를 찾을 수 없습니다: " + requestDto.jobId()));
+                .orElseThrow(() -> new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+                        "직무를 찾을 수 없습니다: " + requestDto.jobId()));
 
         // 이미 지원 내역이 있는지 확인
         if (mentorApplicationRepository.existsByMemberId(requestDto.memberId())) {
-            throw new IllegalStateException("이미 멘토 지원 내역이 존재합니다: " + requestDto.memberId());
+            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+                    "이미 멘토 지원 내역이 존재합니다: " + requestDto.memberId());
         }
 
         // 멘토 애플리케이션 엔티티 생성 - 초기 상태는 PENDING
@@ -100,14 +107,20 @@ public class MentorService {
                 (bestForImages != null && !bestForImages.isEmpty()) ||
                 (attachmentFiles != null && !attachmentFiles.isEmpty())) {
 
-            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles = postAttachmentService.uploadMentorFiles(
-                    introductionImages,
-                    bestForImages,
-                    attachmentFiles,
-                    requestDto.memberId(),
-                    requestDto.introduction(),
-                    requestDto.bestFor()
-            );
+            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles;
+            try {
+                uploadedFiles = postAttachmentService.uploadMentorFiles(
+                        introductionImages,
+                        bestForImages,
+                        attachmentFiles,
+                        requestDto.memberId(),
+                        requestDto.introduction(),
+                        requestDto.bestFor()
+                );
+            } catch (Exception e) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                        "파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
+            }
 
             // 업로드된 파일들을 멘토 애플리케이션과 연결
             List<Long> allAttachmentIds = new ArrayList<>();
@@ -133,7 +146,8 @@ public class MentorService {
                 attachmentRepository.findById(attachmentId)
                         .ifPresent(attachment -> {
                             if (!attachment.getMember().getId().equals(member.getId())) {
-                                throw new IllegalStateException("본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
+                                throw new MentorException(MentorErrorCode.UNAUTHORIZED_ACCESS,
+                                        "본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
                             }
                             attachment.connectToMentorApplication(savedApplication);
                             attachmentRepository.save(attachment);
@@ -149,21 +163,25 @@ public class MentorService {
                              List<MultipartFile> bestForImages,
                              List<MultipartFile> attachmentFiles) {
         Mentor mentor = mentorRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("멘토를 찾을 수 없습니다: " + memberId));
+                .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
+                        "멘토를 찾을 수 없습니다: " + memberId));
 
         // 승인된 멘토만 정보 수정 요청 가능
         if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
-            throw new IllegalStateException("승인되지 않은 멘토는 정보를 수정할 수 없습니다: " + memberId);
+            throw new MentorException(MentorErrorCode.NOT_APPROVED_MENTOR,
+                    "승인되지 않은 멘토는 정보를 수정할 수 없습니다: " + memberId);
         }
 
         // 현재 정보 수정 요청 중인지 확인
         if (mentor.getModificationStatus() == Mentor.ModificationStatus.PENDING) {
-            throw new IllegalStateException("이미 정보 수정 요청 중입니다: " + memberId);
+            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+                    "이미 정보 수정 요청 중입니다: " + memberId);
         }
 
         // 변경 사항이 있는지 확인
         if (!requestDto.hasChanges(mentor)) {
-            throw new IllegalStateException("변경된 내용이 없습니다.");
+            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+                    "변경된 내용이 없습니다.");
         }
 
         // 변경 사항 추출
@@ -174,7 +192,8 @@ public class MentorService {
         try {
             changesJson = objectMapper.writeValueAsString(changes);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("변경 내용을 JSON으로 변환하는데 실패했습니다.", e);
+            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+                    "변경 내용을 JSON으로 변환하는데 실패했습니다: " + e.getMessage());
         }
 
         // 수정 요청 엔티티 생성 및 저장
@@ -191,14 +210,20 @@ public class MentorService {
                 (bestForImages != null && !bestForImages.isEmpty()) ||
                 (attachmentFiles != null && !attachmentFiles.isEmpty())) {
 
-            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles = postAttachmentService.uploadMentorFiles(
-                    introductionImages,
-                    bestForImages,
-                    attachmentFiles,
-                    memberId,
-                    requestDto.introduction(),
-                    requestDto.bestFor()
-            );
+            Map<PostAttachment.ImageType, List<FileResponse.FileInfoDto>> uploadedFiles;
+            try {
+                uploadedFiles = postAttachmentService.uploadMentorFiles(
+                        introductionImages,
+                        bestForImages,
+                        attachmentFiles,
+                        memberId,
+                        requestDto.introduction(),
+                        requestDto.bestFor()
+                );
+            } catch (Exception e) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                        "파일 업로드 중 오류가 발생했습니다: " + e.getMessage());
+            }
 
             // 업로드된 파일들을 멘토 수정 요청과 연결
             List<Long> allAttachmentIds = new ArrayList<>();
@@ -224,7 +249,8 @@ public class MentorService {
                 attachmentRepository.findById(attachmentId)
                         .ifPresent(attachment -> {
                             if (!attachment.getMember().getId().equals(mentor.getMember().getId())) {
-                                throw new IllegalStateException("본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
+                                throw new MentorException(MentorErrorCode.UNAUTHORIZED_ACCESS,
+                                        "본인이 업로드한 파일만 연결할 수 있습니다: " + attachmentId);
                             }
                             attachment.connectToMentorModification(savedModification);
                             attachmentRepository.save(attachment);
@@ -240,11 +266,13 @@ public class MentorService {
     //멘토 정보 조회
     public MentorInfoResponse getMentorInfo(Long memberId) {
         Mentor mentor = mentorRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 멘토를 찾을 수 없습니다: " + memberId));
+                .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
+                        "해당 멘토를 찾을 수 없습니다: " + memberId));
 
         // 승인된 멘토만 정보 조회 가능하도록 체크
         if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
-            throw new IllegalStateException("승인되지 않은 멘토 정보는 조회할 수 없습니다: " + memberId);
+            throw new MentorException(MentorErrorCode.NOT_APPROVED_MENTOR,
+                    "승인되지 않은 멘토 정보는 조회할 수 없습니다: " + memberId);
         }
 
         // 멘토의 클래스 ID 목록 조회
@@ -254,7 +282,7 @@ public class MentorService {
         Integer totalClasses = classIds.size();
 
         // 대기 중인 요청 수 계산
-        Integer pendingRequests = applyRepository.countByMentoringClassIdInAndStatus(
+        Integer pendingRequests = applyRepository.countByMentoringClassIdInAndApplyStatus(
                 classIds, ApplyStatus.PENDING);
 
         // 완료된 멘토링 수 계산 - 멘토링 신청 날짜가 오늘보다 이전이면 완료된 상태
@@ -270,7 +298,8 @@ public class MentorService {
             MentorChangeRequest.ModificationRequestParams params) {
         // 멘토 존재 여부 확인
         if (!mentorRepository.existsById(memberId)) {
-            throw new EntityNotFoundException("해당 멘토를 찾을 수 없습니다: " + memberId);
+            throw new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
+                    "해당 멘토를 찾을 수 없습니다: " + memberId);
         }
 
         // 페이지네이션 설정
@@ -305,9 +334,8 @@ public class MentorService {
                     )
             );
         } catch (Exception e) {
-            // 디버깅을 위해 예외 로깅
-            e.printStackTrace();
-            throw new RuntimeException("멘토 정보 수정 요청 목록 조회 중 오류가 발생했습니다: " + e.getMessage(), e);
+            throw new MentorException(MentorErrorCode.INVALID_STATUS_PARAM,
+                    "멘토 정보 수정 요청 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 

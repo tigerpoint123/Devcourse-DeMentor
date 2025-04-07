@@ -10,7 +10,6 @@ import com.dementor.domain.postattachment.entity.PostAttachment.ImageType;
 import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
@@ -104,7 +103,8 @@ public class PostAttachmentService {
     public List<FileInfoDto> uploadFiles(List<MultipartFile> files, ImageType imageType, Long memberId, String markdownText) {
         // 멤버 확인
         Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.UNAUTHORIZED_ACCESS,
+                        "사용자를 찾을 수 없습니다."));
 
         // 멘토 정보 (있는 경우)
         Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
@@ -188,8 +188,8 @@ public class PostAttachmentService {
                 uploadedFiles.add(fileInfo);
 
             } catch (IOException e) {
-                log.error("파일 업로드 중 오류 발생", e);
-                throw new RuntimeException("파일 저장 중 오류가 발생했습니다.", e);
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                        "파일 저장 중 오류가 발생했습니다: " + e.getMessage());
             }
         }
 
@@ -310,7 +310,8 @@ public class PostAttachmentService {
 
             return postAttachmentRepository.save(attachment);
         } catch (Exception e) {
-            throw new RuntimeException("이미지 처리 중 오류가 발생했습니다.", e);
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                    "이미지 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -335,8 +336,8 @@ public class PostAttachmentService {
             postAttachmentRepository.delete(attachment);
 
         } catch (IOException e) {
-            log.error("파일 삭제 중 오류 발생", e);
-            throw new RuntimeException("파일 삭제 중 오류가 발생했습니다.", e);
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                    "파일 삭제 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -379,7 +380,8 @@ public class PostAttachmentService {
         } catch (MalformedURLException e) {
             throw new PostAttachmentException(PostAttachmentErrorCode.INVALID_FILE_PATH);
         } catch (IOException e) {
-            throw new RuntimeException("파일 다운로드 중 오류가 발생했습니다.", e);
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
+                    "파일 다운로드 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 
@@ -437,7 +439,8 @@ public class PostAttachmentService {
         } catch (MalformedURLException e) {
             throw new PostAttachmentException(PostAttachmentErrorCode.INVALID_FILE_PATH);
         } catch (IOException e) {
-            throw new RuntimeException("이미지 다운로드 중 오류가 발생했습니다.", e);
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
+                    "이미지 다운로드 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
 }

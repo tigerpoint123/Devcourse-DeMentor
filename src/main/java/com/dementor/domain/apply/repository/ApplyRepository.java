@@ -17,7 +17,7 @@ public interface ApplyRepository extends JpaRepository<Apply, Long> {
 	Page<Apply> findByMentoringClassIdIn(List<Long> classId, Pageable pageable);
 
 	// 대기 중인 요청 수 계산
-	Integer countByMentoringClassIdInAndStatus(List<Long> mentoringClassIds, ApplyStatus status);
+	Integer countByMentoringClassIdInAndApplyStatus(List<Long> mentoringClassIds, ApplyStatus applyStatus);
 
 	// 완료된 세션 수 계산 - 오늘 날짜보다 이전인 세션 카운트
 	@Query("SELECT COUNT(a) FROM Apply a WHERE a.mentoringClass.id IN :classIds " +
