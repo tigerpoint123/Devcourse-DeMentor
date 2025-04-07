@@ -18,13 +18,16 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -147,12 +150,21 @@ public class MentorControllerTest {
                         null
                 );
 
+        String requestDtoJson = objectMapper.writeValueAsString(requestDto);
+
+        // multipart/form-data 요청 구성
+        MockMultipartFile mentorInfoPart = new MockMultipartFile(
+                "mentorInfo",
+                "",
+                "application/json",
+                requestDtoJson.getBytes(StandardCharsets.UTF_8)
+        );
+
         // When
         ResultActions resultActions = mvc
                 .perform(
-                        post("/api/mentor")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
+                        MockMvcRequestBuilders.multipart("/api/mentor")
+                                .file(mentorInfoPart)
                                 .with(user(memberPrincipal))
                 )
                 .andDo(print());
@@ -183,12 +195,29 @@ public class MentorControllerTest {
                         null              // attachmentId
                 );
 
+        String requestDtoJson = objectMapper.writeValueAsString(requestDto);
+
+        // multipart/form-data 요청 구성
+        MockMultipartFile mentorInfoPart = new MockMultipartFile(
+                "mentorInfo",
+                "",
+                "application/json",
+                requestDtoJson.getBytes(StandardCharsets.UTF_8)
+        );
+
+        // PUT 요청을 위한 특별한 처리
+        MockMultipartHttpServletRequestBuilder builder =
+                MockMvcRequestBuilders.multipart("/api/mentor/" + testMentorId);
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
+
         // When
         ResultActions resultActions = mvc
                 .perform(
-                        put("/api/mentor/" + testMentorId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
+                        builder
+                                .file(mentorInfoPart)
                                 .with(user(mentorPrincipal))
                 )
                 .andDo(print());

@@ -17,7 +17,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -46,7 +45,7 @@ public class PostAttachmentController {
 
             // 파일 업로드 처리
             List<FileInfoDto> uploadedFiles = postAttachmentService.uploadFiles(
-                    Arrays.asList(file), imageType, userDetails.getId(), markdownText);
+                    List.of(file), imageType, userDetails.getId(), markdownText);
 
             FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()
                     .status(HttpStatus.CREATED.value())

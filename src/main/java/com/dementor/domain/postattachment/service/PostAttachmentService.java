@@ -49,6 +49,41 @@ public class PostAttachmentService {
     @Value("${file.max-per-user}")
     private int maxFilesPerUser; // 사용자당 최대 파일 수
 
+    // 멘토 관련 파일을 업로드하는 새로운 메서드 추가
+    @Transactional
+    public Map<ImageType, List<FileInfoDto>> uploadMentorFiles(
+            List<MultipartFile> introductionImages,
+            List<MultipartFile> bestForImages,
+            List<MultipartFile> attachmentFiles,
+            Long memberId,
+            String markdownIntroduction,
+            String markdownBestFor) {
+
+        Map<ImageType, List<FileInfoDto>> result = new HashMap<>();
+
+        // 파일 업로드 처리를 하나의 유틸리티 메서드로 분리
+        processImagesForType(result, introductionImages, ImageType.MARKDOWN_SELF_INTRODUCTION,
+                memberId, markdownIntroduction);
+        processImagesForType(result, bestForImages, ImageType.MARKDOWN_RECOMMENDATION,
+                memberId, markdownBestFor);
+        processImagesForType(result, attachmentFiles, ImageType.NORMAL,
+                memberId, null);
+
+        return result;
+    }
+
+    // 각 이미지 유형별 처리를 담당하는 도우미 메서드
+    private void processImagesForType(Map<ImageType, List<FileInfoDto>> result,
+                                      List<MultipartFile> images,
+                                      ImageType imageType,
+                                      Long memberId,
+                                      String markdownText) {
+        if (images != null && !images.isEmpty()) {
+            List<FileInfoDto> files = uploadFiles(images, imageType, memberId, markdownText);
+            result.put(imageType, files);
+        }
+    }
+
     //파일 업로드 처리
     @Transactional
     public List<FileInfoDto> uploadFiles(List<MultipartFile> files, ImageType imageType, Long memberId, String markdownText) {
@@ -145,14 +180,14 @@ public class PostAttachmentService {
 
         // 마크다운 텍스트가 제공된 경우, 이미지 참조 처리
         if (markdownText != null && !markdownText.isEmpty()) {
-            processMarkdownImages(markdownText, member, mentor);
+            processMarkdownImages(markdownText, member, mentor, imageType);
         }
 
         return uploadedFiles;
     }
 
     //마크다운 텍스트에서 이미지 참조를 처리하는 메서드
-    private List<PostAttachment> processMarkdownImages(String markdownText, Member member, Mentor mentor) {
+    private List<PostAttachment> processMarkdownImages(String markdownText, Member member, Mentor mentor, ImageType imageType) {
         List<PostAttachment> processedAttachments = new ArrayList<>();
 
         // 정규식으로 마크다운 이미지 구문 찾기
@@ -196,8 +231,8 @@ public class PostAttachmentService {
             // 새로운 이미지 업로드가 필요한 경우 (data:image/... 형식의 base64 인코딩 이미지)
             else if (imageUrl.startsWith("data:image/")) {
                 try {
-                    // Base64 이미지 디코딩 및 저장 (구현 필요)
-                    PostAttachment newImageAttachment = saveBase64Image(imageUrl, altText, member, mentor);
+                    // Base64 이미지 디코딩 및 저장
+                    PostAttachment newImageAttachment = saveBase64Image(imageUrl, altText, member, mentor, imageType);
                     processedAttachments.add(newImageAttachment);
                 } catch (Exception e) {
                     log.error("Base64 이미지 처리 중 오류 발생", e);
@@ -209,7 +244,7 @@ public class PostAttachmentService {
     }
 
     //Base64 인코딩된 이미지를 디코딩하고 저장하는 메서드
-    private PostAttachment saveBase64Image(String base64Image, String altText, Member member, Mentor mentor) {
+    private PostAttachment saveBase64Image(String base64Image, String altText, Member member, Mentor mentor, ImageType imageType) {
         try {
             // "data:image/jpeg;base64," 형식에서 데이터 부분만 추출
             String[] parts = base64Image.split(",");
@@ -254,13 +289,12 @@ public class PostAttachmentService {
                     .fileSize((long) imageBytes.length)
                     .member(member)
                     .mentor(mentor)
-                    .imageType(ImageType.MARKDOWN_SELF_INTRODUCTION) // 또는 요구사항에 맞는 타입
+                    .imageType(imageType)
                     .uniqueIdentifier(uniqueIdentifier)
                     .build();
 
             return postAttachmentRepository.save(attachment);
         } catch (Exception e) {
-            log.error("Base64 이미지 저장 중 오류 발생", e);
             throw new RuntimeException("이미지 처리 중 오류가 발생했습니다.", e);
         }
     }

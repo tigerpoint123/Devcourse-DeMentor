@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,10 @@ public class MentorController {
     @PostMapping
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
-            @RequestBody @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
+            @RequestPart("mentorInfo") @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
+            @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
+            @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
+            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
@@ -46,7 +50,7 @@ public class MentorController {
                         .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "멘토 지원은 본인만 가능합니다."));
             }
 
-            mentorService.applyMentor(requestDto);
+            mentorService.applyMentor(requestDto, introductionImages, bestForImages, attachmentFiles);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
         } catch (IllegalStateException e) {
@@ -65,7 +69,10 @@ public class MentorController {
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestBody @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
+            @RequestPart("mentorInfo") @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
+            @RequestPart(value = "introductionImages", required = false) List<MultipartFile> introductionImages,
+            @RequestPart(value = "bestForImages", required = false) List<MultipartFile> bestForImages,
+            @RequestPart(value = "attachmentFiles", required = false) List<MultipartFile> attachmentFiles,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
@@ -81,7 +88,7 @@ public class MentorController {
                         .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
             }
 
-            mentorService.updateMentor(memberId, requestDto);
+            mentorService.updateMentor(memberId, requestDto, introductionImages, bestForImages, attachmentFiles);
 
             MentorUpdateResponse response = MentorUpdateResponse.of(memberId, Mentor.ModificationStatus.PENDING);
 
