@@ -13,6 +13,7 @@ import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -48,6 +49,20 @@ public class PostAttachmentService {
 
     @Value("${file.max-per-user}")
     private int maxFilesPerUser; // 사용자당 최대 파일 수
+
+    //요청한 사용자가 파일의 소유자인지 확인
+    public boolean isFileOwner(Long fileId, Long userId) {
+        return postAttachmentRepository.findById(fileId)
+                .map(file -> file.getMember().getId().equals(userId))
+                .orElse(false);
+    }
+
+    // 요청한 사용자가 마크다운 이미지의 소유자인지 확인
+    public boolean isMarkdownImageOwner(String uniqueIdentifier, Long userId) {
+        return postAttachmentRepository.findByUniqueIdentifier(uniqueIdentifier)
+                .map(file -> file.getMember().getId().equals(userId))
+                .orElse(false);
+    }
 
     // 멘토 관련 파일을 업로드하는 새로운 메서드 추가
     @Transactional
@@ -331,12 +346,7 @@ public class PostAttachmentService {
         PostAttachment attachment = postAttachmentRepository.findById(attachmentId)
                 .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.FILE_NOT_FOUND));
 
-        // 권한 확인 (멘토와 관리자만 다운로드 가능)
         Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
-
-        // TODO: 관리자 권한 확인 로직 추가 필요
-        // UserDetails에서 권한 정보를 확인하여 ROLE_ADMIN 권한이 있는지 확인
-        // 현재는 멘토 여부만 확인
 
         if (mentor == null) {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_ACCESS_DENIED,
@@ -396,8 +406,22 @@ public class PostAttachmentService {
                     contentType = "image/jpeg"; // 기본값
                 }
 
-                // TODO: 이미지 리사이징 처리 (width, height 파라미터가 있는 경우)
-                // 실제 구현 시에는 이미지 처리 라이브러리를 사용하여 리사이징 처리
+                // 리사이징 로직
+                if (width != null && height != null) {
+                    // 임시 파일 생성
+                    File tempFile = File.createTempFile("resized_", "_" + attachment.getOriginalFilename());
+
+                    // 리사이징 수행
+                    Thumbnails.of(filePath.toFile())
+                            .size(width, height)
+                            .toFile(tempFile);
+
+                    // 리사이징된 이미지로 리소스 교체
+                    resource = new UrlResource(tempFile.toURI());
+
+                    // 임시 파일 삭제 예약 (JVM 종료 시)
+                    tempFile.deleteOnExit();
+                }
 
                 // 인라인 이미지 정보 반환
                 Map<String, Object> imageInfo = new HashMap<>();
