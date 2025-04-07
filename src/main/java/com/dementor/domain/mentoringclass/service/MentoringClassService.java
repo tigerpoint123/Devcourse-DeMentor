@@ -14,6 +14,7 @@ import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,18 +25,26 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class MentoringClassService {
 
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
     private final MentorRepository mentorRepository;
 
-    public Page<MentoringClassFindResponse> findAllClass(Long jobId, Pageable pageable) {
+    public Page<MentoringClassFindResponse> findAllClass(List<Long> jobId, Pageable pageable) {
         Page<MentoringClass> mentoringClasses;
-        if (jobId != null)
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId, pageable);
-        else
+
+        if(jobId == null || jobId.isEmpty()) {// Job id가 없으면
             mentoringClasses = mentoringClassRepository.findAll(pageable);
+            log.info("없을때");
+        } else if (jobId.size() == 1) { // Job id가 하나만 입력되면
+            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId.get(0), pageable);
+            log.info("1개만");
+        } else { // job Id가 여러개면
+            mentoringClasses = mentoringClassRepository.findByAllJobIds(jobId, jobId.size(), pageable);
+            log.info("2개 이상");
+        }
 
         return mentoringClasses.map(MentoringClassFindResponse::from);
     }

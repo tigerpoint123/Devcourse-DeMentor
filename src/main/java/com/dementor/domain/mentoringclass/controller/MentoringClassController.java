@@ -23,6 +23,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 @RestController
 @RequestMapping("/api/class")
@@ -38,12 +40,19 @@ public class MentoringClassController {
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
-            @RequestParam(required = false) Long jobId,
+            @RequestParam(required = false) List<String> jobId,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
 
-        Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobId, domainPageable);
+        // String List를 Long List로 변환
+        List<Long> jobIds = jobId != null ?
+                jobId.stream()
+                        .map(Long::parseLong)
+                        .toList() :
+                null;
+
+        Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobIds, domainPageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

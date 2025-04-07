@@ -45,11 +45,21 @@ public class TestDataInit implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
-		if (jobRepository.count() == 0) {
+		if (jobRepository.count() == 1) {
+//			Job job = Job.builder()
+//					.name("백엔드 개발자")
+//					.build();
+//			jobRepository.save(job);
+
 			Job job = Job.builder()
-					.name("백엔드 개발자")
+					.name("프론트엔드 개발자")
 					.build();
 			jobRepository.save(job);
+
+			Job job2 = Job.builder()
+					.name("안드로이드 개발자")
+					.build();
+			jobRepository.save(job2);
 		}
 
         if (memberRepository.count() == 0) {
