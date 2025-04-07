@@ -38,7 +38,6 @@ spring:
       port: ${REDIS_PORT}
       password: ${REDIS_PASSWORD}
 
-
 jwt:
   secret: ${JWT_SECRET_KEY}
   refresh:
