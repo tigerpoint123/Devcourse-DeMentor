@@ -155,7 +155,7 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.code").value("201"))
 			.andExpect(jsonPath("$.message").value("멘토링 신청이 완료되었습니다"))
-			.andExpect(jsonPath("$.data.applymentId").exists());
+			.andExpect(jsonPath("$.data.applyId").exists());
 	}
 
 	@Test
@@ -222,7 +222,7 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.isSuccess").value(true))
 			.andExpect(jsonPath("$.code").value("201"))
 			.andExpect(jsonPath("$.message").value("멘토링 신청이 완료되었습니다"))
-			.andExpect(jsonPath("$.data.applymentId").exists());
+			.andExpect(jsonPath("$.data.applyId").exists());
 	}
 
 	@Test

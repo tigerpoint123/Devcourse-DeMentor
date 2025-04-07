@@ -131,10 +131,10 @@ public class ApplyServiceTest {
 
 
 		assertNotNull(result);
-		assertNotNull(result.getApplymentId());
+		assertNotNull(result.getApplyId());
 
 
-		Apply savedApply = applyRepository.findById(result.getApplymentId()).orElse(null);
+		Apply savedApply = applyRepository.findById(result.getApplyId()).orElse(null);
 		assertNotNull(savedApply);
 		assertEquals("테스트 문의입니다", savedApply.getInquiry());
 		assertEquals(ApplyStatus.PENDING, savedApply.getApplyStatus());
@@ -183,7 +183,7 @@ public class ApplyServiceTest {
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
 		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
-		Long applyId = result.getApplymentId();
+		Long applyId = result.getApplyId();
 
 		applyService.deleteApply(applyId, testMember.getId());
 
@@ -202,7 +202,7 @@ public class ApplyServiceTest {
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
 		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
-		Long applyId = result.getApplymentId();
+		Long applyId = result.getApplyId();
 
 		Member anotherMember = Member.builder()
 			.email("another@test.com")

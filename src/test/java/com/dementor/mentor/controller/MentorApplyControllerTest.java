@@ -159,7 +159,7 @@ public class MentorApplyControllerTest {
 			.andExpect(jsonPath("$.data.applyments").exists())
 			.andExpect(jsonPath("$.data.applyments").isArray())
 			.andExpect(jsonPath("$.data.applyments.length()").value(10))
-			.andExpect(jsonPath("$.data.applyments[0].applymentId").exists())
+			.andExpect(jsonPath("$.data.applyments[0].applyId").exists())
 			.andExpect(jsonPath("$.data.applyments[0].memberId").exists())
 			.andExpect(jsonPath("$.data.applyments[0].nickname").exists())
 			.andExpect(jsonPath("$.data.pagination").exists())
