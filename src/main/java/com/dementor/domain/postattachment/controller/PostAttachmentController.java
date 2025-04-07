@@ -100,16 +100,16 @@ public class PostAttachmentController {
     }
 
     //파일 삭제 API
-    @DeleteMapping("/{fileId}")
+    @DeleteMapping("/{attachmentId}")
     @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#fileId, authentication.principal.id))")  // 멘토와 관리자만 파일 삭제 가능
     @Operation(summary = "파일 삭제", description = "특정 파일을 삭제합니다. 파일 업로드한 본인만 삭제할 수 있습니다.")
     public ResponseEntity<ApiResponse<?>> deleteFile(
-            @PathVariable("fileId") Long fileId,
+            @PathVariable("attachmentId") Long attachmentId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         try {
             // 파일 삭제 처리
-            postAttachmentService.deleteFile(fileId, userDetails.getId());
+            postAttachmentService.deleteFile(attachmentId, userDetails.getId());
 
             FileResponse.FileDeleteResponseDto responseDto = FileResponse.FileDeleteResponseDto.builder()
                     .status(HttpStatus.OK.value())

@@ -3,9 +3,7 @@ package com.dementor.domain.mentor.controller;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
-import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
-import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
-import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
+import com.dementor.domain.mentor.dto.response.*;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -187,5 +185,34 @@ public class MentorController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."));
         }
+    }
+
+    // MentorApplyController에서 가져온 메소드
+    @GetMapping("/apply")
+    @Operation(summary = "신청된 목록 조회", description = "신청된 목록을 조회합니다")
+    @PreAuthorize("hasRole('MENTOR')")
+    public ApiResponse<MentorApplyResponse.GetApplyMenteePageList> getApplyByMentor(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        MentorApplyResponse.GetApplyMenteePageList response = mentorService.getApplyByMentor(userDetails.getId(), page-1, size);
+
+        return ApiResponse.of(true, HttpStatus.OK, "신청된 목록을 조회했습니다", response);
+    }
+
+    // MentorControllerFromHo에서 가져온 메소드
+    @GetMapping("/class/{memberId}")
+    @Operation(summary = "멘토링 수업 조회", description = "멘토의 멘토링 수업 목록을 조회합니다")
+    public ApiResponse<List<MyMentoringResponse>> getMentorClassFromMentor(
+            @PathVariable Long memberId
+    ) {
+        List<MyMentoringResponse> response = mentorService.getMentorClassFromMentor(memberId);
+        return ApiResponse.of(
+                true,
+                HttpStatus.OK,
+                "My 멘토링 수업 조회 성공",
+                response
+        );
     }
 }

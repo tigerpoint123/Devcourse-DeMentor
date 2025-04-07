@@ -1,5 +1,6 @@
 package com.dementor.domain.mentor.service;
 
+import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.repository.ApplyRepository;
 import com.dementor.domain.job.entity.Job;
@@ -10,8 +11,10 @@ import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
+import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
+import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.entity.MentorModification;
@@ -31,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -344,5 +348,41 @@ public class MentorService {
         }
 
         return changes;
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public MentorApplyResponse.GetApplyMenteePageList getApplyByMentor(Long memberId, int page, int size) {
+
+        Mentor mentor = mentorRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("멘토만 조회할 수 있습니다."));
+
+
+        if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
+            throw new AccessDeniedException("승인되지 않은 멘토는 신청 목록을 조회할 수 없습니다");
+        }
+
+        // 멘토가 가진 클래스 아이디 목록 조회
+        List<Long> classId = mentorRepository.findMentoringClassIdsByMentor(mentor);
+
+        // 멘토가 가진 클래스 아이디 목록으로 신청 목록 조회
+        Page<Apply> applyPage = applyRepository.findByMentoringClassIdIn(classId, PageRequest.of(page, size));
+
+        return MentorApplyResponse.GetApplyMenteePageList.from(applyPage, page, size);
+
+    }
+
+    public List<MyMentoringResponse> getMentorClassFromMentor(Long memberId) {
+        List<Mentor> mentors = mentorRepository.findAllByMemberId(memberId);
+
+        return mentors.stream()
+                .flatMap(mentor -> mentor.getMentorings().stream())
+                .map(mentoringClass -> new MyMentoringResponse(
+                        mentoringClass.getId(),
+                        mentoringClass.getStack(),
+                        mentoringClass.getContent(),
+                        mentoringClass.getTitle(),
+                        mentoringClass.getPrice()
+                ))
+                .collect(Collectors.toList());
     }
 }

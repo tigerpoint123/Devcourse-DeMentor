@@ -13,4 +13,7 @@ public interface MentorRepository extends JpaRepository<Mentor, Long> {
 	List<Long> findMentoringClassIdsByMentor(@Param("mentor") Mentor mentor);
 
 	Optional<Mentor> findByMemberId(Long memberId);
+
+	@Query("SELECT m FROM Mentor m WHERE m.member.id = :memberId")
+	List<Mentor> findAllByMemberId(@Param("memberId") Long memberId);
 }
