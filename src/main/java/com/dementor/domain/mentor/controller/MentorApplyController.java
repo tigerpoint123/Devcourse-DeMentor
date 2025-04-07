@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.dementor.domain.apply.entity.ApplyStatus;
-import com.dementor.domain.mentor.dto.request.ApplyStatusRequest;
-import com.dementor.domain.mentor.dto.response.ApplyStatusResponse;
+import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
+import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
 import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.service.MentorApplyService;
 import com.dementor.global.ApiResponse;
@@ -50,12 +50,12 @@ public class MentorApplyController {
 	@Operation(summary = "신청 상태 변경", description = "멘토링 신청 상태를 변경합니다 (승인/거절)")
 	@PutMapping("/{applyId}/status")
 	@PreAuthorize("hasRole('MENTOR')")
-	public ApiResponse<ApplyStatusResponse> updateApplyStatus(
+	public ApiResponse<MentorApplyStatusResponse> updateApplyStatus(
 		@AuthenticationPrincipal CustomUserDetails userDetails,
 		@PathVariable(name = "applyId") Long applyId,
-		@RequestBody ApplyStatusRequest request
+		@RequestBody MentorApplyStatusRequest request
 	) {
-		ApplyStatusResponse response = mentorApplyService.updateApplyStatus(userDetails.getId(), applyId, request);
+		MentorApplyStatusResponse response = mentorApplyService.updateApplyStatus(userDetails.getId(), applyId, request);
 
 		String message;
 		if (response.getStatus() == ApplyStatus.APPROVED) {

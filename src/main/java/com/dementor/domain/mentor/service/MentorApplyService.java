@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.repository.ApplyRepository;
-import com.dementor.domain.mentor.dto.request.ApplyStatusRequest;
-import com.dementor.domain.mentor.dto.response.ApplyStatusResponse;
+import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
+import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
 import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -51,7 +51,7 @@ public class MentorApplyService {
 
 
 	@Transactional
-	public ApplyStatusResponse updateApplyStatus(Long memberId, Long applyId, ApplyStatusRequest request) {
+	public MentorApplyStatusResponse updateApplyStatus(Long memberId, Long applyId, MentorApplyStatusRequest request) {
 		// 멘토 검증
 		Mentor mentor = mentorRepository.findById(memberId)
 			.orElseThrow(() -> new IllegalArgumentException("멘토만 상태를 변경할 수 있습니다."));
@@ -82,6 +82,6 @@ public class MentorApplyService {
 		// 변경된 엔티티 저장
 		Apply updatedApply = applyRepository.save(apply);
 		
-		return ApplyStatusResponse.from(updatedApply);
+		return MentorApplyStatusResponse.from(updatedApply);
 	}
 }
