@@ -43,17 +43,17 @@ public class MentoringClassService {
     @Transactional
     public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
         Mentor mentor = mentorRepository.findById(mentorId)
-                .orElseThrow(() -> new MentoringClassException("멘토를 찾을 수 없습니다: " + mentorId));
+                .orElseThrow(() -> new IllegalArgumentException("멘토를 찾을 수 없습니다.")); // TODO : 멘토 예외처리를 가져와야 함
 
         // 입력값 검증
         if (request.title() == null || request.content() == null)
-            throw new MentoringClassException(MentoringClassExceptionCode.TITLE_OR_CONTENT_INPUT_NULL.getMessage());
+            throw new MentoringClassException(MentoringClassExceptionCode.TITLE_OR_CONTENT_INPUT_NULL);
         else if (request.price() < 0)
-            throw new MentoringClassException(MentoringClassExceptionCode.MINUS_PRICE.getMessage());
+            throw new MentoringClassException(MentoringClassExceptionCode.MINUS_PRICE);
         else if (request.schedules() == null)
-            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_SCHEDULE.getMessage());
+            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_SCHEDULE);
         else if (request.stack() == null)
-            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_STACK.getMessage());
+            throw new MentoringClassException(MentoringClassExceptionCode.EMPTY_STACK);
 
         MentoringClass mentoringClass = MentoringClass.builder()
                 .title(request.title())
@@ -81,7 +81,7 @@ public class MentoringClassService {
     public MentoringClassDetailResponse findOneClass(Long classId) {
         // 멘토링 클래스 정보 조회
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
-                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
         // 조회한 클래스 id로 스케줄 정보 조회
         List<Schedule> schedules = scheduleRepository.findByMentoringClassId(classId);
         // 같이 response
@@ -95,10 +95,10 @@ public class MentoringClassService {
     @Transactional
     public MentoringClassUpdateResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
-                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
         if (!mentoringClass.getMentor().getId().equals(memberId))
-            throw new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_UNAUTHORIZED.getMessage());
+            throw new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_UNAUTHORIZED);
 
         // 일정 아닌 정보
         if (request.title() != null)
@@ -115,7 +115,7 @@ public class MentoringClassService {
         Schedule schedule = scheduleRepository.findByMentoringClassId(classId)
                 .stream()
                 .findFirst()
-                .orElseThrow(() -> new MentoringClassException("스케줄을 찾을 수 없습니다"));
+                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.SCHEDULE_NOT_FOUND));
 
         if (request.schedule() != null) {
             schedule.updateDayOfWeek(request.schedule().dayOfWeek());
