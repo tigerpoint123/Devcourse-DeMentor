@@ -60,7 +60,7 @@ public class MentorApplication extends BaseEntity {
     }
 
     // 지원 상태 업데이트
-    public void updateStatus(ApplicationStatus status, String rejectionReason) {
+    public void updateStatus(ApplicationStatus status) {
         this.status = status;
     }
 

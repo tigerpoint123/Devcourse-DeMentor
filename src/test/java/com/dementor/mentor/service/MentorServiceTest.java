@@ -140,7 +140,7 @@ public class MentorServiceTest {
                 .orElseThrow(() -> new AssertionError("지원 정보가 없습니다."));
 
         // 승인 처리
-        application.updateStatus(MentorApplication.ApplicationStatus.APPROVED, null);
+        application.updateStatus(MentorApplication.ApplicationStatus.APPROVED);
         mentorApplicationRepository.save(application);
 
         // 멘토 생성
