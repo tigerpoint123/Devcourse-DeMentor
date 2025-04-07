@@ -37,13 +37,10 @@ public class MentoringClassService {
 
         if(jobId == null || jobId.isEmpty()) {// Job id가 없으면
             mentoringClasses = mentoringClassRepository.findAll(pageable);
-            log.info("없을때");
         } else if (jobId.size() == 1) { // Job id가 하나만 입력되면
             mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId.get(0), pageable);
-            log.info("1개만");
         } else { // job Id가 여러개면
-            mentoringClasses = mentoringClassRepository.findByAllJobIds(jobId, jobId.size(), pageable);
-            log.info("2개 이상");
+            mentoringClasses = mentoringClassRepository.findByMentor_Job_IdIn(jobId, pageable);
         }
 
         return mentoringClasses.map(MentoringClassFindResponse::from);
