@@ -15,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,7 +39,7 @@ public class MentoringClassController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
             @RequestParam(required = false) Long jobId,
-            Pageable pageable
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
 
