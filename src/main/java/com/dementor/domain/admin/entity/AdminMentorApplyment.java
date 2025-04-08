@@ -1,5 +1,6 @@
 package com.dementor.domain.admin.entity;
 
+import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Getter
 @RequiredArgsConstructor
-public class AdminMentorApplyment {
+public class AdminMentorApplyment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(nullable = false)
@@ -30,7 +31,7 @@ public class AdminMentorApplyment {
     @Enumerated(EnumType.STRING)
     private Status status;
 
-    private int memberId;
+    private Long memberId;
 
-    private int jobId;
+    private Long jobId;
 }
