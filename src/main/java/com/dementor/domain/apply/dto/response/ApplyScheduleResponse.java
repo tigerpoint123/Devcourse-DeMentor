@@ -20,7 +20,6 @@ public class ApplyScheduleResponse {
     public static ApplyScheduleResponse from(Page<Apply> applyPage, int page, int size) {
         List<ScheduleItem> scheduleItems = applyPage.getContent().stream()
                 .map(apply -> ScheduleItem.builder()
-                        .classId(apply.getMentoringClass().getId())
                         .schedule(apply.getSchedule())
                         .build())
                 .collect(Collectors.toList());
@@ -41,7 +40,6 @@ public class ApplyScheduleResponse {
     @Getter
     @Builder
     public static class ScheduleItem {
-        private Long classId;
         private LocalDateTime schedule;
     }
 
