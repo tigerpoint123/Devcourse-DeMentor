@@ -26,7 +26,7 @@ public class PostAttachment extends BaseEntity {
     @Column(nullable = false)
     private String originalFilename; //원본 파일명
 
-    @Column(nullable = false)
+    @Column(length = 1024, nullable = false)
     private String storeFilePath;
 
     @Column(nullable = false)

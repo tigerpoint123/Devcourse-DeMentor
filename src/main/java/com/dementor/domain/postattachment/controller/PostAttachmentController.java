@@ -19,13 +19,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import lombok.extern.slf4j.Slf4j;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -207,6 +208,36 @@ public class PostAttachmentController {
             return ResponseEntity.status(e.getErrorCode().getStatus().value())
                     .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/paste-image")
+    @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
+    @Operation(summary = "이미지 붙여넣기 업로드", description = "마크다운 에디터에 붙여넣은 이미지를 업로드합니다.")
+    public ResponseEntity<ApiResponse<?>> uploadPastedImage(
+            @RequestBody byte[] imageData,
+            @RequestHeader("Content-Type") String contentType,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        try {
+            log.info("이미지 붙여넣기 요청 - 사용자 ID: {}, 컨텐츠 타입: {}, 크기: {} 바이트",
+                    userDetails.getId(), contentType, imageData.length);
+
+            FileInfoDto fileInfo = postAttachmentService.uploadPastedImage(imageData, contentType, userDetails.getId());
+
+            log.info("이미지 붙여넣기 처리 완료 - 파일 ID: {}", fileInfo.getAttachmentId());
+
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.of(true, HttpStatus.CREATED, "이미지 업로드에 성공했습니다.", fileInfo));
+
+        } catch (PostAttachmentException e) {
+            log.error("이미지 붙여넣기 실패 - PostAttachmentException: {}", e.getErrorCode(), e);
+            return ResponseEntity.status(e.getErrorCode().getStatus().value())
+                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
+        } catch (Exception e) {
+            log.error("이미지 붙여넣기 실패 - 예상치 못한 오류", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
         }
