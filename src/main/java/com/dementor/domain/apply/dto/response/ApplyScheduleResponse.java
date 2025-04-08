@@ -8,16 +8,10 @@ import org.springframework.data.domain.Page;
 
 import com.dementor.domain.apply.entity.Apply;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class ApplyScheduleResponse {
     private List<ScheduleItem> applyments;
@@ -45,9 +39,6 @@ public class ApplyScheduleResponse {
     }
 
     @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class ScheduleItem {
         private Long classId;
@@ -55,9 +46,6 @@ public class ApplyScheduleResponse {
     }
 
     @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
     @Builder
     public static class Pagination {
         private int page;
