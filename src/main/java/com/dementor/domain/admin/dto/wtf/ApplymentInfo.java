@@ -2,9 +2,6 @@ package com.dementor.domain.admin.dto.wtf;
 
 import com.dementor.domain.admin.entity.AdminMentorApplyment;
 import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.postattachment.entity.PostAttachment;
-
-import java.util.List;
 
 public record ApplymentInfo(
         Long applymentId,
@@ -19,13 +16,13 @@ public record ApplymentInfo(
         String bestFor,
         String status,
         String createdAt,
-        String modifiedAt,
-        List<AttachmentInfo> attachments
+        String modifiedAt
+//        List<AttachmentInfo> attachments
 ) {
     public static ApplymentInfo from(
             AdminMentorApplyment applyment,
-            Job job,
-            List<PostAttachment> attachments
+            Job job
+//            List<PostAttachment> attachments
     ) {
         return new ApplymentInfo(
                 applyment.getId(),
@@ -40,10 +37,10 @@ public record ApplymentInfo(
                 applyment.getBestFor(),
                 applyment.getStatus().name(),
                 applyment.getCreatedAt().toString(),
-                applyment.getModifiedAt() != null ? applyment.getModifiedAt().toString() : null,
-                attachments.stream()
-                        .map(AttachmentInfo::from)
-                        .toList()
+                applyment.getModifiedAt() != null ? applyment.getModifiedAt().toString() : null
+//                attachments.stream()
+//                        .map(AttachmentInfo::from)
+//                        .toList()
         );
     }
 }

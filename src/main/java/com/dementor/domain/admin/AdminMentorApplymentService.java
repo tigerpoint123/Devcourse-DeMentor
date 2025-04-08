@@ -9,35 +9,26 @@ import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.entity.MentorApplication;
+import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.postattachment.entity.PostAttachment;
-import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class AdminMentorApplymentService {
     private final AdminMentorApplymentRepository adminMentorApplymentRepository;
     private final JobRepository jobRepository;
-    private final PostAttachmentRepository attachmentRepository;
     private final MentorRepository mentorRepository;
     private final MemberRepository memberRepository;
+    private final MentorApplicationRepository mentorApplicationRepository;
 
     public Page<ApplymentResponse> findAllApplyment(Pageable pageable) {
-        return adminMentorApplymentRepository.findAllWithJob(pageable)
-                .map(tuple -> {
-                    MentorApplication applyment = tuple.get(0, MentorApplication.class);
-                    Job job = tuple.get(1, Job.class);
-
-                    return ApplymentResponse.from(applyment, job);
-                });
+        return mentorApplicationRepository.findAll(pageable)
+                .map(application -> ApplymentResponse.from(application, application.getJob()));
     }
 
     public ApplymentDetailResponse findOneApplyment(Long memberId) {
@@ -50,12 +41,12 @@ public class AdminMentorApplymentService {
                 .orElseThrow(() -> new EntityNotFoundException("직무 정보를 찾을 수 없습니다."));
 
         // 첨부파일 목록 조회
-        List<PostAttachment> attachments = attachmentRepository.findByApplymentId(memberId);
+//        List<PostAttachment> attachments = attachmentRepository.findByApplymentId(memberId);
 
         return ApplymentDetailResponse.from(
                 applyment,
-                job,
-                attachments
+                job
+//                attachments
         );
     }
 
