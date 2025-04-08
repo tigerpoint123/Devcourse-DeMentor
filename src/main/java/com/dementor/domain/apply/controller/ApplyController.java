@@ -21,6 +21,7 @@ import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -77,10 +78,14 @@ public class ApplyController {
 	public ApiResponse<ApplyScheduleResponse> getApplySchedules(
 		@PathVariable Long classId,
 		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@Parameter(description = "시작 날짜", example = "20250408")
+		@RequestParam("startDate") String startDate,
+		@Parameter(description = "종료 날짜", example = "20250430")
+		@RequestParam("endDate") String endDate,
 		@RequestParam(defaultValue = "1") int page,
 		@RequestParam(defaultValue = "10") int size) {
 
-		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(classId, userDetails.getId(),page-1, size);
+		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(classId, userDetails.getId(),page-1, size, startDate, endDate);
 		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 날짜 목록을 조회했습니다", response);
 	}
 }

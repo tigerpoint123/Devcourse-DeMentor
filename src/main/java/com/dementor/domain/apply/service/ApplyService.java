@@ -98,22 +98,19 @@ public class ApplyService {
 	}
 
 	//특정 멘토링 신청 날짜 목록 조회
-	public ApplyScheduleResponse getApplySchedulesByClassId(Long classId, Long memberId, int page, int size) {
+	public ApplyScheduleResponse getApplySchedulesByClassId(Long classId, Long memberId, int page, int size, String startDate, String endDate) {
 
 		mentoringClassRepository.findById(classId)
 			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
-
 		memberRepository.findById(memberId)
 			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 		
-
 		Pageable pageable = PageRequest.of(page, size);
-		
-		// 해당 클래스에 대한 신청 목록 조회
-		Page<Apply> applyPage = applyRepository.findByMentoringClassId(classId, pageable);
-		
 
-		return ApplyScheduleResponse.from(applyPage, page + 1, size);
+		Page<Apply> filteredPage = applyRepository.findByClassIdAndScheduleStringBetween(
+			classId, startDate, endDate, pageable);
+
+		return ApplyScheduleResponse.from(filteredPage, page + 1, size);
 	}
 }
