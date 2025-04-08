@@ -1,7 +1,7 @@
 package com.dementor.domain.admin.dto.wtf;
 
-import com.dementor.domain.admin.entity.AdminMentorApplyment;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.MentorApplication;
 
 public record ApplymentApprovalResponse(
         Long id,
@@ -11,10 +11,10 @@ public record ApplymentApprovalResponse(
         String status,
         String modifiedAt
 ) {
-    public static ApplymentApprovalResponse from(AdminMentorApplyment applyment, Mentor mentor) {
+    public static ApplymentApprovalResponse from(MentorApplication applyment, Mentor mentor) {
         return new ApplymentApprovalResponse(
                 applyment.getId(),
-                applyment.getMemberId(),
+                applyment.getMember().getId(),
                 mentor.getId(),
                 applyment.getName(),
                 applyment.getStatus().name(),

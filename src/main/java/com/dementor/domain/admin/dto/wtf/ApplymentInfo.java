@@ -1,7 +1,6 @@
 package com.dementor.domain.admin.dto.wtf;
 
-import com.dementor.domain.admin.entity.AdminMentorApplyment;
-import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.mentor.entity.MentorApplication;
 
 public record ApplymentInfo(
         Long applymentId,
@@ -20,15 +19,15 @@ public record ApplymentInfo(
 //        List<AttachmentInfo> attachments
 ) {
     public static ApplymentInfo from(
-            AdminMentorApplyment applyment,
-            Job job
+            MentorApplication applyment
+//            Job job
 //            List<PostAttachment> attachments
     ) {
         return new ApplymentInfo(
                 applyment.getId(),
-                applyment.getMemberId(),
+                applyment.getMember().getId(),
                 applyment.getName(),
-                JobInfo.from(job),
+                JobInfo.from(applyment.getJob()),
                 applyment.getCareer(),
                 applyment.getPhone(),
                 applyment.getEmail(),

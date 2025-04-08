@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Entity
 @Getter
 @RequiredArgsConstructor
-public class AdminMentorApplyment extends BaseEntity {
+public class ApplymentMentor extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(nullable = false)
