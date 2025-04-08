@@ -16,7 +16,6 @@ public interface ApplyRepository extends JpaRepository<Apply, Long> {
 
 	Page<Apply> findByMentoringClassIdIn(List<Long> classId, Pageable pageable);
 
-	// 문자열 기반 날짜 필터링(JPQL 사용)
 	@Query("SELECT a FROM Apply a WHERE a.mentoringClass.id = :classId AND " +
 	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') >= :startDate AND " +
 	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') <= :endDate")
