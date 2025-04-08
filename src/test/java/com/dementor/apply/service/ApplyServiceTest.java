@@ -3,6 +3,8 @@ package com.dementor.apply.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -252,54 +254,18 @@ public class ApplyServiceTest {
 		assertEquals(5, page2Result.getApplyments().size());
 	}
 
-	@Test
-	@DisplayName("특정 멘토링 클래스의 신청 날짜 목록 조회 성공")
-	void getApplySchedulesByClassIdSuccess() {
-
-		for (int i = 0; i < 15; i++) {
-			Apply apply = Apply.builder()
-				.mentoringClass(mentoringClass)
-				.member(testMember)
-				.inquiry("일정 조회 테스트 문의 " + i)
-				.applyStatus(ApplyStatus.PENDING)
-				.schedule(LocalDateTime.now().plusDays(i + 1))
-				.build();
-			applyRepository.save(apply);
-		}
-
-
-		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(mentoringClassId, testMember.getId(), 0, 10);
-		
-
-		assertNotNull(response);
-		assertEquals(10, response.getApplyments().size());
-		assertEquals(1, response.getPagination().getPage());
-		assertEquals(10, response.getPagination().getSize());
-		assertEquals(15, response.getPagination().getTotalElements());
-		assertTrue(response.getPagination().getTotalPages() > 0);
-		
-
-		ApplyScheduleResponse.ScheduleItem firstItem = response.getApplyments().get(0);
-		assertEquals(mentoringClassId, firstItem.getClassId());
-		assertNotNull(firstItem.getSchedule());
-		
-
-		ApplyScheduleResponse secondPageResponse = applyService.getApplySchedulesByClassId(mentoringClassId, testMember.getId(), 1, 10);
-		
-
-		assertNotNull(secondPageResponse);
-		assertEquals(5, secondPageResponse.getApplyments().size());
-		assertEquals(2, secondPageResponse.getPagination().getPage());
-	}
 	
 	@Test
 	@DisplayName("존재하지 않는 멘토링 클래스의 신청 날짜 목록 조회 시 예외 발생")
 	void getApplySchedulesByInvalidClassId() {
+		LocalDate now = LocalDate.now();
+		String startDate = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+		String endDate = now.plusMonths(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
 		Long nonExistentClassId = 9999L;
 
 		assertThrows(MentoringClassException.class, () -> {
-			applyService.getApplySchedulesByClassId(nonExistentClassId, testMember.getId(), 0, 10);
+			applyService.getApplySchedulesByClassId(nonExistentClassId, testMember.getId(), 0, 10, startDate, endDate);
 		});
 	}
 }

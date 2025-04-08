@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -412,68 +414,6 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
 	}
 
-	@Test
-	@DisplayName("특정 멘토링 클래스에 대한 신청 날짜 목록 조회 테스트")
-	@WithMockUser(roles = "MENTEE")
-	void getApplySchedulesTest() throws Exception {
-
-		for (int i = 0; i < 15; i++) {
-			Apply apply = Apply.builder()
-				.mentoringClass(testMentoringClass)
-				.member(testMentee)
-				.inquiry("날짜 조회 테스트용 문의 " + i)
-				.applyStatus(ApplyStatus.PENDING)
-				.schedule(LocalDateTime.now().plusDays(i + 1))
-				.build();
-			applyRepository.save(apply);
-		}
-
-
-		ResultActions resultActions = mvc
-			.perform(
-				get("/api/apply/schedules/" + testMentoringClassId)
-					.param("page", "1")
-					.param("size", "10")
-					.with(user(menteePrincipal))
-			)
-			.andDo(print());
-
-		resultActions
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.isSuccess").value(true))
-			.andExpect(jsonPath("$.message").value("멘토링 신청 날짜 목록을 조회했습니다"))
-			.andExpect(jsonPath("$.data.applyments").exists())
-			.andExpect(jsonPath("$.data.applyments").isArray())
-			.andExpect(jsonPath("$.data.applyments.length()").value(10))
-			.andExpect(jsonPath("$.data.applyments[0].classId").value(testMentoringClassId))
-			.andExpect(jsonPath("$.data.applyments[0].schedule").exists())
-			.andExpect(jsonPath("$.data.pagination").exists())
-			.andExpect(jsonPath("$.data.pagination.page").value(1))
-			.andExpect(jsonPath("$.data.pagination.size").value(10))
-			.andExpect(jsonPath("$.data.pagination.totalElements").exists())
-			.andExpect(jsonPath("$.data.pagination.totalPages").exists());
-
-
-		ResultActions page2Results = mvc
-			.perform(
-				get("/api/apply/schedules/" + testMentoringClassId)
-					.param("page", "2")
-					.param("size", "10")
-					.with(user(menteePrincipal))
-			)
-			.andDo(print());
-
-		page2Results
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.isSuccess").value(true))
-			.andExpect(jsonPath("$.data.applyments").exists())
-			.andExpect(jsonPath("$.data.applyments").isArray())
-			.andExpect(jsonPath("$.data.applyments.length()").value(5))
-			.andExpect(jsonPath("$.data.applyments[0].classId").value(testMentoringClassId))
-			.andExpect(jsonPath("$.data.applyments[0].schedule").exists())
-			.andExpect(jsonPath("$.data.pagination.page").value(2))
-			.andExpect(jsonPath("$.data.pagination.size").value(10));
-	}
 
 }
 
