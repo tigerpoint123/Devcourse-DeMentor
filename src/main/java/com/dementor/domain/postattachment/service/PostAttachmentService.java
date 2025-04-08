@@ -229,33 +229,65 @@ public class PostAttachmentService {
 
             // GitHub 및 외부 URL 처리
             else if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-                String uniqueIdentifier = UUID.randomUUID().toString();
+                try {
+                    // 이미지 데이터 직접 다운로드
+                    byte[] imageData = downloadImageFromUrl(imageUrl);
 
-                // 확장자 추출 시도
-                String extension = ".jpg"; // 기본값
-                if (imageUrl.toLowerCase().endsWith(".png")) extension = ".png";
-                else if (imageUrl.toLowerCase().endsWith(".gif")) extension = ".gif";
-                else if (imageUrl.toLowerCase().endsWith(".svg")) extension = ".svg";
+                    // 확장자 추출
+                    String extension = determineImageExtension(imageUrl);
 
-                // 외부 URL은 storeFilePath에 그대로 저장하여 구분
-                PostAttachment attachment = PostAttachment.builder()
-                        .filename(uniqueIdentifier + extension)
-                        .originalFilename(altText + extension)
-                        .storeFilePath(imageUrl) // URL을 그대로 저장
-                        .fileSize(0L) // 실제 크기는 알 수 없음
-                        .member(member)
-                        .mentor(mentor)
-                        .imageType(imageType)
-                        .uniqueIdentifier(uniqueIdentifier)
-                        .build();
+                    // 고유 식별자 생성
+                    String uniqueIdentifier = UUID.randomUUID().toString();
 
-                PostAttachment savedAttachment = postAttachmentRepository.save(attachment);
-                processedAttachments.add(savedAttachment);
-                log.info("외부 URL 이미지 참조 추가: {}", imageUrl);
+                    // 이미지 유효성 검사
+                    BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageData));
+                    if (bufferedImage == null) {
+                        log.warn("유효하지 않은 이미지: {}", imageUrl);
+                        continue;
+                    }
+
+                    // Firebase Storage에 업로드
+                    String contentType = determineContentTypeByFilename("image" + extension);
+                    String directory = imageType.toString().toLowerCase();
+                    String fileUrl = firebaseStorageService.uploadFile(
+                            imageData,
+                            uniqueIdentifier + extension,
+                            contentType,
+                            directory
+                    );
+
+                    // DB 저장
+                    PostAttachment attachment = PostAttachment.builder()
+                            .filename(uniqueIdentifier + extension)
+                            .originalFilename(altText + extension)
+                            .storeFilePath(fileUrl)
+                            .fileSize((long) imageData.length)
+                            .member(member)
+                            .mentor(mentor)
+                            .imageType(imageType)
+                            .uniqueIdentifier(uniqueIdentifier)
+                            .build();
+
+                    PostAttachment savedAttachment = postAttachmentRepository.save(attachment);
+                    processedAttachments.add(savedAttachment);
+                    log.info("외부 URL 이미지 성공적으로 저장: {}", imageUrl);
+                } catch (Exception e) {
+                    log.error("외부 URL 이미지 처리 실패: {}", imageUrl, e);
+                }
             }
         }
 
         return processedAttachments;
+    }
+
+    // 확장자 결정 메서드 추가
+    private String determineImageExtension(String url) {
+        String lowercaseUrl = url.toLowerCase();
+        if (lowercaseUrl.contains(".gif")) return ".gif";
+        if (lowercaseUrl.contains(".png")) return ".png";
+        if (lowercaseUrl.contains(".jpg") || lowercaseUrl.contains(".jpeg")) return ".jpg";
+        if (lowercaseUrl.contains(".webp")) return ".webp";
+        return ".jpg"; // 기본값
     }
 
     //Base64 인코딩된 이미지를 디코딩하고 Firebase에 저장하는 메서드
@@ -287,6 +319,16 @@ public class PostAttachmentService {
             try {
                 imageBytes = Base64.getDecoder().decode(imageData);
                 log.info("Base64 디코딩 성공: {} 바이트", imageBytes.length);
+
+                // 이미지 유효성 검사 추가
+                try {
+                    BufferedImage testImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+                    if (testImage == null) {
+                        log.warn("Base64에서 디코딩된 데이터가 유효한 이미지가 아닙니다");
+                    }
+                } catch (Exception e) {
+                    log.warn("Base64 이미지 유효성 검사 실패: {}", e.getMessage());
+                }
             } catch (IllegalArgumentException e) {
                 log.error("Base64 디코딩 실패", e);
                 throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
@@ -491,21 +533,25 @@ public class PostAttachmentService {
                 .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.FILE_NOT_FOUND, "이미지를 찾을 수 없습니다."));
 
         try {
-            byte[] imageBytes;
-            String contentType;
+            byte[] imageBytes = null;
+            String contentType = null;
             String storedPath = attachment.getStoreFilePath();
             log.info("마크다운 이미지 다운로드 시작: {}", storedPath);
+            boolean isValidImage = false;
 
-            // 직접 data: 로 저장된 경우
+            // Base64 데이터 URI인 경우 바로 처리
             if (storedPath.startsWith("data:")) {
-                log.info("Base64 데이터 URI 감지");
-                // Base64 처리 코드...
+                log.info("Base64 데이터 URI 직접 처리");
                 String[] parts = storedPath.split(",");
                 String metadataPart = parts[0];
                 String base64Data = parts.length > 1 ? parts[1] : "";
+
                 contentType = metadataPart.substring(metadataPart.indexOf(":") + 1, metadataPart.indexOf(";"));
                 imageBytes = Base64.getDecoder().decode(base64Data);
-                log.info("Base64 디코딩 완료: {} 바이트", imageBytes.length);
+                log.info("Base64 직접 디코딩 완료: {} 바이트", imageBytes.length);
+
+                // 디코딩된 이미지 유효성 검사
+                isValidImage = validateImage(imageBytes);
             } else {
                 // Firebase URL에서 데이터 가져오기
                 URL url = new URL(storedPath);
@@ -521,87 +567,62 @@ public class PostAttachmentService {
                             "이미지에 접근할 수 없습니다. 응답 코드: " + responseCode);
                 }
 
+                // 콘텐츠 타입 확인
+                contentType = connection.getContentType();
+                if (contentType == null) {
+                    contentType = determineContentTypeByFilename(attachment.getOriginalFilename());
+                    log.info("콘텐츠 타입 추정: {}", contentType);
+                } else {
+                    log.info("콘텐츠 타입 확인: {}", contentType);
+                }
+
                 // 응답 데이터 읽기
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 try (InputStream inputStream = connection.getInputStream()) {
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                     byte[] buffer = new byte[8192];
                     int bytesRead;
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
                         outputStream.write(buffer, 0, bytesRead);
                     }
-                    byte[] responseData = outputStream.toByteArray();
+                }
+                byte[] responseData = outputStream.toByteArray();
+                log.info("Firebase에서 데이터 다운로드 완료: {} 바이트", responseData.length);
 
-                    // 응답이 텍스트인지 확인 (data: 로 시작하는지)
-                    String responseText = new String(responseData, StandardCharsets.UTF_8).trim();
-
-                    if (responseText.startsWith("data:image/")) {
-                        log.info("Firebase에 텍스트로 저장된 Base64 이미지 감지");
-
-                        // Base64 데이터 파싱
-                        String[] parts = responseText.split(",");
-                        String metadataPart = parts[0];
-                        String base64Data = parts.length > 1 ? parts[1].trim() : "";
-
-                        // 컨텐츠 타입 추출
-                        contentType = metadataPart.substring(
-                                metadataPart.indexOf("image/"),
-                                metadataPart.indexOf(";", metadataPart.indexOf("image/"))
-                        );
-                        log.info("Base64 이미지 컨텐츠 타입: {}", contentType);
-
-                        // Base64 디코딩
-                        imageBytes = Base64.getDecoder().decode(base64Data);
-                        log.info("Base64 이미지 디코딩 완료: {} 바이트", imageBytes.length);
+                // 다운로드한 데이터가 JSON인 경우 Base64 이미지 추출 시도
+                if (contentType != null && contentType.contains("application/json")) {
+                    imageBytes = extractImageFromJson(responseData);
+                    if (imageBytes != null) {
+                        // Data URI를 그대로 반환하는 경우 콘텐츠 타입을 text/plain으로 설정
+                        contentType = "text/plain";
+                        // Data URI는 유효한 이미지가 아니므로 유효성 검사 건너뛰기
+                        isValidImage = false;
+                        log.info("Base64 Data URI를 직접 반환합니다. 리사이징 건너뜀");
                     } else {
-                        // 일반 바이너리 데이터로 간주
+                        // JSON에서 이미지를 추출하지 못한 경우 원본 데이터 사용
                         imageBytes = responseData;
-                        contentType = connection.getContentType();
-                        if (contentType == null || !contentType.startsWith("image/")) {
-                            contentType = determineContentTypeByFilename(attachment.getOriginalFilename());
-                        }
-                        log.info("일반 이미지 다운로드 완료: {} 바이트", imageBytes.length);
                     }
+                } else {
+                    // JSON이 아닌 경우 원본 데이터 사용
+                    imageBytes = responseData;
+                    // 일반 이미지 유효성 검사
+                    isValidImage = validateImage(imageBytes);
                 }
             }
 
-            // 리사이징 처리
-            if (width != null && height != null && imageBytes.length > 300) { // 최소 300바이트 이상만 리사이징 시도
+            // 유효한 이미지인 경우에만 리사이징 시도
+            if (isValidImage && width != null && height != null && imageBytes.length > 300) {
                 try {
                     log.info("이미지 리사이징 시도: {}x{}", width, height);
-
-                    // 먼저 Java 기본 ImageIO로 이미지가 유효한지 확인
-                    InputStream checkStream = new ByteArrayInputStream(imageBytes);
-                    BufferedImage testImage = ImageIO.read(checkStream);
-
-                    if (testImage != null) {
-                        // 유효한 이미지인 경우 리사이징 진행
-                        ByteArrayInputStream bis = new ByteArrayInputStream(imageBytes);
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-                        // Thumbnailator 대신 Java 기본 이미지 처리 사용
-                        BufferedImage originalImage = ImageIO.read(bis);
-                        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                        Graphics2D g = resizedImage.createGraphics();
-                        g.drawImage(originalImage, 0, 0, width, height, null);
-                        g.dispose();
-
-                        // 이미지 포맷 결정
-                        String formatName = getFormatName(contentType);
-                        ImageIO.write(resizedImage, formatName, bos);
-
-                        // 리사이징된 이미지로 교체
-                        imageBytes = bos.toByteArray();
-                        log.info("이미지 리사이징 성공: {} 바이트", imageBytes.length);
-                    } else {
-                        log.warn("유효하지 않은 이미지 데이터입니다. 원본 이미지 사용");
-                    }
+                    imageBytes = resizeImage(imageBytes, width, height, contentType);
+                    log.info("이미지 리사이징 성공: {} 바이트", imageBytes.length);
                 } catch (Exception e) {
-                    // 리사이징 실패 시 원본 이미지 유지
                     log.warn("이미지 리사이징 실패, 원본 이미지 사용: {}", e.getMessage());
                 }
+            } else if (!isValidImage) {
+                log.warn("유효한 이미지가 아니므로 리사이징을 건너뜁니다");
             }
 
-            // ByteArrayResource 생성
+            // 결과 반환
             ByteArrayResource resource = new ByteArrayResource(imageBytes) {
                 @Override
                 public String getFilename() {
@@ -610,7 +631,6 @@ public class PostAttachmentService {
                 }
             };
 
-            // 반환 정보
             Map<String, Object> imageInfo = new HashMap<>();
             imageInfo.put("resource", resource);
             imageInfo.put("contentType", contentType);
@@ -622,6 +642,115 @@ public class PostAttachmentService {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
                     "이미지 다운로드 중 오류가 발생했습니다: " + e.getMessage());
         }
+    }
+
+    private byte[] downloadImageFromUrl(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+        // 다양한 User-Agent 설정으로 차단 방지
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+        connection.setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8");
+        connection.setRequestProperty("Accept-Language", "en-US,en;q=0.9");
+
+        // 리다이렉트 허용
+        connection.setInstanceFollowRedirects(true);
+        HttpURLConnection.setFollowRedirects(true);
+
+        int responseCode = connection.getResponseCode();
+
+        // 리다이렉트 처리
+        if (responseCode == HttpURLConnection.HTTP_MOVED_PERM ||
+                responseCode == HttpURLConnection.HTTP_MOVED_TEMP ||
+                responseCode == HttpURLConnection.HTTP_SEE_OTHER) {
+            String redirectUrl = connection.getHeaderField("Location");
+            log.info("리다이렉트된 URL: {}", redirectUrl);
+            connection = (HttpURLConnection) new URL(redirectUrl).openConnection();
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+            responseCode = connection.getResponseCode();
+        }
+
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            throw new IOException("Failed to download image. Response Code: " + responseCode);
+        }
+
+        try (InputStream inputStream = connection.getInputStream();
+             ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+            return outputStream.toByteArray();
+        }
+    }
+
+    // JSON 응답에서 Base64 이미지 데이터 추출하는 메소드
+    private byte[] extractImageFromJson(byte[] jsonData) {
+        try {
+            // JSON 문자열로 변환
+            String jsonContent = new String(jsonData, StandardCharsets.UTF_8).trim();
+
+            // 큰따옴표 제거 (JSON 문자열인 경우)
+            if (jsonContent.startsWith("\"") && jsonContent.endsWith("\"")) {
+                jsonContent = jsonContent.substring(1, jsonContent.length() - 1);
+            }
+
+            // Base64 이미지 데이터인지 확인
+            if (jsonContent.startsWith("data:image/")) {
+                log.info("JSON에서 Base64 이미지 데이터 발견");
+
+                // 방법 3: 원본 Base64 데이터를 그대로 Data URI로 반환
+                log.info("Base64 데이터를 Data URI로 직접 반환");
+                return jsonContent.getBytes(StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            log.warn("JSON 파싱 및 이미지 데이터 추출 실패: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    // 이미지 유효성 검증 메소드
+    private boolean validateImage(byte[] imageData) {
+        if (imageData == null || imageData.length == 0) {
+            return false;
+        }
+
+        try {
+            ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
+            BufferedImage image = ImageIO.read(bis);
+            if (image != null) {
+                log.info("유효한 이미지 확인됨: {}x{}", image.getWidth(), image.getHeight());
+                return true;
+            } else {
+                log.warn("유효하지 않은 이미지 데이터");
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("이미지 유효성 검사 실패: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    // 이미지 리사이징 메소드
+    private byte[] resizeImage(byte[] imageData, int width, int height, String contentType) throws IOException {
+        ByteArrayInputStream bis = new ByteArrayInputStream(imageData);
+        BufferedImage originalImage = ImageIO.read(bis);
+
+        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g = resizedImage.createGraphics();
+
+        // 고품질 리사이징을 위한 설정
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g.drawImage(originalImage, 0, 0, width, height, null);
+        g.dispose();
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        String formatName = getFormatName(contentType);
+        ImageIO.write(resizedImage, formatName, bos);
+
+        return bos.toByteArray();
     }
 
     // 컨텐츠 타입에서 포맷 이름 추출 (Thumbnailator용)
