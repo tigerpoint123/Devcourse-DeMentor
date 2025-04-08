@@ -14,4 +14,6 @@ public interface ApplyRepository extends JpaRepository<Apply, Long> {
 	Page<Apply> findByMemberId(Long memberId, Pageable pageable);
 
 	Page<Apply> findByMentoringClassIdIn(List<Long> classId, Pageable pageable);
+	
+	Page<Apply> findByMentoringClassId(Long classId, Pageable pageable);
 }
