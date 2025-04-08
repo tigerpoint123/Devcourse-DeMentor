@@ -1,7 +1,6 @@
 package com.dementor.global.common.swaggerDocs;
 
-import com.dementor.domain.admin.dto.wtf.ApplymentDetailResponse;
-import com.dementor.domain.admin.dto.wtf.ApplymentResponse;
+import com.dementor.domain.admin.dto.wtf.*;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +13,13 @@ public interface AdminMentorApplymentSwagger {
     @Operation(summary = "멘토 지원 목록 전체조회", description = "멘토 지원자 정보를 조회합니다")
     ResponseEntity<ApiResponse<Page<ApplymentResponse>>> findAllAdminMentorApplyment(Pageable pageable);
 
+    @Operation(summary = "멘토 지원 데이터 상세 조회", description = "지원 내용을 상세 조회합니다")
     ResponseEntity<ApiResponse<ApplymentDetailResponse>> findOneApplyment(Long applymentId);
+
+    @Operation(summary = "멘토 지원 승인", description = "지원자를 멘토로 승인합니다")
+    ResponseEntity<ApiResponse<ApplymentApprovalResponse>> approveApplyment(Long applymentId);
+
+    @Operation(summary = "멘토 지원 거절", description = "멘토로 승인하지 않습니다.")
+    ResponseEntity<ApiResponse<ApplymentRejectResponse>> rejectApplyment(Long memberId, ApplymentRejectRequest request);
 
 }

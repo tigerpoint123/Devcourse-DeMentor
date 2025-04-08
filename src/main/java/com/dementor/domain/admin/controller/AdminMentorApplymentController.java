@@ -1,8 +1,7 @@
 package com.dementor.domain.admin.controller;
 
 import com.dementor.domain.admin.AdminMentorApplymentService;
-import com.dementor.domain.admin.dto.wtf.ApplymentDetailResponse;
-import com.dementor.domain.admin.dto.wtf.ApplymentResponse;
+import com.dementor.domain.admin.dto.wtf.*;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.common.pagination.PaginationUtil;
 import com.dementor.global.common.swaggerDocs.AdminMentorApplymentSwagger;
@@ -13,10 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/mentor/applyment")
@@ -48,7 +44,7 @@ public class AdminMentorApplymentController implements AdminMentorApplymentSwagg
     @Override
     @GetMapping("/{memberId}")
     public ResponseEntity<ApiResponse<ApplymentDetailResponse>> findOneApplyment(
-        @PathVariable Long memberId
+            @PathVariable Long memberId
     ) {
         ApplymentDetailResponse response = adminMentorApplymentService.findOneApplyment(memberId);
 
@@ -57,9 +53,44 @@ public class AdminMentorApplymentController implements AdminMentorApplymentSwagg
                 .body(ApiResponse.of(
                         true,
                         HttpStatus.OK,
-                        "Success",
+                        "멘토 지원서 상세 조회 성공",
                         response
                 ));
     }
 
+    @Override
+    @PostMapping("/{memberId}")
+    public ResponseEntity<ApiResponse<ApplymentApprovalResponse>> approveApplyment(
+            @PathVariable Long memberId
+    ) {
+        ApplymentApprovalResponse response = adminMentorApplymentService.approveApplyment(memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "멘토 지원 승인",
+                        response
+                ));
+    }
+
+    @Override
+    @PutMapping("/{memberId}/reject")
+    public ResponseEntity<ApiResponse<ApplymentRejectResponse>> rejectApplyment(
+            @PathVariable Long memberId,
+            @RequestBody ApplymentRejectRequest request
+    ) {
+        ApplymentRejectResponse response = adminMentorApplymentService.rejectApplyment(
+                memberId,request
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "멘토 지원 거절",
+                        response
+                ));
+    }
 }

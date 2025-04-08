@@ -34,4 +34,8 @@ public class AdminMentorApplyment extends BaseEntity {
     private Long memberId;
 
     private Long jobId;
+
+    public void updateStatus(Status status) {
+        this.status = status;
+    }
 }
