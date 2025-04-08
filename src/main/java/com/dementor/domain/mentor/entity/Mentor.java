@@ -1,13 +1,30 @@
 package com.dementor.domain.mentor.entity;
 
+import java.util.List;
+
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.postattachment.entity.PostAttachment;
-import jakarta.persistence.*;
-import lombok.*;
 
-import java.util.List;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "mentor")
