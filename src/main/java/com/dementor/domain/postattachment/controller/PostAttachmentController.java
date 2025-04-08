@@ -136,8 +136,6 @@ public class PostAttachmentController {
 
     //일반 첨부 파일 다운로드 API
     @GetMapping("/{attachmentId}/download")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id))")
-    // 멘토와 관리자만 파일 다운로드 가능
     @Operation(summary = "일반 첨부 파일 다운로드", description = "특정 일반 첨부 파일을 다운로드합니다. 멘토와 관리자만 다운로드가 가능합니다.")
     public ResponseEntity<?> downloadFile(
             @PathVariable Long attachmentId,
@@ -173,7 +171,7 @@ public class PostAttachmentController {
 
     //마크다운 이미지 다운로드 API
     @GetMapping("/markdown-images/{uniqueIdentifier}")
-    @PreAuthorize("hasRole('MENTOR') or (hasRole('MENTOR') and @postAttachmentService.isMarkdownImageOwner(#uniqueIdentifier, authentication.principal.id))")
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR'))")
     // 멘토와 관리자만 이미지 다운로드 가능
     @Operation(summary = "마크다운 이미지 다운로드", description = "마크다운 텍스트 내에서 참조하는 이미지를 제공합니다. 이 API는 이미지를 inline으로 표시합니다.")
     public ResponseEntity<?> downloadMarkdownImage(
@@ -208,36 +206,6 @@ public class PostAttachmentController {
             return ResponseEntity.status(e.getErrorCode().getStatus().value())
                     .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping("/paste-image")
-    @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
-    @Operation(summary = "이미지 붙여넣기 업로드", description = "마크다운 에디터에 붙여넣은 이미지를 업로드합니다.")
-    public ResponseEntity<ApiResponse<?>> uploadPastedImage(
-            @RequestBody byte[] imageData,
-            @RequestHeader("Content-Type") String contentType,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        try {
-            log.info("이미지 붙여넣기 요청 - 사용자 ID: {}, 컨텐츠 타입: {}, 크기: {} 바이트",
-                    userDetails.getId(), contentType, imageData.length);
-
-            FileInfoDto fileInfo = postAttachmentService.uploadPastedImage(imageData, contentType, userDetails.getId());
-
-            log.info("이미지 붙여넣기 처리 완료 - 파일 ID: {}", fileInfo.getAttachmentId());
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.of(true, HttpStatus.CREATED, "이미지 업로드에 성공했습니다.", fileInfo));
-
-        } catch (PostAttachmentException e) {
-            log.error("이미지 붙여넣기 실패 - PostAttachmentException: {}", e.getErrorCode(), e);
-            return ResponseEntity.status(e.getErrorCode().getStatus().value())
-                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
-        } catch (Exception e) {
-            log.error("이미지 붙여넣기 실패 - 예상치 못한 오류", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
         }
