@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
 import com.dementor.domain.apply.dto.response.ApplyIdResponse;
 import com.dementor.domain.apply.dto.response.ApplyPageResponse;
+import com.dementor.domain.apply.dto.response.ApplyScheduleResponse;
 import com.dementor.domain.apply.service.ApplyService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
@@ -68,5 +69,18 @@ public class ApplyController {
 	) {
 		ApplyPageResponse response = applyService.getApplyList(userDetails.getId(), page-1, size);
 		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 목록을 조회했습니다", response);
+	}
+
+	// 특정 멘토링 신청 날짜 목록 조회
+	@Operation(summary = "멘토링 신청 날짜 목록 조회", description = "특정 멘토링 클래스에 신청된 날짜 목록을 조회합니다")
+	@GetMapping("/schedules/{classId}")
+	public ApiResponse<ApplyScheduleResponse> getApplySchedules(
+		@PathVariable Long classId,
+		@AuthenticationPrincipal CustomUserDetails userDetails,
+		@RequestParam(defaultValue = "1") int page,
+		@RequestParam(defaultValue = "10") int size) {
+
+		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(classId, userDetails.getId(),page-1, size);
+		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 날짜 목록을 조회했습니다", response);
 	}
 }
