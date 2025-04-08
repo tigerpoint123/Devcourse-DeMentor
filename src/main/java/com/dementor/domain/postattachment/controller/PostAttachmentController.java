@@ -20,7 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +36,7 @@ public class PostAttachmentController {
 
     //파일 업로드 API
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')" )
+    @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
     @Operation(summary = "파일 업로드", description = "새로운 파일을 업로드합니다. 회원가입한 회원(멘티)만 파일 업로드가 가능합니다.")
     public ResponseEntity<ApiResponse<?>> uploadFile(
             @RequestParam(value = "file", required = false) List<MultipartFile> files,
@@ -101,7 +101,8 @@ public class PostAttachmentController {
 
     //파일 삭제 API
     @DeleteMapping("/{attachmentId}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#fileId, authentication.principal.id))")  // 멘토와 관리자만 파일 삭제 가능
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id))")
+    // 멘토와 관리자만 파일 삭제 가능
     @Operation(summary = "파일 삭제", description = "특정 파일을 삭제합니다. 파일 업로드한 본인만 삭제할 수 있습니다.")
     public ResponseEntity<ApiResponse<?>> deleteFile(
             @PathVariable("attachmentId") Long attachmentId,
@@ -134,7 +135,8 @@ public class PostAttachmentController {
 
     //일반 첨부 파일 다운로드 API
     @GetMapping("/{attachmentId}/download")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id))")  // 멘토와 관리자만 파일 다운로드 가능
+    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id))")
+    // 멘토와 관리자만 파일 다운로드 가능
     @Operation(summary = "일반 첨부 파일 다운로드", description = "특정 일반 첨부 파일을 다운로드합니다. 멘토와 관리자만 다운로드가 가능합니다.")
     public ResponseEntity<?> downloadFile(
             @PathVariable Long attachmentId,
@@ -170,7 +172,8 @@ public class PostAttachmentController {
 
     //마크다운 이미지 다운로드 API
     @GetMapping("/markdown-images/{uniqueIdentifier}")
-    @PreAuthorize("hasRole('MENTOR') or (hasRole('MENTOR') and @postAttachmentService.isMarkdownImageOwner(#uniqueIdentifier, authentication.principal.id))")  // 멘토와 관리자만 이미지 다운로드 가능
+    @PreAuthorize("hasRole('MENTOR') or (hasRole('MENTOR') and @postAttachmentService.isMarkdownImageOwner(#uniqueIdentifier, authentication.principal.id))")
+    // 멘토와 관리자만 이미지 다운로드 가능
     @Operation(summary = "마크다운 이미지 다운로드", description = "마크다운 텍스트 내에서 참조하는 이미지를 제공합니다. 이 API는 이미지를 inline으로 표시합니다.")
     public ResponseEntity<?> downloadMarkdownImage(
             @PathVariable String uniqueIdentifier,
@@ -180,31 +183,23 @@ public class PostAttachmentController {
         try {
             Map<String, Object> imageInfo = postAttachmentService.downloadMarkdownImage(uniqueIdentifier, width, height);
 
-            // 외부 URL인 경우 리다이렉트
-            if (imageInfo.containsKey("isExternalUrl") && (Boolean) imageInfo.get("isExternalUrl")) {
-                return ResponseEntity.status(HttpStatus.FOUND)
-                        .location(URI.create((String) imageInfo.get("redirectUrl")))
-                        .build();
-            }
-
-            // 내부 이미지인 경우 리소스 반환
             Resource resource = (Resource) imageInfo.get("resource");
             String contentType = (String) imageInfo.get("contentType");
             String fileName = (String) imageInfo.get("fileName");
 
-            // 파일명이 있는 경우만 인코딩 처리
+            // 내부 및 외부 이미지를 동일하게 처리
+            String encodedFileName = "";
             if (fileName != null && !fileName.isEmpty()) {
-                String encodedFileName = new String(fileName.getBytes(StandardCharsets.UTF_8), StandardCharsets.ISO_8859_1);
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + encodedFileName + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(contentType))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline")
-                        .body(resource);
+                encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
+                        .replaceAll("\\+", "%20");
             }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "inline" +
+                            (encodedFileName.isEmpty() ? "" : "; filename*=UTF-8''" + encodedFileName))
+                    .body(resource);
+
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -21,16 +22,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,6 +56,9 @@ public class PostAttachmentService {
 
     //요청한 사용자가 파일의 소유자인지 확인
     public boolean isFileOwner(Long fileId, Long userId) {
+        if (fileId == null || userId == null) {
+            return false; // null 값이 있으면 소유자가 아님
+        }
         return postAttachmentRepository.findById(fileId)
                 .map(file -> file.getMember().getId().equals(userId))
                 .orElse(false);
@@ -65,65 +69,6 @@ public class PostAttachmentService {
         return postAttachmentRepository.findByUniqueIdentifier(uniqueIdentifier)
                 .map(file -> file.getMember().getId().equals(userId))
                 .orElse(false);
-    }
-
-    // 멘토 관련 파일을 업로드하는 새로운 메서드 추가
-    @Transactional
-    public Map<ImageType, List<FileInfoDto>> uploadMentorFiles(
-            List<MultipartFile> introductionImages,
-            List<MultipartFile> bestForImages,
-            List<MultipartFile> attachmentFiles,
-            Long memberId,
-            String markdownIntroduction,
-            String markdownBestFor) {
-
-        Map<ImageType, List<FileInfoDto>> result = new HashMap<>();
-
-        // 자기소개 이미지 및 마크다운 처리
-        if (introductionImages != null && !introductionImages.isEmpty()) {
-            List<FileInfoDto> files = uploadFiles(
-                    introductionImages,
-                    ImageType.MARKDOWN_SELF_INTRODUCTION,
-                    memberId,
-                    markdownIntroduction);
-            result.put(ImageType.MARKDOWN_SELF_INTRODUCTION, files);
-        } else if (markdownIntroduction != null && !markdownIntroduction.isEmpty()) {
-            // 이미지 없이 마크다운만 있는 경우
-            List<FileInfoDto> files = processMarkdownOnly(
-                    markdownIntroduction,
-                    ImageType.MARKDOWN_SELF_INTRODUCTION,
-                    memberId);
-            result.put(ImageType.MARKDOWN_SELF_INTRODUCTION, files);
-        }
-
-        // 추천대상 이미지 및 마크다운 처리
-        if (bestForImages != null && !bestForImages.isEmpty()) {
-            List<FileInfoDto> files = uploadFiles(
-                    bestForImages,
-                    ImageType.MARKDOWN_RECOMMENDATION,
-                    memberId,
-                    markdownBestFor);
-            result.put(ImageType.MARKDOWN_RECOMMENDATION, files);
-        } else if (markdownBestFor != null && !markdownBestFor.isEmpty()) {
-            // 이미지 없이 마크다운만 있는 경우
-            List<FileInfoDto> files = processMarkdownOnly(
-                    markdownBestFor,
-                    ImageType.MARKDOWN_RECOMMENDATION,
-                    memberId);
-            result.put(ImageType.MARKDOWN_RECOMMENDATION, files);
-        }
-
-        // 일반 첨부 파일 처리
-        if (attachmentFiles != null && !attachmentFiles.isEmpty()) {
-            List<FileInfoDto> files = uploadFiles(
-                    attachmentFiles,
-                    ImageType.NORMAL,
-                    memberId,
-                    null);
-            result.put(ImageType.NORMAL, files);
-        }
-
-        return result;
     }
 
     //파일 업로드 처리
@@ -317,60 +262,6 @@ public class PostAttachmentService {
         return processedAttachments;
     }
 
-    // 외부 URL 이미지를 다운로드하고 저장하는 메서드
-    private PostAttachment saveExternalImage(String imageUrl, String altText, Member member, Mentor mentor, ImageType imageType) {
-        try {
-            // 이미지 URL에서 파일 확장자 추출 (또는 기본값 사용)
-            String extension = ".jpg"; // 기본값
-            if (imageUrl.contains(".png")) extension = ".png";
-            else if (imageUrl.contains(".gif")) extension = ".gif";
-            else if (imageUrl.contains(".svg")) extension = ".svg";
-
-            // URL 연결 및 이미지 다운로드
-            URL url = new URL(imageUrl);
-            URLConnection connection = url.openConnection();
-            connection.setRequestProperty("User-Agent", "Mozilla/5.0"); // User-Agent 설정
-
-            try (InputStream in = connection.getInputStream()) {
-                // 파일명 생성 (UUID)
-                String filename = UUID.randomUUID().toString() + extension;
-
-                // 저장 경로 생성
-                String filePath = uploadDir + File.separator + filename;
-                Path targetPath = Paths.get(filePath);
-
-                // 디렉토리 생성 (없는 경우)
-                Files.createDirectories(targetPath.getParent());
-
-                // 파일 저장
-                Files.copy(in, targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-                // 파일 크기 확인
-                long fileSize = Files.size(targetPath);
-
-                // 마크다운용 고유 식별자 생성
-                String uniqueIdentifier = UUID.randomUUID().toString();
-
-                // DB 저장
-                PostAttachment attachment = PostAttachment.builder()
-                        .filename(filename)
-                        .originalFilename(altText + extension) // 대체 텍스트를 원본 파일명으로 사용
-                        .storeFilePath(filePath)
-                        .fileSize(fileSize)
-                        .member(member)
-                        .mentor(mentor)
-                        .imageType(imageType)
-                        .uniqueIdentifier(uniqueIdentifier)
-                        .build();
-
-                return postAttachmentRepository.save(attachment);
-            }
-        } catch (Exception e) {
-            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
-                    "외부 이미지 다운로드 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
-
     //Base64 인코딩된 이미지를 디코딩하고 저장하는 메서드
     private PostAttachment saveBase64Image(String base64Image, String altText, Member member, Mentor mentor, ImageType imageType) {
         try {
@@ -390,8 +281,17 @@ public class PostAttachmentService {
             else if (mimeType.equals("image/gif")) extension = ".gif";
             else if (mimeType.equals("image/svg+xml")) extension = ".svg";
 
+            // Base64 문자열 정리 (공백, 개행 문자 제거)
+            imageData = imageData.trim().replaceAll("\\s", "");
+
             // Base64 디코딩
-            byte[] imageBytes = Base64.getDecoder().decode(imageData);
+            byte[] imageBytes;
+            try {
+                imageBytes = Base64.getDecoder().decode(imageData);
+            } catch (IllegalArgumentException e) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                        "올바르지 않은 Base64 인코딩 형식입니다: " + e.getMessage());
+            }
 
             // 파일명 생성 (UUID)
             String filename = UUID.randomUUID().toString() + extension;
@@ -422,6 +322,8 @@ public class PostAttachmentService {
                     .build();
 
             return postAttachmentRepository.save(attachment);
+        } catch (PostAttachmentException e) {
+            throw e; // 이미 처리된 예외는 그대로 던짐
         } catch (Exception e) {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
                     "이미지 처리 중 오류가 발생했습니다: " + e.getMessage());
@@ -489,9 +391,12 @@ public class PostAttachmentService {
         }
 
         try {
-            // 물리적 파일 삭제
-            Path filePath = Paths.get(attachment.getStoreFilePath());
-            Files.deleteIfExists(filePath);
+            // storeFilePath가 http로 시작하면 외부 URL로 판단하여 물리적 삭제는 건너뜀
+            if (!attachment.getStoreFilePath().startsWith("http")) {
+                // 물리적 파일 삭제
+                Path filePath = Paths.get(attachment.getStoreFilePath());
+                Files.deleteIfExists(filePath);
+            }
 
             // DB 레코드 삭제
             postAttachmentRepository.delete(attachment);
@@ -553,60 +458,127 @@ public class PostAttachmentService {
 
         // storeFilePath가 http로 시작하면 외부 URL로 판단
         if (attachment.getStoreFilePath().startsWith("http")) {
-            Map<String, Object> externalInfo = new HashMap<>();
-            // URL을 그대로 사용하고 파싱하지 않음
-            externalInfo.put("redirectUrl", attachment.getStoreFilePath());
-            externalInfo.put("isExternalUrl", true);
-            return externalInfo;
-        }
+            try {
+                URL url = new URL(attachment.getStoreFilePath());
 
-        // 마크다운 이미지인지 확인
-        if (attachment.getImageType() == ImageType.NORMAL) {
-            throw new PostAttachmentException(PostAttachmentErrorCode.NOT_MARKDOWN_IMAGE);
-        }
+                // HttpURLConnection 사용
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+                connection.setConnectTimeout(10000); // 10초 타임아웃
+                connection.setReadTimeout(10000);
 
-        try {
-            // 파일 리소스 생성
-            Path filePath = Paths.get(attachment.getStoreFilePath());
-            Resource resource = new UrlResource(filePath.toUri());
+                // 응답 코드 확인
+                int responseCode = connection.getResponseCode();
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
+                            "외부 이미지에 접근할 수 없습니다. 응답 코드: " + responseCode);
+                }
 
-            if (resource.exists() && resource.isReadable()) {
-                // 이미지 타입 감지
-                String contentType = Files.probeContentType(filePath);
+                // MIME 타입 확인
+                String contentType = connection.getContentType();
                 if (contentType == null || !contentType.startsWith("image/")) {
                     contentType = "image/jpeg"; // 기본값
                 }
 
-                // 리사이징 로직
-                if (width != null && height != null) {
-                    // 임시 파일 생성
-                    File tempFile = File.createTempFile("resized_", "_" + attachment.getOriginalFilename());
+                // 이미지 데이터 읽기 및 ByteArrayOutputStream에 저장
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-                    // 리사이징 수행
-                    Thumbnails.of(filePath.toFile())
-                            .size(width, height)
-                            .toFile(tempFile);
-
-                    // 리사이징된 이미지로 리소스 교체
-                    resource = new UrlResource(tempFile.toURI());
-
-                    // 임시 파일 삭제 예약 (JVM 종료 시)
-                    tempFile.deleteOnExit();
+                try (InputStream inputStream = connection.getInputStream()) {
+                    if (width != null && height != null) {
+                        // 리사이징 처리
+                        Thumbnails.of(inputStream)
+                                .size(width, height)
+                                .toOutputStream(outputStream);
+                    } else {
+                        // 원본 이미지 그대로 복사
+                        byte[] buffer = new byte[8192];
+                        int bytesRead;
+                        while ((bytesRead = inputStream.read(buffer)) != -1) {
+                            outputStream.write(buffer, 0, bytesRead);
+                        }
+                    }
                 }
 
-                // 인라인 이미지 정보 반환
-                Map<String, Object> imageInfo = new HashMap<>();
-                imageInfo.put("resource", resource);
-                imageInfo.put("contentType", contentType);
-                imageInfo.put("fileName", attachment.getOriginalFilename());
-                imageInfo.put("contentDisposition", "inline; filename=\"" + attachment.getOriginalFilename() + "\"");
+                final byte[] imageBytes = outputStream.toByteArray();
+                outputStream.close();
 
-                return imageInfo;
-            } else {
-                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR, "이미지를 찾을 수 없거나 읽을 수 없습니다.");
+                // ByteArrayResource 생성
+                ByteArrayResource resource = new ByteArrayResource(imageBytes) {
+                    @Override
+                    public String getFilename() {
+                        return attachment.getOriginalFilename() != null ?
+                                attachment.getOriginalFilename() : "image.jpg";
+                    }
+                };
+
+                Map<String, Object> externalInfo = new HashMap<>();
+                externalInfo.put("resource", resource);
+                externalInfo.put("contentType", contentType);
+                externalInfo.put("fileName", attachment.getOriginalFilename());
+                externalInfo.put("isExternalUrl", true);
+
+                return externalInfo;
+
+            } catch (Exception e) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
+                        "외부 이미지 로드 중 오류가 발생했습니다: " + e.getMessage());
             }
-        } catch (MalformedURLException e) {
-            throw new PostAttachmentException(PostAttachmentErrorCode.INVALID_FILE_PATH);
+        }
+
+        // 내부 파일 처리 로직 (로컬 파일)
+        try {
+            // 파일 경로 확인 및 검증
+            Path filePath = Paths.get(attachment.getStoreFilePath());
+            File sourceFile = filePath.toFile();
+
+            if (!sourceFile.exists() || !sourceFile.canRead()) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_NOT_FOUND,
+                        "파일을 찾을 수 없거나 읽을 수 없습니다: " + attachment.getStoreFilePath());
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Resource resource;
+
+            if (width != null && height != null) {
+                // 메모리에서 직접 리사이징
+                Thumbnails.of(sourceFile)
+                        .size(width, height)
+                        .toOutputStream(baos);
+
+                final byte[] resizedImageBytes = baos.toByteArray();
+                baos.close();
+
+                resource = new ByteArrayResource(resizedImageBytes) {
+                    @Override
+                    public String getFilename() {
+                        return attachment.getOriginalFilename();
+                    }
+                };
+            } else {
+                // 파일 바이트를 직접 읽어 ByteArrayResource 생성
+                byte[] fileContent = Files.readAllBytes(filePath);
+                resource = new ByteArrayResource(fileContent) {
+                    @Override
+                    public String getFilename() {
+                        return attachment.getOriginalFilename();
+                    }
+                };
+            }
+
+            // 이미지 타입 감지
+            String contentType = Files.probeContentType(filePath);
+            if (contentType == null || !contentType.startsWith("image/")) {
+                contentType = "image/jpeg"; // 기본값
+            }
+
+            // 반환 정보
+            Map<String, Object> imageInfo = new HashMap<>();
+            imageInfo.put("resource", resource);
+            imageInfo.put("contentType", contentType);
+            imageInfo.put("fileName", attachment.getOriginalFilename());
+
+            return imageInfo;
         } catch (IOException e) {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_READ_ERROR,
                     "이미지 다운로드 중 오류가 발생했습니다: " + e.getMessage());
