@@ -9,6 +9,7 @@ import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
@@ -32,7 +33,7 @@ public class AdminMentorApplymentService {
     public Page<ApplymentResponse> findAllApplyment(Pageable pageable) {
         return adminMentorApplymentRepository.findAllWithJob(pageable)
                 .map(tuple -> {
-                    AdminMentorApplyment applyment = tuple.get(0, AdminMentorApplyment.class);
+                    MentorApplication applyment = tuple.get(0, MentorApplication.class);
                     Job job = tuple.get(1, Job.class);
 
                     return ApplymentResponse.from(applyment, job);
