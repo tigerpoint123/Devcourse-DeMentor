@@ -416,7 +416,7 @@ public class ApplyControllerTest {
 	@DisplayName("특정 멘토링 클래스에 대한 신청 날짜 목록 조회 테스트")
 	@WithMockUser(roles = "MENTEE")
 	void getApplySchedulesTest() throws Exception {
-		// 테스트용 신청 데이터 생성 (15개)
+
 		for (int i = 0; i < 15; i++) {
 			Apply apply = Apply.builder()
 				.mentoringClass(testMentoringClass)
@@ -428,7 +428,7 @@ public class ApplyControllerTest {
 			applyRepository.save(apply);
 		}
 
-		// 1페이지 조회 테스트 (10개)
+
 		ResultActions resultActions = mvc
 			.perform(
 				get("/api/apply/schedules/" + testMentoringClassId)
@@ -453,7 +453,7 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.data.pagination.totalElements").exists())
 			.andExpect(jsonPath("$.data.pagination.totalPages").exists());
 
-		// 2페이지 조회 테스트 (5개)
+
 		ResultActions page2Results = mvc
 			.perform(
 				get("/api/apply/schedules/" + testMentoringClassId)
