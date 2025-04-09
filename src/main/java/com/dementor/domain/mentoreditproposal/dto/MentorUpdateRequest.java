@@ -10,7 +10,6 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 //오류를 피하기 위한 파일
-// TODO : 지워야 함
 public class MentorUpdateRequest {
 	public record MentorUpdateRequestDto(
 		@Positive(message = "경력은 0보다 큰 정수여야 합니다.")
