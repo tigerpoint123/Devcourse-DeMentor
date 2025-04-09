@@ -4,7 +4,6 @@ import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
-import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.*;
 import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
