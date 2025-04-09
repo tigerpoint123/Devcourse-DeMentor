@@ -1,4 +1,4 @@
-package com.dementor.domain.admin.dto.response;
+package com.dementor.domain.mentorapplyproposal.dto.response;
 
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;

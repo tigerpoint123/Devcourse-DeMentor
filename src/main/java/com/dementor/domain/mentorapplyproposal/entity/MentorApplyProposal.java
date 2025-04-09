@@ -5,7 +5,10 @@ import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "mentor_apply_proposal")
@@ -49,6 +52,7 @@ public class MentorApplyProposal extends BaseEntity {
     @Column(length = 255, nullable = false)
     private String introduction;
 
+//    private PostAttachment postAttachment;
 
     // 지원 상태 업데이트
     public void updateStatus(MentorApplyProposalStatus status) {

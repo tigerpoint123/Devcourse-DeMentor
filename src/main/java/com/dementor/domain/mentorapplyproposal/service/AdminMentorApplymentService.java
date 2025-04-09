@@ -1,14 +1,14 @@
-package com.dementor.domain.admin.service;
+package com.dementor.domain.mentorapplyproposal.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.dementor.domain.admin.dto.request.ApplymentRejectRequest;
-import com.dementor.domain.admin.dto.response.ApplymentApprovalResponse;
-import com.dementor.domain.admin.dto.response.ApplymentDetailResponse;
-import com.dementor.domain.admin.dto.response.ApplymentRejectResponse;
-import com.dementor.domain.admin.dto.response.ApplymentResponse;
+import com.dementor.domain.mentorapplyproposal.dto.request.ApplymentRejectRequest;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentApprovalResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentDetailResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentRejectResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentResponse;
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
