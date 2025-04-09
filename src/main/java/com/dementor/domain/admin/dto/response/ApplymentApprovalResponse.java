@@ -1,7 +1,7 @@
 package com.dementor.domain.admin.dto.response;
 
 import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.entity.MentorApplication;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 
 public record ApplymentApprovalResponse(
         Long id,
@@ -11,7 +11,7 @@ public record ApplymentApprovalResponse(
         String status,
         String modifiedAt
 ) {
-    public static ApplymentApprovalResponse from(MentorApplication applyment, Mentor mentor) {
+    public static ApplymentApprovalResponse from(MentorApplyProposal applyment, Mentor mentor) {
         return new ApplymentApprovalResponse(
                 applyment.getId(),
                 applyment.getMember().getId(),

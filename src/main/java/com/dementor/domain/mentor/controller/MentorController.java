@@ -1,31 +1,46 @@
 package com.dementor.domain.mentor.controller;
 
-import com.dementor.domain.apply.entity.ApplyStatus;
-import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
-import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
-import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
-import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
-import com.dementor.domain.mentor.dto.response.*;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.exception.MentorException;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentor.service.MentorService;
-import com.dementor.domain.postattachment.exception.PostAttachmentException;
-import com.dementor.global.ApiResponse;
-import com.dementor.global.security.CustomUserDetails;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
+import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
+import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
+import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
+import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
+import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
+import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
+import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
+import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
+import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
+import com.dementor.domain.mentor.entity.ModificationStatus;
+import com.dementor.domain.mentor.exception.MentorException;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentor.service.MentorService;
+import com.dementor.domain.mentoringclass.service.MentoringClassService;
+import com.dementor.domain.postattachment.exception.PostAttachmentException;
+import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/mentor")
@@ -34,12 +49,13 @@ import java.util.Map;
 public class MentorController {
     private final MentorService mentorService;
     private final MentorRepository mentorRepository;
+    private final MentoringClassService mentoringClassService;
 
     @PostMapping
     @PreAuthorize("hasRole('MENTEE') and #requestDto.memberId() == authentication.principal.id")
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
-            @RequestBody @Valid MentorApplicationRequest.MentorApplicationRequestDto requestDto,
+            @RequestBody @Valid MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             // 권한 체크: 멘토 지원 시 자신의 ID로만 지원 가능
@@ -84,7 +100,7 @@ public class MentorController {
             }
             mentorService.updateMentor(memberId, requestDto);
 
-            MentorUpdateResponse response = MentorUpdateResponse.of(memberId, Mentor.ModificationStatus.PENDING);
+            MentorUpdateResponse response = MentorUpdateResponse.of(memberId, ModificationStatus.PENDING);
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", response));
@@ -230,7 +246,8 @@ public class MentorController {
     public ApiResponse<List<MyMentoringResponse>> getMentorClassFromMentor(
             @PathVariable Long memberId
     ) {
-        List<MyMentoringResponse> response = mentorService.getMentorClassFromMentor(memberId);
+        List<MyMentoringResponse> response = mentoringClassService.getMentorClassFromMentor(memberId);
+
         return ApiResponse.of(
                 true,
                 HttpStatus.OK,

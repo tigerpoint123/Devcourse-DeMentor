@@ -1,4 +1,4 @@
-package com.dementor.domain.mentor.entity;
+package com.dementor.domain.mentoreditproposal.entity;
 
 import com.dementor.domain.member.entity.Member;
 import com.dementor.global.base.BaseEntity;
@@ -6,12 +6,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "mentor_modification")
+@Table(name = "mentor_edit_proposal")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class MentorModification extends BaseEntity {
+public class MentorEditProposal extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,18 +26,10 @@ public class MentorModification extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ModificationStatus status;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewer_id")
-    private Member reviewer;
-
-    public enum ModificationStatus {
-        PENDING, APPROVED, REJECTED
-    }
+    private MentorEditProposalStatus status;
 
     // 수정 요청 상태 업데이트
-    public void updateStatus(ModificationStatus status) {
+    public void updateStatus(MentorEditProposalStatus status) {
         this.status = status;
     }
 }

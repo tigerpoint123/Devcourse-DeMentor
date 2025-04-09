@@ -1,5 +1,9 @@
 package com.dementor.domain.admin.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.dementor.domain.admin.dto.request.ApplymentRejectRequest;
 import com.dementor.domain.admin.dto.response.ApplymentApprovalResponse;
 import com.dementor.domain.admin.dto.response.ApplymentDetailResponse;
@@ -10,17 +14,13 @@ import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.entity.MentorApplication;
-import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposalStatus;
+import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import static com.dementor.domain.mentor.entity.MentorApplication.ApplicationStatus.APPROVED;
-import static com.dementor.domain.mentor.entity.MentorApplication.ApplicationStatus.REJECTED;
 
 @Service
 @RequiredArgsConstructor
@@ -28,16 +28,16 @@ public class AdminMentorApplymentService {
     private final JobRepository jobRepository;
     private final MentorRepository mentorRepository;
     private final MemberRepository memberRepository;
-    private final MentorApplicationRepository mentorApplicationRepository;
+    private final MentorApplyProposalRepository mentorApplyProposalRepository;
 
     public Page<ApplymentResponse> findAllApplyment(Pageable pageable) {
-        return mentorApplicationRepository.findAll(pageable)
+        return mentorApplyProposalRepository.findAll(pageable)
                 .map(application -> ApplymentResponse.from(application, application.getJob()));
     }
 
     public ApplymentDetailResponse findOneApplyment(Long memberId) {
         // 지원서 조회
-        MentorApplication applyment = mentorApplicationRepository.findByMemberId(memberId)
+        MentorApplyProposal applyment = mentorApplyProposalRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("지원서를 찾을 수 없습니다."));
 
         // 첨부파일 목록 조회
@@ -52,7 +52,7 @@ public class AdminMentorApplymentService {
 
     public ApplymentApprovalResponse approveApplyment(Long memberId) {
         // 지원서 조회
-        MentorApplication applyment = mentorApplicationRepository.findByMemberId(memberId)
+        MentorApplyProposal applyment = mentorApplyProposalRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("지원서를 찾을 수 없습니다."));
 
         // 회원 정보 조회
@@ -73,27 +73,25 @@ public class AdminMentorApplymentService {
                 .phone(applyment.getPhone())
                 .email(applyment.getEmail())
                 .introduction(applyment.getIntroduction())
-                .bestFor(applyment.getBestFor())
-                .approvalStatus(Mentor.ApprovalStatus.APPROVED)
                 .build();
 
         mentorRepository.save(mentor);
 
-        applyment.updateStatus(APPROVED);
-        MentorApplication updatedApplyment = mentorApplicationRepository.save(applyment);
+        applyment.updateStatus(MentorApplyProposalStatus.APPROVED);
+        MentorApplyProposal updatedApplyment = mentorApplyProposalRepository.save(applyment);
 
         return ApplymentApprovalResponse.from(updatedApplyment, mentor);
     }
 
     public ApplymentRejectResponse rejectApplyment(Long memberId, ApplymentRejectRequest request) {
         // 지원서 조회
-        MentorApplication applyment = mentorApplicationRepository.findByMemberId(memberId)
+        MentorApplyProposal applyment = mentorApplyProposalRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("지원서를 찾을 수 없습니다."));
 
         // 지원서 상태를 거절로 변경하고 거절 사유 저장
-        applyment.updateStatus(REJECTED);
+        applyment.updateStatus(MentorApplyProposalStatus.REJECTED);
         // 저장
-        MentorApplication updatedApplyment = mentorApplicationRepository.save(applyment);
+        MentorApplyProposal updatedApplyment = mentorApplyProposalRepository.save(applyment);
 
         // 회원 정보 조회
         Member member = memberRepository.findById(applyment.getMember().getId())

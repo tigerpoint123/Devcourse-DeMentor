@@ -1,21 +1,23 @@
 package com.dementor.domain.admin.dto.response;
 
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.mentor.entity.MentorApplication;
-
 import java.time.LocalDateTime;
+
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposalStatus;
+
 
 public record ApplymentRejectResponse(
         Long applymentId,
         Long memberId,
         String name,
-        MentorApplication.ApplicationStatus status,
+        MentorApplyProposalStatus status,
         LocalDateTime modifiedAt,
         String reason
 ) {
     // 엔티티와 요청으로부터 직접 생성하는 팩토리 메서드 추가
     public static ApplymentRejectResponse of(
-            MentorApplication applyment,
+            MentorApplyProposal applyment,
             Member member,
             String rejectReason
     ) {

@@ -1,18 +1,19 @@
-package com.dementor.domain.mentor.entity;
+package com.dementor.domain.mentorapplyproposal.entity;
 
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "mentor_application")
+@Table(name = "mentor_apply_proposal")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MentorApplication extends BaseEntity {
+public class MentorApplyProposal extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +29,7 @@ public class MentorApplication extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private ApplicationStatus status;
+    private MentorApplyProposalStatus status;
 
     @Column(length = 10, nullable = false)
     private String name;
@@ -48,25 +49,15 @@ public class MentorApplication extends BaseEntity {
     @Column(length = 255, nullable = false)
     private String introduction;
 
-    @Column(name = "best_for", length = 255)
-    private String bestFor;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reviewer_id")
-    private Member reviewer;
-
-    public enum ApplicationStatus {
-        PENDING, APPROVED, REJECTED
-    }
 
     // 지원 상태 업데이트
-    public void updateStatus(ApplicationStatus status) {
+    public void updateStatus(MentorApplyProposalStatus status) {
         this.status = status;
     }
 
     // 멘토 엔티티로 변환
     public Mentor toMentor() {
-        if (this.status != ApplicationStatus.APPROVED) {
+        if (this.status != MentorApplyProposalStatus.APPROVED) {
             throw new IllegalStateException("승인되지 않은 지원은 멘토로 변환할 수 없습니다.");
         }
 
@@ -79,8 +70,6 @@ public class MentorApplication extends BaseEntity {
                 .email(this.email)
                 .currentCompany(this.currentCompany)
                 .introduction(this.introduction)
-                .bestFor(this.bestFor)
-                .approvalStatus(Mentor.ApprovalStatus.APPROVED)
                 .build();
     }
 }

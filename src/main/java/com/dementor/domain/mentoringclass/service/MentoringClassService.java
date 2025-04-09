@@ -1,5 +1,14 @@
 package com.dementor.domain.mentoringclass.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
@@ -13,14 +22,9 @@ import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -146,6 +150,20 @@ public class MentoringClassService {
                         schedule.getTime()
                 )
         );
+    }
+
+    public List<MyMentoringResponse> getMentorClassFromMentor(Long memberId) {
+        List<MentoringClass> mentoringList = mentoringClassRepository.findByMentor_Id(memberId);
+
+        return mentoringList.stream()
+            .map(mentoringClass -> new MyMentoringResponse(
+                mentoringClass.getId(),
+                mentoringClass.getStack(),
+                mentoringClass.getContent(),
+                mentoringClass.getTitle(),
+                mentoringClass.getPrice()
+            ))
+            .collect(Collectors.toList());
     }
 
 }

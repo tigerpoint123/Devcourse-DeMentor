@@ -18,4 +18,6 @@ public interface MentoringClassRepository extends JpaRepository<MentoringClass, 
     );
 
     Page<MentoringClass> findByMentor_Job_Id(Long mentor_job_id, Pageable pageable);
+
+	List<MentoringClass> findByMentor_Id(Long mentorId);
 }

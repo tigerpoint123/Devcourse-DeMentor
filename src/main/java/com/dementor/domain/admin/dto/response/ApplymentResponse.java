@@ -1,7 +1,7 @@
 package com.dementor.domain.admin.dto.response;
 
 import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.mentor.entity.MentorApplication;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 
 public record ApplymentResponse(
         Long id,
@@ -13,7 +13,7 @@ public record ApplymentResponse(
         String status,
         String createdAt
 ){
-    public static ApplymentResponse from(MentorApplication applyment, Job job) {
+    public static ApplymentResponse from(MentorApplyProposal applyment, Job job) {
         return new ApplymentResponse(
                 applyment.getId(),
                 applyment.getMember().getId(),

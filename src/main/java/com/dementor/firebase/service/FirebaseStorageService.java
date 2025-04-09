@@ -1,5 +1,18 @@
 package com.dementor.firebase.service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -8,16 +21,9 @@ import com.google.cloud.storage.Storage;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.StorageClient;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.PostConstruct;
-import java.io.IOException;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -35,9 +41,49 @@ public class FirebaseStorageService {
     @PostConstruct
     public void initialize() {
         try {
-            FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(
-                            new ClassPathResource(firebaseConfigPath).getInputStream()))
+            log.info("Firebase 초기화 시작. 설정 파일 경로: {}", firebaseConfigPath);
+            FirebaseOptions options;
+            InputStream credentialsStream = null;
+
+            // 모든 가능한 위치에서 파일 찾기
+            // 1. 먼저 프로젝트 루트 폴더에서 찾기
+            String userDir = System.getProperty("user.dir"); // 현재 작업 디렉토리 (프로젝트 루트)
+            log.info("현재 작업 디렉토리: {}", userDir);
+            
+            // 상대 경로를 절대 경로로 변환
+            File rootFile = Paths.get(userDir, firebaseConfigPath).toFile();
+            if (rootFile.exists()) {
+                log.info("프로젝트 루트에서 Firebase 설정 파일을 찾았습니다: {}", rootFile.getAbsolutePath());
+                credentialsStream = new FileInputStream(rootFile);
+            } 
+            // 2. 원래 경로에서 찾기
+            else {
+                File credentialsFile = new File(firebaseConfigPath);
+                if (credentialsFile.exists()) {
+                    log.info("지정된 경로에서 Firebase 설정 파일을 찾았습니다: {}", credentialsFile.getAbsolutePath());
+                    credentialsStream = new FileInputStream(credentialsFile);
+                } 
+                // 3. 클래스패스에서 파일 찾기 시도
+                else {
+                    try {
+                        log.info("클래스패스에서 Firebase 설정 파일 찾는 중: {}", firebaseConfigPath);
+                        ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
+                        if (resource.exists()) {
+                            log.info("클래스패스에서 Firebase 설정 파일을 찾았습니다");
+                            credentialsStream = resource.getInputStream();
+                        }
+                    } catch (Exception e) {
+                        log.warn("클래스패스에서 Firebase 설정 파일을 찾지 못했습니다: {}", e.getMessage());
+                    }
+                }
+            }
+
+            if (credentialsStream == null) {
+                throw new IOException("어떤 위치에서도 Firebase 설정 파일을 찾을 수 없습니다: " + firebaseConfigPath);
+            }
+
+            options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(credentialsStream))
                     .setStorageBucket(storageBucket)
                     .build();
 
@@ -47,7 +93,7 @@ public class FirebaseStorageService {
             }
         } catch (IOException e) {
             log.error("Firebase 초기화 실패", e);
-            throw new RuntimeException("Firebase 초기화 중 오류 발생", e);
+            throw new RuntimeException("Firebase 초기화 중 오류 발생: " + e.getMessage(), e);
         }
     }
 
