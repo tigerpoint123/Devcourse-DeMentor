@@ -7,7 +7,6 @@ import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
-import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
@@ -18,6 +17,7 @@ import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposalStatus;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
@@ -35,77 +35,77 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class MentorServiceTest {
 
-    @Autowired
-    private MentorService mentorService;
+	@Autowired
+	private MentorService mentorService;
 
-    @Autowired
-    private MentorRepository mentorRepository;
+	@Autowired
+	private MentorRepository mentorRepository;
 
-    @Autowired
-    private MemberRepository memberRepository;
+	@Autowired
+	private MemberRepository memberRepository;
 
-    @Autowired
-    private JobRepository jobRepository;
+	@Autowired
+	private JobRepository jobRepository;
 
-    private Job testJob;
-    private Member testMember;
-    private Member testMentorMember;
-    private Mentor testMentor;
-    @Autowired
-    private MentorEditProposalRepository mentorEditProposalRepository;
+	private Job testJob;
+	private Member testMember;
+	private Member testMentorMember;
+	private Mentor testMentor;
+	@Autowired
+	private MentorEditProposalRepository mentorEditProposalRepository;
 
-    @Autowired
-    private MentorApplyProposalRepository mentorApplyProposalRepository;
+	@Autowired
+	private MentorApplyProposalRepository mentorApplyProposalRepository;
 
-    @BeforeEach
-    void setUp() {
-        // 기존 데이터 정리
-        mentorEditProposalRepository.deleteAll();
-        mentorApplyProposalRepository.deleteAll();
-        mentorRepository.deleteAll();
-        memberRepository.deleteAll();
-        jobRepository.deleteAll();
+	@BeforeEach
+	void setUp() {
+		// 기존 데이터 정리
+		mentorEditProposalRepository.deleteAll();
+		mentorApplyProposalRepository.deleteAll();
+		mentorRepository.deleteAll();
+		memberRepository.deleteAll();
+		jobRepository.deleteAll();
 
-        // 테스트용 일반 회원 생성
-        testMember = Member.builder()
-                .nickname("testMember")
-                .password("password")
-                .name("테스트회원")
-                .email("test@example.com")
-                .userRole(UserRole.MENTEE)
-                .build();
-        testMember = memberRepository.save(testMember);
+		// 테스트용 일반 회원 생성
+		testMember = Member.builder()
+			.nickname("testMember")
+			.password("password")
+			.name("테스트회원")
+			.email("test@example.com")
+			.userRole(UserRole.MENTEE)
+			.build();
+		testMember = memberRepository.save(testMember);
 
-        // 테스트용 멘토 회원 생성
-        testMentorMember = Member.builder()
-                .nickname("testMentor")
-                .password("password")
-                .name("테스트멘토")
-                .email("mentor@example.com")
-                .userRole(UserRole.MENTOR)
-                .build();
-        testMentorMember = memberRepository.save(testMentorMember);
+		// 테스트용 멘토 회원 생성
+		testMentorMember = Member.builder()
+			.nickname("testMentor")
+			.password("password")
+			.name("테스트멘토")
+			.email("mentor@example.com")
+			.userRole(UserRole.MENTOR)
+			.build();
+		testMentorMember = memberRepository.save(testMentorMember);
 
-        // 테스트용 직무 생성
-        testJob = Job.builder()
-                .name("백엔드 개발자")
-                .build();
-        testJob = jobRepository.save(testJob);
+		// 테스트용 직무 생성
+		testJob = Job.builder()
+			.name("백엔드 개발자")
+			.build();
+		testJob = jobRepository.save(testJob);
 
-        // 테스트용 멘토 정보 생성 (수정/조회 테스트용)
-        testMentor = Mentor.builder()
-                .member(testMentorMember)
-                .job(testJob)
-                .name(testMentorMember.getName())
-                .currentCompany("테스트 회사")
-                .career(5)
-                .phone("01012345678")
-                .email("mentor@example.com")
-                .introduction("테스트 자기소개")
-                .modificationStatus(ModificationStatus.NONE)
-                .build();
-        testMentor = mentorRepository.save(testMentor);
-    }
+		// 테스트용 멘토 정보 생성 (수정/조회 테스트용)
+		testMentor = Mentor.builder()
+			.member(testMentorMember)
+			.job(testJob)
+			.name(testMentorMember.getName())
+			.currentCompany("테스트 회사")
+			.career(5)
+			.phone("01012345678")
+			.email("mentor@example.com")
+			.introduction("테스트 자기소개")
+			.modificationStatus(ModificationStatus.NONE)
+			.build();
+		testMentor = mentorRepository.save(testMentor);
+	}
 
     @Test
     @Order(1)
@@ -367,106 +367,105 @@ public class MentorServiceTest {
         assertTrue(exception.getMessage().contains("해당 멘토를 찾을 수 없습니다"));
     }
 
+	@Test
+	@Order(11)
+	@DisplayName("멘토 정보 수정 요청 목록 조회 성공")
+	void getModificationRequestsSuccess() {
+		// Given
+		// 수정 요청 생성 및 저장
+		MentorEditProposal modification = MentorEditProposal.builder()
+			.member(testMentorMember)
+			.status(MentorEditProposalStatus.PENDING)
+			.build();
+		mentorEditProposalRepository.save(modification);
 
-    @Test
-    @Order(11)
-    @DisplayName("멘토 정보 수정 요청 목록 조회 성공")
-    void getModificationRequestsSuccess() {
-        // Given
-        // 수정 요청 생성 및 저장
-        MentorEditProposal modification = MentorEditProposal.builder()
-                .member(testMentorMember)
-                .changes("{\"career\":{\"before\":5,\"after\":8},\"phone\":{\"before\":\"01012345678\",\"after\":\"01098765432\"}}")
-                .status(MentorEditProposalStatus.PENDING)
-                .build();
-        mentorEditProposalRepository.save(modification);
+		// 조회 파라미터 설정
+		MentorChangeRequest.ModificationRequestParams params =
+			new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
 
-        // 조회 파라미터 설정
-        MentorChangeRequest.ModificationRequestParams params =
-                new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
+		// When
+		MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(
+			testMentorMember.getId(), params);
 
-        // When
-        MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(testMentorMember.getId(), params);
+		// Then
+		assertNotNull(response, "응답이 null이 아니어야 합니다.");
+		assertFalse(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있지 않아야 합니다.");
+		assertEquals(1, response.modificationRequests().size(), "변경 요청 목록의 크기가 1이어야 합니다.");
+		assertEquals(MentorEditProposalStatus.PENDING.name(),
+			response.modificationRequests().get(0).status(), "상태가 PENDING이어야 합니다.");
+		assertNotNull(response.pagination(), "페이지네이션 정보가 null이 아니어야 합니다.");
+		assertEquals(1, response.pagination().page(), "현재 페이지가 1이어야 합니다.");
+		assertEquals(10, response.pagination().size(), "페이지 크기가 10이어야 합니다.");
+		assertEquals(1, response.pagination().totalElements(), "전체 요소 수가 1이어야 합니다.");
+	}
 
-        // Then
-        assertNotNull(response, "응답이 null이 아니어야 합니다.");
-        assertFalse(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있지 않아야 합니다.");
-        assertEquals(1, response.modificationRequests().size(), "변경 요청 목록의 크기가 1이어야 합니다.");
-        assertEquals(MentorEditProposalStatus.PENDING.name(),
-                response.modificationRequests().get(0).status(), "상태가 PENDING이어야 합니다.");
-        assertNotNull(response.pagination(), "페이지네이션 정보가 null이 아니어야 합니다.");
-        assertEquals(1, response.pagination().page(), "현재 페이지가 1이어야 합니다.");
-        assertEquals(10, response.pagination().size(), "페이지 크기가 10이어야 합니다.");
-        assertEquals(1, response.pagination().totalElements(), "전체 요소 수가 1이어야 합니다.");
-    }
+	@Test
+	@Order(12)
+	@DisplayName("멘토 정보 수정 요청 목록 - 상태별 필터링 조회 성공")
+	void getModificationRequestsWithStatusFilterSuccess() {
+		// Given
+		// PENDING 상태의 수정 요청 생성
+		MentorEditProposal pendingModification = MentorEditProposal.builder()
+			.member(testMentorMember)
+			.status(MentorEditProposalStatus.PENDING)
+			.build();
+		mentorEditProposalRepository.save(pendingModification);
 
-    @Test
-    @Order(12)
-    @DisplayName("멘토 정보 수정 요청 목록 - 상태별 필터링 조회 성공")
-    void getModificationRequestsWithStatusFilterSuccess() {
-        // Given
-        // PENDING 상태의 수정 요청 생성
-        MentorEditProposal pendingModification = MentorEditProposal.builder()
-                .member(testMentorMember)
-                .changes("{\"career\":{\"before\":5,\"after\":8}}")
-                .status(MentorEditProposalStatus.PENDING)
-                .build();
-        mentorEditProposalRepository.save(pendingModification);
+		// APPROVED 상태의 수정 요청 생성
+		MentorEditProposal approvedModification = MentorEditProposal.builder()
+			.member(testMentorMember)
+			.status(MentorEditProposalStatus.APPROVED)
+			.build();
+		mentorEditProposalRepository.save(approvedModification);
 
-        // APPROVED 상태의 수정 요청 생성
-        MentorEditProposal approvedModification = MentorEditProposal.builder()
-                .member(testMentorMember)
-                .changes("{\"phone\":{\"before\":\"01012345678\",\"after\":\"01098765432\"}}")
-                .status(MentorEditProposalStatus.APPROVED)
-                .build();
-        mentorEditProposalRepository.save(approvedModification);
+		// APPROVED 상태만 필터링하는 파라미터 설정
+		MentorChangeRequest.ModificationRequestParams params =
+			new MentorChangeRequest.ModificationRequestParams("APPROVED", 1, 10);
 
-        // APPROVED 상태만 필터링하는 파라미터 설정
-        MentorChangeRequest.ModificationRequestParams params =
-                new MentorChangeRequest.ModificationRequestParams("APPROVED", 1, 10);
+		// When
+		MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(
+			testMentorMember.getId(), params);
 
-        // When
-        MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(testMentorMember.getId(), params);
+		// Then
+		assertNotNull(response, "응답이 null이 아니어야 합니다.");
+		assertFalse(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있지 않아야 합니다.");
+		assertEquals(1, response.modificationRequests().size(), "변경 요청 목록의 크기가 1이어야 합니다.");
+		assertEquals(MentorEditProposalStatus.APPROVED.name(),
+			response.modificationRequests().get(0).status(), "상태가 APPROVED이어야 합니다.");
+	}
 
-        // Then
-        assertNotNull(response, "응답이 null이 아니어야 합니다.");
-        assertFalse(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있지 않아야 합니다.");
-        assertEquals(1, response.modificationRequests().size(), "변경 요청 목록의 크기가 1이어야 합니다.");
-        assertEquals(MentorEditProposalStatus.APPROVED.name(),
-                response.modificationRequests().get(0).status(), "상태가 APPROVED이어야 합니다.");
-    }
+	@Test
+	@Order(13)
+	@DisplayName("존재하지 않는 멘토의 정보 수정 요청 목록 조회 시 예외 발생")
+	void getModificationRequestsFailMentorNotFound() {
+		// Given
+		final Long nonExistingMentorId = 9999L;
+		MentorChangeRequest.ModificationRequestParams params =
+			new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
 
-    @Test
-    @Order(13)
-    @DisplayName("존재하지 않는 멘토의 정보 수정 요청 목록 조회 시 예외 발생")
-    void getModificationRequestsFailMentorNotFound() {
-        // Given
-        final Long nonExistingMentorId = 9999L;
-        MentorChangeRequest.ModificationRequestParams params =
-                new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
+		// When & Then
+		Exception exception = assertThrows(MentorException.class, () -> {
+			mentorService.getModificationRequests(nonExistingMentorId, params);
+		});
 
-        // When & Then
-        Exception exception = assertThrows(MentorException.class, () -> {
-            mentorService.getModificationRequests(nonExistingMentorId, params);
-        });
+		assertTrue(exception.getMessage().contains("해당 멘토를 찾을 수 없습니다"));
+	}
 
-        assertTrue(exception.getMessage().contains("해당 멘토를 찾을 수 없습니다"));
-    }
+	@Test
+	@Order(14)
+	@DisplayName("수정 요청이 없는 경우 빈 목록 반환")
+	void getModificationRequestsWithEmptyList() {
+		// Given - 수정 요청을 생성하지 않음
+		MentorChangeRequest.ModificationRequestParams params =
+			new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
 
-    @Test
-    @Order(14)
-    @DisplayName("수정 요청이 없는 경우 빈 목록 반환")
-    void getModificationRequestsWithEmptyList() {
-        // Given - 수정 요청을 생성하지 않음
-        MentorChangeRequest.ModificationRequestParams params =
-                new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
+		// When
+		MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(
+			testMentorMember.getId(), params);
 
-        // When
-        MentorChangeResponse.ChangeListResponse response = mentorService.getModificationRequests(testMentorMember.getId(), params);
-
-        // Then
-        assertNotNull(response, "응답이 null이 아니어야 합니다.");
-        assertTrue(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있어야 합니다.");
-        assertEquals(0, response.pagination().totalElements(), "전체 요소 수가 0이어야 합니다.");
-    }
+		// Then
+		assertNotNull(response, "응답이 null이 아니어야 합니다.");
+		assertTrue(response.modificationRequests().isEmpty(), "변경 요청 목록이 비어있어야 합니다.");
+		assertEquals(0, response.pagination().totalElements(), "전체 요소 수가 0이어야 합니다.");
+	}
 }

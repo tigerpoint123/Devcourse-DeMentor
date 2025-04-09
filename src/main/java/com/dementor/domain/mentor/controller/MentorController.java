@@ -6,6 +6,12 @@ import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.*;
+import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
+import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
+import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
+import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
+import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
+import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -13,6 +19,7 @@ import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
@@ -95,8 +102,7 @@ public class MentorController {
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestPart(value = "mentorUpdateData") @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @RequestBody @Valid MentorEditProposalRequest requestDto,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
