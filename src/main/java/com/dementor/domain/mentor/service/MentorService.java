@@ -23,7 +23,6 @@ import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposalStatus;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
@@ -58,7 +57,7 @@ public class MentorService {
 	private final PostAttachmentService postAttachmentService;
 	private final ApplyRepository applyRepository;
 
-    //멘토 지원하기
+	//멘토 지원하기
     @Transactional
     public MentorApplyProposal applyMentor(MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto) {
         // 회원 엔티티 조회
@@ -66,38 +65,38 @@ public class MentorService {
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
                         "회원을 찾을 수 없습니다: " + requestDto.memberId()));
 
-        // 회원의 역할이 이미 MENTOR인지 확인
-        if (member.getUserRole() == UserRole.MENTOR) {
-            throw new MentorException(MentorErrorCode.MENTOR_ALREADY_EXISTS,
-                    "이미 멘토로 등록된 사용자입니다: " + requestDto.memberId());
-        }
+		// 회원의 역할이 이미 MENTOR인지 확인
+		if (member.getUserRole() == UserRole.MENTOR) {
+			throw new MentorException(MentorErrorCode.MENTOR_ALREADY_EXISTS,
+				"이미 멘토로 등록된 사용자입니다: " + requestDto.memberId());
+		}
 
-        // 직무 엔티티 조회
-        Job job = jobRepository.findById(requestDto.jobId())
-                .orElseThrow(() -> new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
-                        "직무를 찾을 수 없습니다: " + requestDto.jobId()));
+		// 직무 엔티티 조회
+		Job job = jobRepository.findById(requestDto.jobId())
+			.orElseThrow(() -> new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+				"직무를 찾을 수 없습니다: " + requestDto.jobId()));
 
-        // 이미 지원 내역이 있는지 확인
-        if (mentorApplyProposalRepository.existsByMemberId(requestDto.memberId())) {
-            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
-                    "이미 멘토 지원 내역이 존재합니다: " + requestDto.memberId());
-        }
+		// 이미 지원 내역이 있는지 확인
+		if (mentorApplyProposalRepository.existsByMemberId(requestDto.memberId())) {
+			throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+				"이미 멘토 지원 내역이 존재합니다: " + requestDto.memberId());
+		}
 
-        // 멘토 애플리케이션 엔티티 생성 - 초기 상태는 PENDING
-        MentorApplyProposal mentorApplyProposal = MentorApplyProposal.builder()
-                .member(member)
-                .job(job)
-                .name(requestDto.name())
-                .career(requestDto.career())
-                .phone(requestDto.phone())
-                .email(requestDto.email())
-                .currentCompany(requestDto.currentCompany())
-                .introduction(requestDto.introduction())
-                .status(MentorApplyProposalStatus.PENDING)
-                .build();
+		// 멘토 애플리케이션 엔티티 생성 - 초기 상태는 PENDING
+		MentorApplyProposal mentorApplyProposal = MentorApplyProposal.builder()
+			.member(member)
+			.job(job)
+			.name(requestDto.name())
+			.career(requestDto.career())
+			.phone(requestDto.phone())
+			.email(requestDto.email())
+			.currentCompany(requestDto.currentCompany())
+			.introduction(requestDto.introduction())
+			.status(MentorApplyProposalStatus.PENDING)
+			.build();
 
-        // 멘토 애플리케이션 저장 (ID 생성)
-        MentorApplyProposal savedApplication = mentorApplyProposalRepository.save(mentorApplyProposal);
+		// 멘토 애플리케이션 저장 (ID 생성)
+		MentorApplyProposal savedApplication = mentorApplyProposalRepository.save(mentorApplyProposal);
 
         // 첨부파일 연결
         if (requestDto.attachmentId() != null && !requestDto.attachmentId().isEmpty()) {
@@ -130,23 +129,23 @@ public class MentorService {
                     "이미 정보 수정 요청 중입니다: " + memberId);
         }
 
-        // 변경 사항이 있는지 확인
-        if (!requestDto.hasChanges(mentor)) {
-            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
-                    "변경된 내용이 없습니다.");
-        }
+		// 변경 사항이 있는지 확인
+		if (!requestDto.hasChanges(mentor)) {
+			throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+				"변경된 내용이 없습니다.");
+		}
 
-        // 변경 사항 추출
-        Map<String, Map<String, Object>> changes = extractChanges(mentor, requestDto);
+		// 변경 사항 추출
+		Map<String, Map<String, Object>> changes = extractChanges(mentor, requestDto);
 
-        // 변경 사항을 JSON으로 변환
-        String changesJson;
-        try {
-            changesJson = objectMapper.writeValueAsString(changes);
-        } catch (JsonProcessingException e) {
-            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
-                    "변경 내용을 JSON으로 변환하는데 실패했습니다: " + e.getMessage());
-        }
+		// 변경 사항을 JSON으로 변환
+		String changesJson;
+		try {
+			changesJson = objectMapper.writeValueAsString(changes);
+		} catch (JsonProcessingException e) {
+			throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
+				"변경 내용을 JSON으로 변환하는데 실패했습니다: " + e.getMessage());
+		}
 
 		// 수정 요청 엔티티 생성 및 저장
 		MentorEditProposal modification = MentorEditProposal.builder()
@@ -197,79 +196,79 @@ public class MentorService {
         // 완료된 멘토링 수 계산 - 멘토링 신청 날짜가 오늘보다 이전이면 완료된 상태
         Integer completedSessions = applyRepository.countCompletedSessions(classIds);
 
+		return MentorInfoResponse.from(mentor, totalClasses, pendingRequests, completedSessions);
+	}
 
-        return MentorInfoResponse.from(mentor, totalClasses, pendingRequests, completedSessions);
-    }
+	//멘토 정보 수정 요청 목록 조회
+	public MentorChangeResponse.ChangeListResponse getModificationRequests(
+		Long memberId,
+		MentorChangeRequest.ModificationRequestParams params) {
+		// 멘토 존재 여부 확인
+		if (!mentorRepository.existsById(memberId)) {
+			throw new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
+				"해당 멘토를 찾을 수 없습니다: " + memberId);
+		}
 
-    //멘토 정보 수정 요청 목록 조회
-    public MentorChangeResponse.ChangeListResponse getModificationRequests(
-            Long memberId,
-            MentorChangeRequest.ModificationRequestParams params) {
-        // 멘토 존재 여부 확인
-        if (!mentorRepository.existsById(memberId)) {
-            throw new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
-                    "해당 멘토를 찾을 수 없습니다: " + memberId);
-        }
+		// 페이지네이션 설정
+		Pageable pageable = PageRequest.of(
+			params.page() - 1, // 0-based page index
+			params.size(),
+			Sort.by(Sort.Direction.DESC, "createdAt")
+		);
 
-        // 페이지네이션 설정
-        Pageable pageable = PageRequest.of(
-                params.page() - 1, // 0-based page index
-                params.size(),
-                Sort.by(Sort.Direction.DESC, "createdAt")
-        );
+		try {
+			// 상태 필터가 있으면 상태별로 조회, 없으면 전체 조회
+			Page<MentorEditProposal> modificationPage;
 
-        try {
-            // 상태 필터가 있으면 상태별로 조회, 없으면 전체 조회
-            Page<MentorEditProposal> modificationPage;
+			if (params.status() != null) {
+				MentorEditProposalStatus status = MentorEditProposalStatus.valueOf(params.status());
+				modificationPage = mentorEditProposalRepository.findByMemberIdAndStatus(memberId, status, pageable);
+			} else {
+				modificationPage = mentorEditProposalRepository.findByMemberId(memberId, pageable);
+			}
 
-            if (params.status() != null) {
-                MentorEditProposalStatus status = MentorEditProposalStatus.valueOf(params.status());
-                modificationPage = mentorEditProposalRepository.findByMemberIdAndStatus(memberId, status, pageable);
-            } else {
-                modificationPage = mentorEditProposalRepository.findByMemberId(memberId, pageable);
-            }
+			// 결과 변환 및 반환
+			List<MentorChangeResponse.ChangeRequestData> changeRequests = modificationPage.getContent().stream()
+				.map(this::convertToChangeRequestData)
+				.collect(Collectors.toList());
 
-            // 결과 변환 및 반환
-            List<MentorChangeResponse.ChangeRequestData> changeRequests = modificationPage.getContent().stream()
-                    .map(this::convertToChangeRequestData)
-                    .collect(Collectors.toList());
+			return new MentorChangeResponse.ChangeListResponse(
+				changeRequests,
+				new MentorChangeResponse.Pagination(
+					params.page(),
+					params.size(),
+					modificationPage.getTotalElements()
+				)
+			);
+		} catch (Exception e) {
+			throw new MentorException(MentorErrorCode.INVALID_STATUS_PARAM,
+				"멘토 정보 수정 요청 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
+		}
+	}
 
-            return new MentorChangeResponse.ChangeListResponse(
-                    changeRequests,
-                    new MentorChangeResponse.Pagination(
-                            params.page(),
-                            params.size(),
-                            modificationPage.getTotalElements()
-                    )
-            );
-        } catch (Exception e) {
-            throw new MentorException(MentorErrorCode.INVALID_STATUS_PARAM,
-                    "멘토 정보 수정 요청 목록 조회 중 오류가 발생했습니다: " + e.getMessage());
-        }
-    }
+	//멘토 정보 수정 요청을 DTO로 변환합니다.
+	private MentorChangeResponse.ChangeRequestData convertToChangeRequestData(MentorEditProposal modification) {
+		Map<String, MentorChangeResponse.FieldChange<?>> modifiedFields = new HashMap<>();
 
-    //멘토 정보 수정 요청을 DTO로 변환합니다.
-    private MentorChangeResponse.ChangeRequestData convertToChangeRequestData(MentorEditProposal modification) {
-        Map<String, MentorChangeResponse.FieldChange<?>> modifiedFields = new HashMap<>();
+		try {
+			// Map<String, Map<String, Object>> changes = objectMapper.readValue(
+			// 	modification.getChanges(),
+			// 	new TypeReference<Map<String, Map<String, Object>>>() {
+			// 	}
+			// );
 
-        try {
-            Map<String, Map<String, Object>> changes = objectMapper.readValue(
-                    modification.getChanges(),
-                    new TypeReference<Map<String, Map<String, Object>>>() {}
-            );
-
-            for (Map.Entry<String, Map<String, Object>> entry : changes.entrySet()) {
-                String fieldName = entry.getKey();
-                Map<String, Object> change = entry.getValue();
-
-                Object before = change.get("before");
-                Object after = change.get("after");
-
-                modifiedFields.put(fieldName, new MentorChangeResponse.FieldChange<>(before, after));
-            }
-        } catch (Exception e) {
-            // JSON 파싱 실패 시 빈 맵 반환
-        }
+			// for (Map.Entry<String, Map<String, Object>> entry : changes.entrySet()) {
+			// 	String fieldName = entry.getKey();
+			// 	Map<String, Object> change = entry.getValue();
+			//
+			// 	Object before = change.get("before");
+			// 	Object after = change.get("after");
+			//
+			// 	modifiedFields.put(fieldName, new MentorChangeResponse.FieldChange<>(before, after));
+			// }
+		} catch (Exception e) {
+			// JSON 파싱 실패 시 빈 맵 반환
+		}
 
 		return new MentorChangeResponse.ChangeRequestData(
 			modification.getId(),
@@ -335,22 +334,21 @@ public class MentorService {
 		return changes;
 	}
 
-    @Transactional
-    public MentorApplyResponse.GetApplyMenteePageList getApplyByMentor(Long memberId, int page, int size) {
+	@Transactional
+	public MentorApplyResponse.GetApplyMenteePageList getApplyByMentor(Long memberId, int page, int size) {
 
-        Mentor mentor = mentorRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("멘토만 조회할 수 있습니다."));
+		Mentor mentor = mentorRepository.findById(memberId)
+			.orElseThrow(() -> new IllegalArgumentException("멘토만 조회할 수 있습니다."));
 
+		// 멘토가 가진 클래스 아이디 목록 조회
+		List<Long> classId = mentorRepository.findMentoringClassIdsByMentor(mentor);
 
-        // 멘토가 가진 클래스 아이디 목록 조회
-        List<Long> classId = mentorRepository.findMentoringClassIdsByMentor(mentor);
+		// 멘토가 가진 클래스 아이디 목록으로 신청 목록 조회
+		Page<Apply> applyPage = applyRepository.findByMentoringClassIdIn(classId, PageRequest.of(page, size));
 
-        // 멘토가 가진 클래스 아이디 목록으로 신청 목록 조회
-        Page<Apply> applyPage = applyRepository.findByMentoringClassIdIn(classId, PageRequest.of(page, size));
+		return MentorApplyResponse.GetApplyMenteePageList.from(applyPage, page, size);
 
-        return MentorApplyResponse.GetApplyMenteePageList.from(applyPage, page, size);
-
-    }
+	}
 
     @Transactional
     public MentorApplyStatusResponse updateApplyStatus(Long memberId, Long applyId, MentorApplyStatusRequest request) {
