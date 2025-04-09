@@ -1,6 +1,8 @@
 package com.dementor.domain.mentor.controller;
 
+import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
+import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
 import com.dementor.domain.mentor.dto.response.*;
@@ -199,6 +201,27 @@ public class MentorController {
         MentorApplyResponse.GetApplyMenteePageList response = mentorService.getApplyByMentor(userDetails.getId(), page-1, size);
 
         return ApiResponse.of(true, HttpStatus.OK, "신청된 목록을 조회했습니다", response);
+    }
+
+    // 자신의 멘토링 신청 승인/거절
+    @Operation(summary = "신청 상태 변경", description = "멘토링 신청 상태를 변경합니다 (승인/거절)")
+    @PutMapping("/apply/{applyId}/status")
+    @PreAuthorize("hasRole('MENTOR')")
+    public ApiResponse<MentorApplyStatusResponse> updateApplyStatus(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable(name = "applyId") Long applyId,
+            @RequestBody MentorApplyStatusRequest request
+    ) {
+        MentorApplyStatusResponse response = mentorService.updateApplyStatus(userDetails.getId(), applyId, request);
+
+        String message;
+        if (response.getStatus() == ApplyStatus.APPROVED) {
+            message = "멘토링 신청이 승인되었습니다.";
+        } else {
+            message = "멘토링 신청이 거절되었습니다.";
+        }
+
+        return ApiResponse.of(true, HttpStatus.OK, message, response);
     }
 
     // MentorControllerFromHo에서 가져온 메소드

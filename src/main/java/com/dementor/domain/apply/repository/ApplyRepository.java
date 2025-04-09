@@ -16,6 +16,16 @@ public interface ApplyRepository extends JpaRepository<Apply, Long> {
 
 	Page<Apply> findByMentoringClassIdIn(List<Long> classId, Pageable pageable);
 
+	@Query("SELECT a FROM Apply a WHERE a.mentoringClass.id = :classId AND " +
+	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') >= :startDate AND " +
+	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') <= :endDate")
+	List<Apply> findAllByClassIdAndScheduleBetween(
+		@Param("classId") Long classId,
+		@Param("startDate") String startDate,
+		@Param("endDate") String endDate
+	);
+
+
 	// 대기 중인 요청 수 계산
 	Integer countByMentoringClassIdInAndApplyStatus(List<Long> mentoringClassIds, ApplyStatus applyStatus);
 

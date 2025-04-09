@@ -9,12 +9,10 @@ import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.dto.request.MentorApplicationRequest;
+import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
-import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
-import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
-import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
-import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
+import com.dementor.domain.mentor.dto.response.*;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.entity.MentorModification;
@@ -369,6 +367,41 @@ public class MentorService {
 
         return MentorApplyResponse.GetApplyMenteePageList.from(applyPage, page, size);
 
+    }
+
+    @Transactional
+    public MentorApplyStatusResponse updateApplyStatus(Long memberId, Long applyId, MentorApplyStatusRequest request) {
+        // 멘토 검증
+        Mentor mentor = mentorRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("멘토만 상태를 변경할 수 있습니다."));
+
+        if (mentor.getApprovalStatus() != Mentor.ApprovalStatus.APPROVED) {
+            throw new AccessDeniedException("승인되지 않은 멘토는 신청 상태를 변경할 수 없습니다");
+        }
+
+        // 신청 정보 조회
+        Apply apply = applyRepository.findById(applyId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 신청입니다."));
+
+        // 멘토의 클래스인지 확인
+        List<Long> classIds = mentorRepository.findMentoringClassIdsByMentor(mentor);
+        if (!classIds.contains(apply.getMentoringClass().getId())) {
+            throw new AccessDeniedException("자신의 멘토링 클래스에 대한 신청만 변경할 수 있습니다.");
+        }
+
+        //이미 승인/거절을 한 신청인지 확인
+        if (apply.getApplyStatus() == ApplyStatus.APPROVED || apply.getApplyStatus() == ApplyStatus.REJECTED) {
+            throw new IllegalArgumentException("이미 승인/거절된 신청입니다.");
+        }
+
+        // 상태 변경
+        ApplyStatus newStatus = request.getStatus();
+        apply.updateStatus(newStatus);
+
+        // 변경된 엔티티 저장
+        Apply updatedApply = applyRepository.save(apply);
+
+        return MentorApplyStatusResponse.from(updatedApply);
     }
 
     public List<MyMentoringResponse> getMentorClassFromMentor(Long memberId) {
