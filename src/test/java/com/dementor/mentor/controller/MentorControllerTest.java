@@ -13,6 +13,7 @@ import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRep
 import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
+import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
