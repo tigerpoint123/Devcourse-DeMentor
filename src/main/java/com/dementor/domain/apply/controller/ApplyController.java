@@ -77,15 +77,12 @@ public class ApplyController {
 	@GetMapping("/schedules/{classId}")
 	public ApiResponse<ApplyScheduleResponse> getApplySchedules(
 		@PathVariable Long classId,
-		@AuthenticationPrincipal CustomUserDetails userDetails,
 		@Parameter(description = "시작 날짜", example = "20250408")
 		@RequestParam("startDate") String startDate,
 		@Parameter(description = "종료 날짜", example = "20250430")
-		@RequestParam("endDate") String endDate,
-		@RequestParam(defaultValue = "1") int page,
-		@RequestParam(defaultValue = "10") int size) {
+		@RequestParam("endDate") String endDate) {
 
-		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(classId, userDetails.getId(),page-1, size, startDate, endDate);
+		ApplyScheduleResponse response = applyService.getApplySchedulesByClassId(classId, startDate, endDate);
 		return ApiResponse.of(true, HttpStatus.OK, "멘토링 신청 날짜 목록을 조회했습니다", response);
 	}
 }

@@ -27,6 +27,9 @@ import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -98,19 +101,14 @@ public class ApplyService {
 	}
 
 	//특정 멘토링 신청 날짜 목록 조회
-	public ApplyScheduleResponse getApplySchedulesByClassId(Long classId, Long memberId, int page, int size, String startDate, String endDate) {
+	public ApplyScheduleResponse getApplySchedulesByClassId(Long classId, String startDate, String endDate) {
 
 		mentoringClassRepository.findById(classId)
 			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
-		memberRepository.findById(memberId)
-			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-		
-		Pageable pageable = PageRequest.of(page, size);
+		List<Apply> applies = applyRepository.findAllByClassIdAndScheduleBetween(
+			classId, startDate, endDate);
 
-		Page<Apply> filteredPage = applyRepository.findByClassIdAndScheduleStringBetween(
-			classId, startDate, endDate, pageable);
-
-		return ApplyScheduleResponse.from(filteredPage, page + 1, size);
+		return ApplyScheduleResponse.fromList(applies);
 	}
 }

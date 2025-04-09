@@ -26,4 +26,13 @@ public interface ApplyRepository extends JpaRepository<Apply, Long> {
 		Pageable pageable
 	);
 
+	@Query("SELECT a FROM Apply a WHERE a.mentoringClass.id = :classId AND " +
+	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') >= :startDate AND " +
+	       "FUNCTION('DATE_FORMAT', a.schedule, '%Y%m%d') <= :endDate")
+	List<Apply> findAllByClassIdAndScheduleBetween(
+		@Param("classId") Long classId,
+		@Param("startDate") String startDate,
+		@Param("endDate") String endDate
+	);
+
 }
