@@ -265,7 +265,7 @@ public class ApplyServiceTest {
 		Long nonExistentClassId = 9999L;
 
 		assertThrows(MentoringClassException.class, () -> {
-			applyService.getApplySchedulesByClassId(nonExistentClassId, testMember.getId(), 0, 10, startDate, endDate);
+			applyService.getApplySchedulesByClassId(nonExistentClassId, startDate, endDate);
 		});
 	}
 }
