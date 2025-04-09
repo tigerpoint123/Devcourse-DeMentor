@@ -3,15 +3,14 @@ package com.dementor.domain.mentor.entity;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "mentor_modification")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class MentorModification extends BaseEntity {
 
     @Id
@@ -37,15 +36,8 @@ public class MentorModification extends BaseEntity {
         PENDING, APPROVED, REJECTED
     }
 
-    @Builder
-    public MentorModification(Member member, String changes, ModificationStatus status) {
-        this.member = member;
-        this.changes = changes;
-        this.status = status != null ? status : ModificationStatus.PENDING;
-    }
-
     // 수정 요청 상태 업데이트
-    public void updateStatus(ModificationStatus status, String rejectionReason) {
+    public void updateStatus(ModificationStatus status) {
         this.status = status;
     }
 }

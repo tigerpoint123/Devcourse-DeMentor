@@ -42,7 +42,7 @@ public class MentorApplication extends BaseEntity {
     @Column(length = 20, nullable = false)
     private String phone;
 
-    @Column(length = 20, nullable = false)
+    @Column(length = 50, nullable = false)
     private String email;
 
     @Column(length = 255, nullable = false)
@@ -60,7 +60,7 @@ public class MentorApplication extends BaseEntity {
     }
 
     // 지원 상태 업데이트
-    public void updateStatus(ApplicationStatus status, String rejectionReason) {
+    public void updateStatus(ApplicationStatus status) {
         this.status = status;
     }
 

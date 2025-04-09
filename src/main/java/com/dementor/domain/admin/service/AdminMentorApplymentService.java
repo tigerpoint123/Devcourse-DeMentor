@@ -79,7 +79,7 @@ public class AdminMentorApplymentService {
 
         mentorRepository.save(mentor);
 
-        applyment.updateStatus(APPROVED, null);
+        applyment.updateStatus(APPROVED);
         MentorApplication updatedApplyment = mentorApplicationRepository.save(applyment);
 
         return ApplymentApprovalResponse.from(updatedApplyment, mentor);
@@ -91,7 +91,7 @@ public class AdminMentorApplymentService {
                 .orElseThrow(() -> new EntityNotFoundException("지원서를 찾을 수 없습니다."));
 
         // 지원서 상태를 거절로 변경하고 거절 사유 저장
-        applyment.updateStatus(REJECTED, request.reason());
+        applyment.updateStatus(REJECTED);
         // 저장
         MentorApplication updatedApplyment = mentorApplicationRepository.save(applyment);
 

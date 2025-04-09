@@ -2,6 +2,8 @@ package com.dementor.domain.postattachment.entity;
 
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.MentorApplication;
+import com.dementor.domain.mentor.entity.MentorModification;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,6 +13,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class PostAttachment extends BaseEntity {
 
     @Id
@@ -23,7 +26,7 @@ public class PostAttachment extends BaseEntity {
     @Column(nullable = false)
     private String originalFilename; //원본 파일명
 
-    @Column(nullable = false)
+    @Column(length = 1024, nullable = false)
     private String storeFilePath;
 
     @Column(nullable = false)
@@ -38,6 +41,14 @@ public class PostAttachment extends BaseEntity {
     @JoinColumn(name = "mentor_id")
     private Mentor mentor;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentor_application_id")
+    private MentorApplication mentorApplication;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mentor_modification_id")
+    private MentorModification mentorModification;
+
     // 파일이 마크다운 내 이미지인지 일반 첨부파일인지 구분
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,22 +58,20 @@ public class PostAttachment extends BaseEntity {
     @Column(unique = true)
     private String uniqueIdentifier; // 마크다운 내 이미지 참조를 위한 고유 식별자
 
-    @Builder
-    public PostAttachment(String filename, String originalFilename, String storeFilePath,
-                          Long fileSize, Member member, Mentor mentor, ImageType imageType) {
-        this.filename = filename;
-        this.originalFilename = originalFilename;
-        this.storeFilePath = storeFilePath;
-        this.fileSize = fileSize;
-        this.member = member;
-        this.mentor = mentor;
-        this.imageType = imageType != null ? imageType : ImageType.NORMAL;
-    }
-
     // ImageType enum
     public enum ImageType {
         NORMAL,      // 일반 첨부 파일
         MARKDOWN_SELF_INTRODUCTION,     // "나를 소개하는 글" 마크다운 내 이미지
         MARKDOWN_RECOMMENDATION, // 추천 대상 마크다운 내 이미지
+    }
+
+    // 멘토 지원서와 연결
+    public void connectToMentorApplication(MentorApplication application) {
+        this.mentorApplication = application;
+    }
+
+    // 멘토 정보 수정 요청과 연결
+    public void connectToMentorModification(MentorModification modification) {
+        this.mentorModification = modification;
     }
 }

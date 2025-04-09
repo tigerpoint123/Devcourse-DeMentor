@@ -13,11 +13,11 @@ import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.MentorApplication;
 import com.dementor.domain.mentor.entity.MentorModification;
+import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorApplicationRepository;
 import com.dementor.domain.mentor.repository.MentorModificationRepository;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -140,7 +140,7 @@ public class MentorServiceTest {
                 .orElseThrow(() -> new AssertionError("지원 정보가 없습니다."));
 
         // 승인 처리
-        application.updateStatus(MentorApplication.ApplicationStatus.APPROVED, null);
+        application.updateStatus(MentorApplication.ApplicationStatus.APPROVED);
         mentorApplicationRepository.save(application);
 
         // 멘토 생성
@@ -176,7 +176,7 @@ public class MentorServiceTest {
                 );
 
         // When & Then
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.applyMentor(requestDto);
         });
 
@@ -203,7 +203,7 @@ public class MentorServiceTest {
                 );
 
         // When & Then
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.applyMentor(requestDto);
         });
 
@@ -241,7 +241,7 @@ public class MentorServiceTest {
                 .orElseThrow(() -> new AssertionError("수정 요청이 없습니다."));
 
         // 승인 처리
-        modification.updateStatus(MentorModification.ModificationStatus.APPROVED, null);
+        modification.updateStatus(MentorModification.ModificationStatus.APPROVED);
         mentorModificationRepository.save(modification);
 
         Mentor mentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
@@ -283,7 +283,7 @@ public class MentorServiceTest {
                 );
 
         // When & Then
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.updateMentor(nonExistingMentorId, requestDto);
         });
 
@@ -333,7 +333,7 @@ public class MentorServiceTest {
                 );
 
         // When & Then
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.updateMentor(unapprovedMentorId, requestDto);
         });
 
@@ -383,7 +383,7 @@ public class MentorServiceTest {
                 );
 
         // When & Then
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.updateMentor(pendingMentorId, requestDto);
         });
 
@@ -421,7 +421,7 @@ public class MentorServiceTest {
         final Long nonExistingMentorId = 9999L;
 
         // When & Then
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.getMentorInfo(nonExistingMentorId);
         });
 
@@ -459,7 +459,7 @@ public class MentorServiceTest {
         final Long unapprovedMentorId = unapprovedMentor.getId();
 
         // When & Then
-        Exception exception = assertThrows(IllegalStateException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.getMentorInfo(unapprovedMentorId);
         });
 
@@ -544,7 +544,7 @@ public class MentorServiceTest {
                 new MentorChangeRequest.ModificationRequestParams(null, 1, 10);
 
         // When & Then
-        Exception exception = assertThrows(EntityNotFoundException.class, () -> {
+        Exception exception = assertThrows(MentorException.class, () -> {
             mentorService.getModificationRequests(nonExistingMentorId, params);
         });
 

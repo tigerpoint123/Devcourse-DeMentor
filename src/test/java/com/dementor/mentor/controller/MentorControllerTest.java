@@ -192,7 +192,6 @@ public class MentorControllerTest {
                                 .with(user(mentorPrincipal))
                 )
                 .andDo(print());
-
         // Then
         resultActions
                 .andExpect(status().isOk())
