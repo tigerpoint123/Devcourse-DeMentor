@@ -24,10 +24,13 @@ import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposalStatus;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
 import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
+import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
+import com.dementor.domain.postattachment.service.PostAttachmentService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +58,7 @@ public class MentorService {
 	private final ObjectMapper objectMapper;
 	private final ApplyRepository applyRepository;
 
-    //멘토 지원하기
+	//멘토 지원하기
     @Transactional
     public MentorApplyProposal applyMentor(MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto) {
         // 회원 엔티티 조회
