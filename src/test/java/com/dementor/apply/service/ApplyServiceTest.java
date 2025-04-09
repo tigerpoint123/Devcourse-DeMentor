@@ -2,8 +2,8 @@ package com.dementor.apply.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
 import com.dementor.domain.apply.dto.response.ApplyIdResponse;
 import com.dementor.domain.apply.dto.response.ApplyPageResponse;
-import com.dementor.domain.apply.dto.response.ApplyScheduleResponse;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.exception.ApplyErrorCode;
@@ -30,6 +29,7 @@ import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.exception.MentoringClassException;
@@ -101,9 +101,7 @@ public class ApplyServiceTest {
 			.phone("010-1234-5678")
 			.email("mentor@example.com")
 			.introduction("테스트 멘토 소개")
-			.bestFor("테스트 특기")
-			.approvalStatus(Mentor.ApprovalStatus.APPROVED)
-			.modificationStatus(Mentor.ModificationStatus.NONE)
+			.modificationStatus(ModificationStatus.NONE)
 			.build();
 		mentor = mentorRepository.save(mentor);
 

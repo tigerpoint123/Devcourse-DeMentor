@@ -1,23 +1,11 @@
 package com.dementor.mentoringclass;
 
-import com.dementor.config.TestSecurityConfig;
-import com.dementor.domain.job.entity.Job;
-import com.dementor.domain.job.repository.JobRepository;
-import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.entity.UserRole;
-import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentoringclass.dto.DayOfWeek;
-import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
-import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
-import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
-import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.mentoringclass.entity.Schedule;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
-import com.dementor.global.security.CustomUserDetails;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +20,25 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.dementor.config.TestSecurityConfig;
+import com.dementor.domain.job.entity.Job;
+import com.dementor.domain.job.repository.JobRepository;
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
+import com.dementor.domain.member.repository.MemberRepository;
+import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.entity.ModificationStatus;
+import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
+import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
+import com.dementor.domain.mentoringclass.dto.request.ScheduleRequest;
+import com.dementor.domain.mentoringclass.entity.MentoringClass;
+import com.dementor.domain.mentoringclass.entity.Schedule;
+import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+import com.dementor.global.security.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -87,9 +88,7 @@ public class MentoringClassTest {
                 .phone("010-1234-5678")
                 .email("mentor@example.com")
                 .introduction("테스트 멘토 소개")
-                .bestFor("테스트 추천대상")
-                .approvalStatus(Mentor.ApprovalStatus.APPROVED)
-                .modificationStatus(Mentor.ModificationStatus.NONE)
+                .modificationStatus(ModificationStatus.NONE)
                 .build();
         mentorEntity = mentorRepository.save(mentorEntity);
 

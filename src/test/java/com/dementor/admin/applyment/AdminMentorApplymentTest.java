@@ -26,7 +26,7 @@ public class AdminMentorApplymentTest {
 //    private MentoringClassRepository mentoringClassRepository;
 //
 //    @Autowired
-//    private MentorApplicationRepository mentorApplicationRepository;
+//    private MentorApplyProposalRepository MentorApplyProposalRepository;
 //
 //    @Autowired
 //    private ApplyRepository applyRepository;
@@ -47,7 +47,7 @@ public class AdminMentorApplymentTest {
 //    @BeforeEach
 //    void setUp() {
 //        // 테스트용 멘토 지원서 생성
-//        MentorApplication mentorApplication1 = MentorApplication.builder()
+//        MentorApplyProposal MentorApplyProposal1 = MentorApplyProposal.builder()
 //                .name("테스트멘토1")
 //                .email("mentor1@test.com")
 //                .phone("01012345678")
@@ -57,7 +57,7 @@ public class AdminMentorApplymentTest {
 //                .bestFor("이런 분야가 특기입니다1")
 //                .build();
 //
-//        MentorApplication mentorApplication2 = MentorApplication.builder()
+//        MentorApplyProposal MentorApplyProposal2 = MentorApplyProposal.builder()
 //                .name("테스트멘토2")
 //                .email("mentor2@test.com")
 //                .phone("01087654321")
@@ -68,8 +68,8 @@ public class AdminMentorApplymentTest {
 //                .build();
 //
 //        // 멘토 지원서 저장
-//        mentorApplicationRepository.save(mentorApplication1);
-//        mentorApplicationRepository.save(mentorApplication2);
+//        MentorApplyProposalRepository.save(MentorApplyProposal1);
+//        MentorApplyProposalRepository.save(MentorApplyProposal2);
 //
 //    }
 //

@@ -1,9 +1,13 @@
 package com.dementor.domain.mentor.dto.request;
 
-import com.dementor.domain.mentor.entity.Mentor;
-import jakarta.validation.constraints.*;
-
 import java.util.List;
+
+import com.dementor.domain.mentor.entity.Mentor;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public class MentorUpdateRequest {
     public record MentorUpdateRequestDto(
@@ -38,8 +42,7 @@ public class MentorUpdateRequest {
                     (currentCompany != null && !currentCompany.equals(mentor.getCurrentCompany())) ||
                     (jobId != null && !jobId.equals(mentor.getJob().getId())) ||
                     (email != null && !email.equals(mentor.getMember().getEmail())) ||
-                    (introduction != null && !introduction.equals(mentor.getIntroduction())) ||
-                    (bestFor != null && !bestFor.equals(mentor.getBestFor()));
+                    (introduction != null && !introduction.equals(mentor.getIntroduction()));
         }
     }
 }

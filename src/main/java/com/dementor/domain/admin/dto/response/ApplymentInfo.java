@@ -1,6 +1,6 @@
 package com.dementor.domain.admin.dto.response;
 
-import com.dementor.domain.mentor.entity.MentorApplication;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 
 public record ApplymentInfo(
         Long applymentId,
@@ -12,14 +12,13 @@ public record ApplymentInfo(
         String email,
         String currentCompany,
         String introduction,
-        String bestFor,
         String status,
         String createdAt,
         String modifiedAt
 //        List<AttachmentInfo> attachments
 ) {
     public static ApplymentInfo from(
-            MentorApplication applyment
+            MentorApplyProposal applyment
 //            Job job
 //            List<PostAttachment> attachments
     ) {
@@ -33,7 +32,6 @@ public record ApplymentInfo(
                 applyment.getEmail(),
                 applyment.getCurrentCompany(),
                 applyment.getIntroduction(),
-                applyment.getBestFor(),
                 applyment.getStatus().name(),
                 applyment.getCreatedAt().toString(),
                 applyment.getModifiedAt() != null ? applyment.getModifiedAt().toString() : null
