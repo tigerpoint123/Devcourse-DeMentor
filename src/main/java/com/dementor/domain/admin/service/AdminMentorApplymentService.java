@@ -1,6 +1,10 @@
-package com.dementor.domain.admin;
+package com.dementor.domain.admin.service;
 
-import com.dementor.domain.admin.dto.wtf.*;
+import com.dementor.domain.admin.dto.request.ApplymentRejectRequest;
+import com.dementor.domain.admin.dto.response.ApplymentApprovalResponse;
+import com.dementor.domain.admin.dto.response.ApplymentDetailResponse;
+import com.dementor.domain.admin.dto.response.ApplymentRejectResponse;
+import com.dementor.domain.admin.dto.response.ApplymentResponse;
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;

@@ -1,4 +1,4 @@
-package com.dementor.domain.admin.dto.wtf;
+package com.dementor.domain.admin.dto.response;
 
 import com.dementor.domain.postattachment.entity.PostAttachment;
 
