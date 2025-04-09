@@ -1,4 +1,4 @@
-package com.dementor.domain.admin.dto.wtf;
+package com.dementor.domain.admin.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

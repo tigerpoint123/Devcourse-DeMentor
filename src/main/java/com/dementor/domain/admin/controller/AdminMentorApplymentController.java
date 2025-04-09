@@ -1,7 +1,11 @@
 package com.dementor.domain.admin.controller;
 
-import com.dementor.domain.admin.AdminMentorApplymentService;
-import com.dementor.domain.admin.dto.wtf.*;
+import com.dementor.domain.admin.dto.request.ApplymentRejectRequest;
+import com.dementor.domain.admin.dto.response.ApplymentApprovalResponse;
+import com.dementor.domain.admin.dto.response.ApplymentDetailResponse;
+import com.dementor.domain.admin.dto.response.ApplymentRejectResponse;
+import com.dementor.domain.admin.dto.response.ApplymentResponse;
+import com.dementor.domain.admin.service.AdminMentorApplymentService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.common.pagination.PaginationUtil;
 import com.dementor.global.common.swaggerDocs.AdminMentorApplymentSwagger;

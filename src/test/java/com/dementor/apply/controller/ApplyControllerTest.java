@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -411,6 +413,7 @@ public class ApplyControllerTest {
 			.andExpect(jsonPath("$.data.pagination.total_elements").value(15))
 			.andExpect(jsonPath("$.data.pagination.total_pages").value(2));
 	}
+
 
 }
 
