@@ -122,7 +122,6 @@ public class MentorServiceTest {
                         5,
                         "테스트 회사",
                         "테스트 자기소개",
-                        "테스트 특기",
                         null
                 );
 
@@ -170,7 +169,6 @@ public class MentorServiceTest {
                         5,
                         "테스트 회사",
                         "테스트 자기소개",
-                        "테스트 특기",
                         null
                 );
 
@@ -197,7 +195,6 @@ public class MentorServiceTest {
                         5,
                         "테스트 회사",
                         "테스트 자기소개",
-                        "테스트 특기",
                         null
                 );
 
