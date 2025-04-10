@@ -242,18 +242,14 @@ public class MentorServiceTest {
         modification.updateStatus(MentorEditProposalStatus.APPROVED);
         mentorEditProposalRepository.save(modification);
 
-		Mentor mentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
-		mentor.update(
-			"업데이트 회사",
-			8,
-			// "01098765432",
-			// "update@email.com",
-			job,
-			"업데이트된 자기소개",
-			ModificationStatus.APPROVED
-		);
-		mentor.updateModificationStatus(ModificationStatus.NONE);
-		mentorRepository.save(mentor);
+        Mentor mentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
+        mentor.update(
+                "업데이트 회사",
+                8,
+                "업데이트된 자기소개"
+        );
+        mentor.updateModificationStatus(ModificationStatus.NONE);
+        mentorRepository.save(mentor);
 
         // Then - 변경 확인
         Mentor finalMentor = mentorRepository.findById(testMentor.getId()).orElseThrow();
