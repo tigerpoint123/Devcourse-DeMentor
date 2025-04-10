@@ -67,11 +67,11 @@ public class SecurityConfig {
 
                         //관리자 로그인제외 권한
                         .requestMatchers("/api/admin/logout").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/admin/job").permitAll() // 직무 조회는 모두 허용해야 함
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
                         .requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
-                        .requestMatchers(HttpMethod.GET, "/api/admin/job").permitAll() // 특정 수업 조회 허용
 
                         .requestMatchers("/api/authenticate").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
