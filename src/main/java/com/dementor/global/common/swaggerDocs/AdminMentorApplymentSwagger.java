@@ -1,10 +1,10 @@
 package com.dementor.global.common.swaggerDocs;
 
-import com.dementor.domain.admin.dto.request.ApplymentRejectRequest;
-import com.dementor.domain.admin.dto.response.ApplymentApprovalResponse;
-import com.dementor.domain.admin.dto.response.ApplymentDetailResponse;
-import com.dementor.domain.admin.dto.response.ApplymentRejectResponse;
-import com.dementor.domain.admin.dto.response.ApplymentResponse;
+import com.dementor.domain.mentorapplyproposal.dto.request.ApplymentRejectRequest;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentApprovalResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentDetailResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentRejectResponse;
+import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentResponse;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

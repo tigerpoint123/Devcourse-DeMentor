@@ -1,4 +1,4 @@
-package com.dementor.domain.admin.dto.request;
+package com.dementor.domain.mentorapplyproposal.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 
