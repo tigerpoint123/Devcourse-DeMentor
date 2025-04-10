@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.dementor.domain.member.dto.request.SignupRequest;
+import com.dementor.domain.member.dto.response.MemberInfoResponse;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.exception.MemberErrorCode;
@@ -30,6 +31,10 @@ public class MemberService {
 			throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
 		});
 
+		memberRepository.findByNickname(signupRequest.getNickname()).ifPresent(member -> {
+			throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
+		});
+
 		//redis 에 저장된 code 가져오기
 		String storedCode = redisTemplate.opsForValue().get("email:" + signupRequest.getEmail());
 
@@ -38,9 +43,9 @@ public class MemberService {
 			Member member = Member.builder()
 				.email(signupRequest.getEmail())
 				.password(passwordEncoder.encode(signupRequest.getPassword()))
-				.nickname(signupRequest.getNickName())
+				.nickname(signupRequest.getNickname())
 				.name(signupRequest.getName())
-				.userRole(UserRole.MENTOR)
+				.userRole(UserRole.MENTEE)
 				.build();
 
 			memberRepository.save(member);
@@ -53,6 +58,8 @@ public class MemberService {
 		memberRepository.findByEmail(email).ifPresent(member -> {
 			throw new MemberException(MemberErrorCode.DUPLICATE_EMAIL);
 		});
+
+
 		return true;
 	}
 
@@ -61,5 +68,30 @@ public class MemberService {
 			throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
 		});
 		return true;
+	}
+
+	public MemberInfoResponse getMemberInfo(String email) {
+		return memberRepository.findByEmail(email)
+			.map(member -> MemberInfoResponse.builder()
+				.id(member.getId())
+				.email(member.getEmail())
+				.nickname(member.getNickname())
+				.created_at(member.getCreatedAt())
+				.build())
+
+			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+	}
+
+	@Transactional
+	public void modifyNickname(String email, String nickname) {
+		//중복 처리를 한번 더 해줘야하나?
+		memberRepository.findByNickname(nickname).ifPresent(member -> {
+			throw new MemberException(MemberErrorCode.DUPLICATE_NICKNAME);
+		});
+
+		Member member = memberRepository.findByEmail(email).orElseThrow(
+			() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+		member.updateNickname(nickname);
 	}
 }

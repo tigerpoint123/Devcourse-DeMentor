@@ -1,12 +1,15 @@
 package com.dementor.domain.mentoringclass.entity;
 
+import com.dementor.domain.mentoringclass.dto.DayOfWeek;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "schedule")
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,10 +18,19 @@ public class Schedule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String dayOfWeek;
-    private int time;
+    @Enumerated(EnumType.STRING)
+    private DayOfWeek dayOfWeek;
+    private String time;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "mentoring_class_id")
-    private MentoringClass mentoringClass;
-} 
+    @Column(name = "mentoring_class_id")
+    private Long mentoringClassId;
+
+    public void updateDayOfWeek(DayOfWeek dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public void updateTime(String time) {
+        this.time = time;
+    }
+
+}

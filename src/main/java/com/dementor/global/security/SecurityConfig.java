@@ -1,6 +1,5 @@
 package com.dementor.global.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,11 +14,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsUtils;
 
+import com.dementor.global.security.cookie.CookieUtil;
 import com.dementor.global.security.jwt.JwtAccessDeniedHandler;
 import com.dementor.global.security.jwt.JwtAuthenticationEntryPoint;
 import com.dementor.global.security.jwt.JwtAuthenticationFilter;
 import com.dementor.global.security.jwt.JwtTokenProvider;
+import com.dementor.global.security.jwt.service.TokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,10 +34,8 @@ public class SecurityConfig {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
-
-	// 쿠키 이름을 위한 값 추가
-	@Value("${jwt.cookie.name}")
-	private String cookieName;
+	private final TokenService tokenService;
+	private final CookieUtil cookieUtil;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -47,15 +47,29 @@ public class SecurityConfig {
 				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 			)
 
-			.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-				.requestMatchers("/api/signup/**").permitAll()
-				.requestMatchers("/api/member/login").permitAll()
-				.requestMatchers("/api/authenticate").permitAll()
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers(CorsUtils::isPreFlightRequest).permitAll()
+				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+				.requestMatchers("/api/admin/refresh").permitAll()
+				.requestMatchers("/api/members/refresh").permitAll()
+
+				.requestMatchers("/api/members/info").hasAnyRole("MENTOR", "MENTEE")
+				.requestMatchers("/api/members/logout").authenticated()
+
+				//내 정보, 로그아웃 제외 허용
+				.requestMatchers("/api/members/**").permitAll()
+				.requestMatchers("/api/admin/login").permitAll()
+
+				//관리자 로그인제외 권한
+				.requestMatchers("/api/admin/logout").authenticated()
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 
 				.requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
 				.requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
-				.requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
 
+				.requestMatchers("/api/authenticate").permitAll()
+				.requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
 				.requestMatchers("/swagger-ui/**").permitAll() // swagger 주소 허용
 				.requestMatchers("/actuator/**").permitAll()
 				.requestMatchers("/").permitAll()
@@ -65,8 +79,8 @@ public class SecurityConfig {
 			.sessionManagement(session -> session
 				.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, cookieName), UsernamePasswordAuthenticationFilter.class);
-		;
+			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, tokenService, cookieUtil), UsernamePasswordAuthenticationFilter.class);
+
 		return http.build();
 	}
 
@@ -79,4 +93,5 @@ public class SecurityConfig {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
 	}
+
 }

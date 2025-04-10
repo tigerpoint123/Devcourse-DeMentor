@@ -1,8 +1,8 @@
 package com.dementor.global.security.jwt;
 
 import java.security.Key;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,15 +16,22 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import com.dementor.domain.admin.entity.Admin;
+import com.dementor.domain.member.entity.Member;
+import com.dementor.domain.member.entity.UserRole;
 import com.dementor.global.security.CustomUserDetails;
+import com.dementor.global.security.jwt.repository.RefreshTokenRepository;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 
 @Component
 public class JwtTokenProvider implements InitializingBean {
@@ -34,16 +41,28 @@ public class JwtTokenProvider implements InitializingBean {
 	@Value("${jwt.secret}")
 	private final String secret;
 
-	@Value("${jwt.expiration}")
-	private final long tokenValidityInMilliseconds;
+	@Value("${jwt.access.expiration}")
+	private final long accessTokenValidityInMilliseconds;
 
+	@Getter
+	@Value("${jwt.refresh.expiration}")
+	private final long refreshTokenValidityInMilliseconds;
+
+	@Getter
 	private Key key;
+
+	private final RefreshTokenRepository refreshTokenRepository;
 
 	public JwtTokenProvider(
 			@Value("${jwt.secret}") String secret,
-			@Value("${jwt.expiration}") long tokenValidityInMilliseconds) {
+			@Value("${jwt.access.expiration}") long accessTokenValidityInMilliseconds,
+			@Value("${jwt.refresh.expiration}") long refreshTokenValidityInMilliseconds,
+			RefreshTokenRepository refreshTokenRepository
+	) {
 		this.secret = secret;
-		this.tokenValidityInMilliseconds = tokenValidityInMilliseconds;
+		this.accessTokenValidityInMilliseconds = accessTokenValidityInMilliseconds;
+		this.refreshTokenValidityInMilliseconds = refreshTokenValidityInMilliseconds;
+		this.refreshTokenRepository = refreshTokenRepository;
 	}
 
 	@Override
@@ -52,8 +71,37 @@ public class JwtTokenProvider implements InitializingBean {
 		this.key = Keys.hmacShaKeyFor(ketBytes);
 	}
 
+	// 리프레시 토큰 생성
+	public String createRefreshToken(String userIdentifier, RefreshToken_Role role) {
+
+		Map<String, Object> claims = new HashMap<>();
+		claims.put("sub", role.name());
+
+		long now = (new Date()).getTime();
+		Date vaildity = new Date(now + refreshTokenValidityInMilliseconds);
+
+		return Jwts.builder()
+			.setClaims(claims)
+			.setSubject(userIdentifier)
+			.setIssuedAt(new Date(now))
+			.setExpiration(vaildity)
+			.signWith(key, SignatureAlgorithm.HS512)
+			.compact();
+	}
+
+	// 리프레시 토큰에서 사용자 이메일 추출
+	public String getUserIdentifierFromRefreshToken(String token) {
+		return Jwts.parserBuilder()
+			.setSigningKey(key)
+			.build()
+			.parseClaimsJws(token)
+			.getBody()
+			.getSubject();
+	}
+
+
 	// Authentication에 권한 정보를 이요한 토큰 생성
-	public String createToken(Authentication authentication, Long memberId, String nickname) {
+	public String createMemberToken(Authentication authentication, Long memberId, String nickname) {
 		String authorities = authentication.getAuthorities().stream()
 			.map(GrantedAuthority::getAuthority)
 			.collect(Collectors.joining(","));
@@ -65,7 +113,7 @@ public class JwtTokenProvider implements InitializingBean {
 		claims.put("sub", authentication.getName());
 
 		long now = (new Date()).getTime();
-		Date vaildity = new Date(now + tokenValidityInMilliseconds);
+		Date vaildity = new Date(now + accessTokenValidityInMilliseconds);
 
 		return Jwts.builder()
 			.setClaims(claims)
@@ -75,8 +123,29 @@ public class JwtTokenProvider implements InitializingBean {
 			.compact();
 	}
 
+	// Admin 토큰 생성 메서드
+	public String createAdminToken(Long adminId) {
+		String authorities = "ROLE_ADMIN";
+
+		Map<String, Object> claims = new HashMap<>();
+		claims.put(AUTHORITIES_KEY, authorities);
+		claims.put("adminId", adminId);
+		claims.put("sub", "admin");
+
+		long now = (new Date()).getTime();
+		Date validity = new Date(now + accessTokenValidityInMilliseconds);
+
+		return Jwts.builder()
+			.setClaims(claims)
+			.setIssuedAt(new Date(now))
+			.signWith(key, SignatureAlgorithm.HS512)
+			.setExpiration(validity)
+			.compact();
+	}
+
 	//Token에 담겨있는 정보를 이용해 Authentication 객체 리턴
 	public Authentication getAuthentication(String token) {
+
 		Claims claims = Jwts
 			.parserBuilder()
 			.setSigningKey(key)
@@ -84,25 +153,76 @@ public class JwtTokenProvider implements InitializingBean {
 			.parseClaimsJws(token)
 			.getBody();
 
-		Collection<? extends GrantedAuthority> authorities =
-			Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
-				.map(SimpleGrantedAuthority::new)
-				.collect(Collectors.toList());
+		String userIdentifier = claims.getSubject();
 
-		// this is from 김호남남
-		CustomUserDetails principal = new CustomUserDetails(
-			claims.get("memberId", Long.class),
-			claims.getSubject(),
-			"",  // password는 JWT 토큰에 저장하지 않음
-			claims.get("nickname", String.class),
-			authorities
+		Collection<? extends GrantedAuthority> authorities = Collections.singletonList(
+			new SimpleGrantedAuthority(claims.get(AUTHORITIES_KEY, String.class))
 		);
+
+
+
+		// role에 따라 Member 또는 Admin으로 구분
+		String role = claims.get(AUTHORITIES_KEY, String.class);
+		CustomUserDetails principal;
+
+		if (role.startsWith("ROLE_ADMIN")) {
+			principal = CustomUserDetails.ofAdmin(
+				Admin.builder()
+					.id(claims.get("adminId", Long.class))
+					.username(claims.getSubject())
+					.password("")
+					.build()
+			);
+		} else {
+			principal = CustomUserDetails.of(
+				Member.builder()
+					.id(claims.get("memberId", Long.class))
+					.email(claims.getSubject())
+					.password("")
+					.nickname(claims.get("nickname", String.class))
+					.userRole(UserRole.fromRole(claims.get(AUTHORITIES_KEY, String.class)))
+					.build()
+			);
+		}
 
 		return new UsernamePasswordAuthenticationToken(principal, token, authorities);
 	}
 
+	public Authentication getRefreshAuthentication(String token) {
+		Claims claims = Jwts
+			.parserBuilder()
+			.setSigningKey(key)
+			.build()
+			.parseClaimsJws(token)
+			.getBody();
+
+		String userIdentifier = claims.getSubject();
+		String role = claims.get(AUTHORITIES_KEY, String.class);
+		CustomUserDetails principal;
+
+		if (role.startsWith("ROLE_ADMIN")) {
+			principal = CustomUserDetails.ofAdmin(
+				Admin.builder()
+					.id(claims.get("adminId", Long.class))
+					.username(claims.getSubject())
+					.password("")
+					.build()
+			);
+		} else {
+			principal = CustomUserDetails.of(
+				Member.builder()
+					.id(claims.get("memberId", Long.class))
+					.email(claims.getSubject())
+					.password("")
+					.build()
+			);
+		}
+
+		return new UsernamePasswordAuthenticationToken(principal, token, Collections.emptyList());
+	}
+
 	//토큰 유효성 검증
-	public boolean validateToken(String token) {
+	public boolean validateAccessToken(String token) {
 		try {
 			Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
 			return true;
@@ -116,6 +236,30 @@ public class JwtTokenProvider implements InitializingBean {
 			System.out.println("잘못된 JWT 토큰"); //log 로 변경
 		}
 		return false;
+	}
+
+	public boolean validateRefreshToken(String token) {
+		try {
+			// 1. JWT 서명 검증
+			Jws<Claims> claims = Jwts.parserBuilder()
+				.setSigningKey(key)
+				.build()
+				.parseClaimsJws(token);
+
+			// 2. 만료 시간 검증
+			if (claims.getBody().getExpiration().before(new Date())) {
+				return false;
+			}
+
+			// 3. Redis에 저장된 토큰과 비교
+			String userIdentifier = claims.getBody().getSubject();
+			String storedToken = refreshTokenRepository.findByUserIdentifier(userIdentifier)
+				.orElse(null);
+
+			return token.equals(storedToken);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
 }
