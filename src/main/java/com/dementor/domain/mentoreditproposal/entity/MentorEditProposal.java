@@ -32,7 +32,7 @@ public class MentorEditProposal extends BaseEntity {
     @Column(length = 20)
     private String currentCompany;
 
-    @Column
+    @Column(length = 500)
     private String introduction;
 
     @Enumerated(EnumType.STRING)
