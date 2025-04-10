@@ -39,6 +39,8 @@ public class MentorEditProposal extends BaseEntity {
     @Column(nullable = false)
     private MentorEditProposalStatus status;
 
+    //List<PostAttachment> attachments; // 첨부파일
+
     // 수정 요청 상태 업데이트
     public void updateStatus(MentorEditProposalStatus status) {
         this.status = status;
