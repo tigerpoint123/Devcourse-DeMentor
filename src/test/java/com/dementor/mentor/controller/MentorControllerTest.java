@@ -10,9 +10,9 @@ import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
-import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -178,16 +178,13 @@ public class MentorControllerTest {
     @WithMockUser(roles = "MENTOR")
     void updateMentorSuccess() throws Exception {
         // Given
-        MentorUpdateRequest.MentorUpdateRequestDto requestDto =
-                new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,          // career
-                        "01098765432",    // phone
-                        "업데이트 회사",    // currentCompany
-                        1L,               // jobId (예시 값)
-                        "update@email.com", // email
-                        "업데이트된 자기소개", // introduction
-                        null              // attachmentId
-                );
+        MentorEditProposalRequest requestDto = new MentorEditProposalRequest(
+                testJobId,                   // jobId
+                8,                    // career
+                "업데이트 회사",       // currentCompany
+                "업데이트된 자기소개", // introduction
+                null                  // attachmentId
+        );
 
         // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
         MockMultipartFile jsonPart = new MockMultipartFile(
@@ -272,6 +269,10 @@ public class MentorControllerTest {
         // 수정 요청을 생성 (이미 setUp 메서드에서 testMentor가 APPROVED 상태)
         MentorEditProposal modification = MentorEditProposal.builder()
                 .member(testMentor)
+                .career(8)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.PENDING)
                 .build();
         mentorEditProposalRepository.save(modification);
@@ -306,7 +307,10 @@ public class MentorControllerTest {
         // PENDING 상태의 수정 요청 생성
         MentorEditProposal pendingModification = MentorEditProposal.builder()
                 .member(testMentor)
-
+                .career(8)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.PENDING)
                 .build();
         mentorEditProposalRepository.save(pendingModification);
@@ -314,7 +318,10 @@ public class MentorControllerTest {
         // APPROVED 상태의 수정 요청 생성
         MentorEditProposal approvedModification = MentorEditProposal.builder()
                 .member(testMentor)
-
+                .career(5)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.APPROVED)
                 .build();
         mentorEditProposalRepository.save(approvedModification);

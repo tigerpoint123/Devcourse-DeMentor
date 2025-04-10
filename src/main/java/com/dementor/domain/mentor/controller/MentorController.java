@@ -5,20 +5,20 @@ import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.response.*;
+import com.dementor.domain.mentor.dto.response.*;
 import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
 import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
-import com.dementor.domain.mentor.dto.response.MentorUpdateResponse;
 import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
-import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalResponse;
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
@@ -101,7 +101,8 @@ public class MentorController {
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestBody @Valid MentorEditProposalRequest requestDto,
+            @RequestPart(value = "mentorUpdateData") @Valid MentorEditProposalRequest requestDto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
@@ -118,7 +119,7 @@ public class MentorController {
             }
 
             // 파일이나 마크다운 중 하나는 필수
-            if ((files == null || files.isEmpty()) && (requestDto.introduction() == null || requestDto.introduction().isEmpty())) {
+            if ((files == null || files.isEmpty()) && (requestDto.getIntroduction() == null || requestDto.getIntroduction().isEmpty())) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "파일 또는 마크다운 텍스트 중 하나는 필수입니다."));
             }
@@ -131,11 +132,11 @@ public class MentorController {
             }
 
             // 마크다운 이미지 처리 (마크다운이 있는 경우)
-            if (requestDto.introduction() != null && !requestDto.introduction().isEmpty()) {
-                postAttachmentService.uploadMarkdownContent(requestDto.introduction(), mentorEditProposal.getId());
+            if (requestDto.getIntroduction() != null && !requestDto.getIntroduction().isEmpty()) {
+                postAttachmentService.uploadMarkdownContent(requestDto.getIntroduction(), mentorEditProposal.getId());
             }
 
-            MentorUpdateResponse response = MentorUpdateResponse.of(memberId, ModificationStatus.PENDING);
+            MentorEditUpdateRenewalResponse response = MentorEditUpdateRenewalResponse.from(mentorEditProposal);
 
             return ResponseEntity.ok()
                     .body(ApiResponse.of(true, HttpStatus.OK, "멘토 정보 수정 요청에 성공했습니다.", response));
