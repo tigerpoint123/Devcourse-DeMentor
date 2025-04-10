@@ -1,12 +1,12 @@
 package com.dementor.domain.postattachment.service;
 
 import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.repository.MemberRepository;
-import com.dementor.domain.mentor.entity.Mentor;
-import com.dementor.domain.mentor.repository.MentorRepository;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
+import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
+import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
 import com.dementor.domain.postattachment.entity.PostAttachment;
-import com.dementor.domain.postattachment.entity.PostAttachment.ImageType;
 import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
@@ -41,9 +41,9 @@ import java.util.regex.Pattern;
 public class PostAttachmentService {
 
     private final PostAttachmentRepository postAttachmentRepository;
-    private final MemberRepository memberRepository;
-    private final MentorRepository mentorRepository;
     private final FirebaseStorageService firebaseStorageService;
+    private final MentorApplyProposalRepository mentorApplyProposalRepository;
+    private final MentorEditProposalRepository mentorEditProposalRepository;
 
     @Value("${file.max-size}")
     private long maxFileSize;
@@ -56,21 +56,25 @@ public class PostAttachmentService {
             return false;
         }
         return postAttachmentRepository.findById(fileId)
-                .map(file -> file.getMember().getId().equals(userId))
+                .map(file -> {
+                    Member member = file.getMember();
+                    return member != null && member.getId().equals(userId);
+                })
                 .orElse(false);
     }
 
-    public boolean isMarkdownImageOwner(String uniqueIdentifier, Long userId) {
-        return postAttachmentRepository.findByUniqueIdentifier(uniqueIdentifier)
-                .map(file -> file.getMember().getId().equals(userId))
-                .orElse(false);
-    }
-
+    //멘토 지원서용 파일 업로드 메소드
     @Transactional
-    public List<FileInfoDto> uploadFiles(List<MultipartFile> files, ImageType imageType, Long memberId, String markdownText) {
-        Member member = getMember(memberId);
-        Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
+    public List<FileInfoDto> uploadFilesApply(
+            List<MultipartFile> files,
+            MentorApplyProposal applyProposal) {
 
+        if (files == null || files.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Long memberId = applyProposal.getMember().getId();
+        // 파일 개수 체크
         long currentFileCount = postAttachmentRepository.countByMemberId(memberId);
         if (currentFileCount + files.size() > maxFilesPerUser) {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
@@ -91,43 +95,25 @@ public class PostAttachmentService {
 
             try {
                 String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
-                String directory = imageType.toString().toLowerCase();
+                String directory = "apply";
                 String fileUrl = firebaseStorageService.uploadFile(file, directory);
-
-                String uniqueIdentifier = null;
-                if (imageType != ImageType.NORMAL) {
-                    uniqueIdentifier = UUID.randomUUID().toString();
-                }
 
                 PostAttachment attachment = PostAttachment.builder()
                         .filename(UUID.randomUUID().toString() + "_" + originalFilename)
                         .originalFilename(originalFilename)
                         .storeFilePath(fileUrl)
                         .fileSize(file.getSize())
-                        .member(member)
-                        .mentor(mentor)
-                        .imageType(imageType)
-                        .uniqueIdentifier(uniqueIdentifier)
+                        .mentorApplyProposal(applyProposal)
+                        .mentorEditProposal(null)
                         .build();
 
                 postAttachmentRepository.save(attachment);
 
-                FileInfoDto fileInfo;
-                if (imageType != ImageType.NORMAL && uniqueIdentifier != null) {
-                    fileInfo = FileInfoDto.builder()
-                            .attachmentId(attachment.getId())
-                            .originalFilename(originalFilename)
-                            .fileSize(file.getSize())
-                            .fileUrl("/api/files/markdown-images/" + uniqueIdentifier)
-                            .uniqueIdentifier(uniqueIdentifier)
-                            .build();
-                } else {
-                    fileInfo = FileInfoDto.builder()
-                            .attachmentId(attachment.getId())
-                            .originalFilename(originalFilename)
-                            .fileSize(file.getSize())
-                            .build();
-                }
+                FileInfoDto fileInfo = FileInfoDto.builder()
+                        .attachmentId(attachment.getId())
+                        .originalFilename(originalFilename)
+                        .fileSize(file.getSize())
+                        .build();
 
                 uploadedFiles.add(fileInfo);
             } catch (Exception e) {
@@ -137,8 +123,106 @@ public class PostAttachmentService {
             }
         }
 
+        return uploadedFiles;
+    }
+
+    //멘토 정보 수정용 파일 업로드 메소드
+    @Transactional
+    public List<FileInfoDto> uploadFilesEdit(
+            List<MultipartFile> files,
+            MentorEditProposal editProposal) {
+
+        if (files == null || files.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Long memberId = editProposal.getMember().getId();
+        // 파일 개수 체크
+        long currentFileCount = postAttachmentRepository.countByMemberId(memberId);
+        if (currentFileCount + files.size() > maxFilesPerUser) {
+            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
+                    "파일 업로드 제한을 초과했습니다. 최대 " + maxFilesPerUser + "개까지 가능합니다.");
+        }
+
+        List<FileInfoDto> uploadedFiles = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_REQUIRED);
+            }
+
+            if (file.getSize() > maxFileSize) {
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_SIZE_EXCEEDED,
+                        "파일 크기가 허용 범위를 초과했습니다. 최대 " + (maxFileSize / (1024 * 1024)) + "MB까지 가능합니다.");
+            }
+
+            try {
+                String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+                String directory = "edit";
+                String fileUrl = firebaseStorageService.uploadFile(file, directory);
+
+                PostAttachment attachment = PostAttachment.builder()
+                        .filename(UUID.randomUUID().toString() + "_" + originalFilename)
+                        .originalFilename(originalFilename)
+                        .storeFilePath(fileUrl)
+                        .fileSize(file.getSize())
+                        .mentorApplyProposal(null)
+                        .mentorEditProposal(editProposal)
+                        .build();
+
+                postAttachmentRepository.save(attachment);
+
+                FileInfoDto fileInfo = FileInfoDto.builder()
+                        .attachmentId(attachment.getId())
+                        .originalFilename(originalFilename)
+                        .fileSize(file.getSize())
+                        .build();
+
+                uploadedFiles.add(fileInfo);
+            } catch (Exception e) {
+                log.error("파일 업로드 실패: {}", e.getMessage());
+                throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
+                        "파일 저장 중 오류가 발생했습니다: " + e.getMessage());
+            }
+        }
+
+        return uploadedFiles;
+    }
+
+    //마크다운 이미지 처리용 업로드 메소드
+    @Transactional
+    public List<FileInfoDto> uploadMarkdownContent(
+            String markdownText,
+            Long proposalId) {
+
+        // proposal ID로 적절한 엔티티 조회
+        MentorApplyProposal applyProposal = null;
+        MentorEditProposal editProposal = null;
+        boolean isApplyProposal = false;
+
+        // 먼저 ApplyProposal이 있는지 확인
+        Optional<MentorApplyProposal> optionalApplyProposal = mentorApplyProposalRepository.findById(proposalId);
+        if (optionalApplyProposal.isPresent()) {
+            applyProposal = optionalApplyProposal.get();
+            isApplyProposal = true;
+        } else {
+            // ApplyProposal이 없는 경우 EditProposal 확인
+            editProposal = mentorEditProposalRepository.findById(proposalId)
+                    .orElseThrow(() -> new PostAttachmentException(
+                            PostAttachmentErrorCode.EDIT_PROPOSAL_NOT_FOUND,
+                            "멘토 지원서 또는 정보 수정 요청을 찾을 수 없습니다."));
+        }
+
+        // 멤버 ID 조회
+        Long memberId = isApplyProposal ?
+                applyProposal.getMember().getId() :
+                editProposal.getMember().getId();
+
+        List<FileInfoDto> uploadedFiles = new ArrayList<>();
+
+        // 마크다운 텍스트 처리 (있는 경우만)
         if (markdownText != null && !markdownText.isEmpty()) {
-            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, member, mentor, imageType);
+            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, applyProposal, editProposal);
 
             for (PostAttachment attachment : markdownAttachments) {
                 FileInfoDto fileInfo = FileInfoDto.builder()
@@ -156,29 +240,23 @@ public class PostAttachmentService {
         return uploadedFiles;
     }
 
-    // 멤버 조회를 위한 공통 메서드
-    private Member getMember(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new PostAttachmentException(PostAttachmentErrorCode.UNAUTHORIZED_ACCESS,
-                        "사용자를 찾을 수 없습니다."));
-    }
-
     // 파일 접근 권한 확인 메서드
     private boolean hasAccessPermission(Long memberId, PostAttachment attachment) {
         // 파일 소유자인 경우 접근 허용
-        if (attachment.getMember().getId().equals(memberId)) {
-            return true;
-        }
-
-        // 멘토인 경우 접근 허용 (파일 다운로드에 멘토 권한이 필요한 경우)
-        Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
-        return mentor != null;
+        Member owner = attachment.getMember();
+        return owner != null && owner.getId().equals(memberId);
     }
 
-    private List<PostAttachment> processMarkdownImages(String markdownText, Member member, Mentor mentor, ImageType imageType) {
+    // 마크다운 이미지 처리
+    private List<PostAttachment> processMarkdownImages(
+            String markdownText,
+            MentorApplyProposal applyProposal,
+            MentorEditProposal editProposal) {
+
         List<PostAttachment> processedAttachments = new ArrayList<>();
         Pattern pattern = Pattern.compile("!\\[(.*?)\\]\\((.*?)\\)");
         Matcher matcher = pattern.matcher(markdownText);
+        boolean isApplyProposal = (applyProposal != null);
 
         while (matcher.find()) {
             String altText = matcher.group(1);
@@ -196,7 +274,7 @@ public class PostAttachmentService {
                 }
             } else if (imageUrl.startsWith("data:image/")) {
                 try {
-                    PostAttachment newImageAttachment = saveBase64Image(imageUrl, altText, member, mentor, imageType);
+                    PostAttachment newImageAttachment = saveBase64Image(imageUrl, altText, applyProposal, editProposal);
                     processedAttachments.add(newImageAttachment);
                 } catch (Exception e) {
                     log.error("Base64 이미지 처리 중 오류 발생: {}", e.getMessage());
@@ -213,7 +291,7 @@ public class PostAttachmentService {
                     }
 
                     String contentType = determineContentTypeByFilename("image" + extension);
-                    String directory = imageType.toString().toLowerCase();
+                    String directory = "markdown";
                     String fileUrl = firebaseStorageService.uploadFile(
                             imageData,
                             uniqueIdentifier + extension,
@@ -226,9 +304,8 @@ public class PostAttachmentService {
                             .originalFilename(altText + extension)
                             .storeFilePath(fileUrl)
                             .fileSize((long) imageData.length)
-                            .member(member)
-                            .mentor(mentor)
-                            .imageType(imageType)
+                            .mentorApplyProposal(isApplyProposal ? applyProposal : null)
+                            .mentorEditProposal(isApplyProposal ? null : editProposal)
                             .uniqueIdentifier(uniqueIdentifier)
                             .build();
 
@@ -252,7 +329,11 @@ public class PostAttachmentService {
         return ".jpg";
     }
 
-    private PostAttachment saveBase64Image(String base64Image, String altText, Member member, Mentor mentor, ImageType imageType) {
+    private PostAttachment saveBase64Image(
+            String base64Image,
+            String altText,
+            MentorApplyProposal applyProposal,
+            MentorEditProposal editProposal) {
         try {
             String[] parts = base64Image.split(",");
             String imageData = parts.length > 1 ? parts[1] : parts[0];
@@ -278,7 +359,7 @@ public class PostAttachmentService {
             }
 
             String originalFilename = (altText.isEmpty() ? "image" : altText) + extension;
-            String directory = imageType.toString().toLowerCase();
+            String directory = "markdown";
             String fileUrl = firebaseStorageService.uploadFile(
                     imageBytes,
                     originalFilename,
@@ -287,15 +368,15 @@ public class PostAttachmentService {
             );
 
             String uniqueIdentifier = UUID.randomUUID().toString();
+            boolean isApplyProposal = (applyProposal != null);
 
             PostAttachment attachment = PostAttachment.builder()
                     .filename(UUID.randomUUID().toString() + extension)
                     .originalFilename(altText + extension)
                     .storeFilePath(fileUrl)
                     .fileSize((long) imageBytes.length)
-                    .member(member)
-                    .mentor(mentor)
-                    .imageType(imageType)
+                    .mentorApplyProposal(isApplyProposal ? applyProposal : null)
+                    .mentorEditProposal(isApplyProposal ? null : editProposal)
                     .uniqueIdentifier(uniqueIdentifier)
                     .build();
 
@@ -307,43 +388,6 @@ public class PostAttachmentService {
             throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
                     "이미지 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
-    }
-
-    @Transactional
-    public List<FileInfoDto> processMarkdownOnly(String markdownText, ImageType imageType, Long memberId) {
-        if (markdownText == null || markdownText.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Member member = getMember(memberId);
-        Mentor mentor = mentorRepository.findByMemberId(memberId).orElse(null);
-
-        List<FileInfoDto> result = new ArrayList<>();
-        List<PostAttachment> processedAttachments = processMarkdownImages(markdownText, member, mentor, imageType);
-
-        if (processedAttachments.isEmpty()) {
-            return result;
-        }
-
-        long currentFileCount = postAttachmentRepository.countByMemberId(memberId);
-        if (currentFileCount + processedAttachments.size() > maxFilesPerUser) {
-            throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
-                    "파일 업로드 제한을 초과했습니다. 최대 " + maxFilesPerUser + "개까지 가능합니다.");
-        }
-
-        for (PostAttachment attachment : processedAttachments) {
-            FileInfoDto fileInfo = FileInfoDto.builder()
-                    .attachmentId(attachment.getId())
-                    .originalFilename(attachment.getOriginalFilename())
-                    .fileSize(attachment.getFileSize())
-                    .fileUrl("/api/files/markdown-images/" + attachment.getUniqueIdentifier())
-                    .uniqueIdentifier(attachment.getUniqueIdentifier())
-                    .build();
-
-            result.add(fileInfo);
-        }
-
-        return result;
     }
 
     @Transactional

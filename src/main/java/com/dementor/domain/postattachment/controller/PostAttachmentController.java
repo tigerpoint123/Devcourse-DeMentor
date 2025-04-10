@@ -1,11 +1,19 @@
 package com.dementor.domain.postattachment.controller;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
+import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
+import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
+import com.dementor.domain.postattachment.dto.response.FileResponse;
+import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
+import com.dementor.domain.postattachment.exception.PostAttachmentException;
+import com.dementor.domain.postattachment.service.PostAttachmentService;
+import com.dementor.global.ApiResponse;
+import com.dementor.global.security.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -13,27 +21,13 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.*;
 
-import com.dementor.domain.postattachment.dto.response.FileResponse;
-import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
-import com.dementor.domain.postattachment.entity.PostAttachment.ImageType;
-import com.dementor.domain.postattachment.exception.PostAttachmentException;
-import com.dementor.domain.postattachment.service.PostAttachmentService;
-import com.dementor.global.ApiResponse;
-import com.dementor.global.security.CustomUserDetails;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -43,41 +37,64 @@ import lombok.extern.slf4j.Slf4j;
 public class PostAttachmentController {
 
     private final PostAttachmentService postAttachmentService;
+    private final MentorApplyProposalRepository mentorApplyProposalRepository;
+    private final MentorEditProposalRepository mentorEditProposalRepository;
 
     //파일 업로드 API
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/upload")
     @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
-    @Operation(summary = "파일 업로드", description = "새로운 파일을 업로드합니다. 회원가입한 회원(멘티)만 파일 업로드가 가능합니다.")
-    public ResponseEntity<ApiResponse<?>> uploadFile(
-            @RequestParam(value = "file", required = false) List<MultipartFile> files,
-            @RequestParam(value = "introductionMarkdown", required = false) String introductionMarkdown,
-            @RequestParam(value = "imageType", required = false, defaultValue = "NORMAL") ImageType imageType,
+    @Operation(summary = "마크다운 이미지 업로드", description = "멘토 지원 및 정보 수정 시 마크다운에 포함된 이미지를 업로드합니다.")
+    public ResponseEntity<ApiResponse<?>> uploadMarkdownContent(
+            @RequestParam(value = "introductionMarkdown", required = false) String introduction,
+            @RequestParam(value = "proposalId", required = true) Long proposalId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         try {
-            // 파일이나 마크다운 중 하나는 필수
-            if ((files == null || files.isEmpty()) &&
-                    (introductionMarkdown == null || introductionMarkdown.isEmpty())) {
+            // 마크다운 텍스트는 필수
+            if (introduction == null || introduction.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "파일 또는 마크다운 텍스트 중 하나는 필수입니다."));
+                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "마크다운 텍스트는 필수입니다."));
             }
 
-            List<FileInfoDto> allUploadedFiles = new ArrayList<>();
+            // 권한 체크: proposal 소유자 확인
+            boolean isOwner = false;
 
-            // 1. 일반 파일 업로드 처리
-            if (files != null && !files.isEmpty()) {
-                List<FileInfoDto> uploadedFiles = postAttachmentService.uploadFiles(
-                        files, ImageType.NORMAL, userDetails.getId(), null);
-                allUploadedFiles.addAll(uploadedFiles);
+            // 먼저 멘토 지원서 확인
+            Optional<MentorApplyProposal> optionalApplyProposal = mentorApplyProposalRepository.findById(proposalId);
+            if (optionalApplyProposal.isPresent()) {
+                MentorApplyProposal applyProposal = optionalApplyProposal.get();
+                // 본인 소유 지원서인지 확인
+                if (applyProposal.getMember().getId().equals(userDetails.getId())) {
+                    isOwner = true;
+                } else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                            .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "본인의 지원서만 수정할 수 있습니다."));
+                }
+            } else {
+                // 멘토 수정 요청 확인
+                Optional<MentorEditProposal> optionalEditProposal = mentorEditProposalRepository.findById(proposalId);
+                if (optionalEditProposal.isPresent()) {
+                    MentorEditProposal editProposal = optionalEditProposal.get();
+                    // 본인 소유 수정 요청인지 확인
+                    if (editProposal.getMember().getId().equals(userDetails.getId())) {
+                        isOwner = true;
+                    } else {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "본인의 수정 요청만 변경할 수 있습니다."));
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(ApiResponse.of(false, HttpStatus.NOT_FOUND, "멘토 지원서 또는 정보 수정 요청을 찾을 수 없습니다."));
+                }
             }
 
-            // 2. 자기소개 마크다운 처리
-            if (introductionMarkdown != null && !introductionMarkdown.isEmpty()) {
-                List<FileInfoDto> introductionImages = postAttachmentService.processMarkdownOnly(
-                        introductionMarkdown, ImageType.MARKDOWN_SELF_INTRODUCTION, userDetails.getId());
-                allUploadedFiles.addAll(introductionImages);
+            if (!isOwner) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "권한이 없습니다."));
             }
 
+            List<FileInfoDto> allUploadedFiles = postAttachmentService.uploadMarkdownContent(
+                    introduction, proposalId);
 
             FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()
                     .status(HttpStatus.CREATED.value())
@@ -102,8 +119,8 @@ public class PostAttachmentController {
 
     //파일 삭제 API
     @DeleteMapping("/{attachmentId}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR') and @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id))")
-    // 멘토와 관리자만 파일 삭제 가능
+    @PreAuthorize("hasRole('ADMIN') or @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id)")
+    // 파일 업로드한 본인과 관리자만 파일 삭제 가능
     @Operation(summary = "파일 삭제", description = "특정 파일을 삭제합니다. 파일 업로드한 본인만 삭제할 수 있습니다.")
     public ResponseEntity<ApiResponse<?>> deleteFile(
             @PathVariable("attachmentId") Long attachmentId,
@@ -136,6 +153,7 @@ public class PostAttachmentController {
 
     //일반 첨부 파일 다운로드 API
     @GetMapping("/{attachmentId}/download")
+    @PreAuthorize("hasRole('ADMIN') or @postAttachmentService.isFileOwner(#attachmentId, authentication.principal.id)")
     @Operation(summary = "일반 첨부 파일 다운로드", description = "특정 일반 첨부 파일을 다운로드합니다. 멘토와 관리자만 다운로드가 가능합니다.")
     public ResponseEntity<?> downloadFile(
             @PathVariable Long attachmentId,
@@ -171,13 +189,13 @@ public class PostAttachmentController {
 
     //마크다운 이미지 다운로드 API
     @GetMapping("/markdown-images/{uniqueIdentifier}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('MENTOR')) or (hasRole('MENTEE'))")
-    // 멘토와 관리자만 이미지 다운로드 가능
+    @PreAuthorize("hasRole('ADMIN') or @postAttachmentService.isMarkdownImageOwner(#uniqueIdentifier, authentication.principal.id)")
     @Operation(summary = "마크다운 이미지 다운로드", description = "마크다운 텍스트 내에서 참조하는 이미지를 제공합니다. 이 API는 이미지를 inline으로 표시합니다.")
     public ResponseEntity<?> downloadMarkdownImage(
             @PathVariable String uniqueIdentifier,
             @RequestParam(required = false) Integer width,
-            @RequestParam(required = false) Integer height
+            @RequestParam(required = false) Integer height,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         try {
             Map<String, Object> imageInfo = postAttachmentService.downloadMarkdownImage(uniqueIdentifier, width, height);
