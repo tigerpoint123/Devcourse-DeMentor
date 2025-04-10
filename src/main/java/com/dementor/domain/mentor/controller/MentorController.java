@@ -1,26 +1,11 @@
 package com.dementor.domain.mentor.controller;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
+import com.dementor.domain.mentor.dto.request.MentorUpdateRequest;
+import com.dementor.domain.mentor.dto.response.*;
 import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
 import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
 import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
@@ -31,16 +16,29 @@ import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
-import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
+import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
+import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
+import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/mentor")
@@ -50,12 +48,15 @@ public class MentorController {
     private final MentorService mentorService;
     private final MentorRepository mentorRepository;
     private final MentoringClassService mentoringClassService;
+    private final PostAttachmentService postAttachmentService;
+    private final MentorApplyProposalRepository mentorApplyProposalRepository;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('MENTEE') and #requestDto.memberId() == authentication.principal.id")
     @Operation(summary = "멘토 지원", description = "새로운 멘토 지원 API")
     public ResponseEntity<ApiResponse<?>> applyMentor(
-            @RequestBody @Valid MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto,
+            @RequestPart(value = "mentorApplyData") @Valid MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         try {
             // 권한 체크: 멘토 지원 시 자신의 ID로만 지원 가능
@@ -63,7 +64,24 @@ public class MentorController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "멘토 지원은 본인만 가능합니다."));
             }
-            mentorService.applyMentor(requestDto);
+
+            // 파일이나 마크다운 중 하나는 필수
+            if ((files == null || files.isEmpty()) && (requestDto.introduction() == null || requestDto.introduction().isEmpty())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "파일 또는 마크다운 텍스트 중 하나는 필수입니다."));
+            }
+
+            MentorApplyProposal mentorApplyProposal = mentorService.applyMentor(requestDto);
+
+            // 일반 파일 업로드
+            if (files != null && !files.isEmpty()) {
+                postAttachmentService.uploadFilesApply(files,mentorApplyProposal);
+            }
+
+            // 마크다운 이미지 처리 (마크다운이 있는 경우)
+            if (requestDto.introduction() != null && !requestDto.introduction().isEmpty()) {
+                postAttachmentService.uploadMarkdownContent(requestDto.introduction(), mentorApplyProposal.getId());
+            }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
         } catch (MentorException e) {
@@ -78,16 +96,16 @@ public class MentorController {
         }
     }
 
-    @PutMapping(value = "/{memberId}")
+    @PutMapping(value = "/{memberId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('MENTOR') and #memberId == authentication.principal.id")
     @Operation(summary = "멘토 정보 수정", description = "멘토 정보 수정 API - 로그인한 멘토 본인만 가능")
     public ResponseEntity<ApiResponse<?>> updateMentor(
             @PathVariable Long memberId,
-            @RequestBody @Valid MentorEditProposalRequest requestDto,
+            @RequestPart(value = "mentorUpdateData") @Valid MentorUpdateRequest.MentorUpdateRequestDto requestDto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         try {
-
             boolean exists = mentorRepository.existsById(memberId);
             if (!exists) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -99,9 +117,24 @@ public class MentorController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "해당 멘토 정보를 수정할 권한이 없습니다."));
             }
-            mentorService.updateMentor(memberId, requestDto);
 
+            // 파일이나 마크다운 중 하나는 필수
+            if ((files == null || files.isEmpty()) && (requestDto.introduction() == null || requestDto.introduction().isEmpty())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "파일 또는 마크다운 텍스트 중 하나는 필수입니다."));
+            }
 
+            MentorEditProposal mentorEditProposal = mentorService.updateMentor(memberId,requestDto);
+
+            // 일반 파일 업로드
+            if (files != null && !files.isEmpty()) {
+                postAttachmentService.uploadFilesEdit(files, mentorEditProposal);
+            }
+
+            // 마크다운 이미지 처리 (마크다운이 있는 경우)
+            if (requestDto.introduction() != null && !requestDto.introduction().isEmpty()) {
+                postAttachmentService.uploadMarkdownContent(requestDto.introduction(), mentorEditProposal.getId());
+            }
 
             MentorUpdateResponse response = MentorUpdateResponse.of(memberId, ModificationStatus.PENDING);
 
