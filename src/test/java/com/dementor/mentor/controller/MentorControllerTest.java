@@ -194,6 +194,14 @@ public class MentorControllerTest {
                 objectMapper.writeValueAsBytes(requestDto)
         );
 
+        // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "mentorUpdateData", // @RequestPart("mentorUpdateData")와 일치해야 함
+                null,
+                "application/json",
+                objectMapper.writeValueAsBytes(requestDto)
+        );
+
         // When
         ResultActions resultActions = mvc
                 .perform(MockMvcRequestBuilders.multipart("/api/mentor/" + testMentorId)
