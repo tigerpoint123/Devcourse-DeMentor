@@ -19,7 +19,9 @@ public enum PostAttachmentErrorCode {
     NOT_MARKDOWN_IMAGE(HttpStatus.BAD_REQUEST, "요청한 파일은 마크다운 이미지가 아닙니다."),
     FILE_READ_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일을 읽을 수 없습니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
-    FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 오류가 발생했습니다.");
+    FILE_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드 중 오류가 발생했습니다."),
+    APPLY_PROPOSAL_NOT_FOUND(HttpStatus.NOT_FOUND, "멘토 지원서를 찾을 수 없습니다."),
+    EDIT_PROPOSAL_NOT_FOUND(HttpStatus.NOT_FOUND, "멘토 정보 수정 요청을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;

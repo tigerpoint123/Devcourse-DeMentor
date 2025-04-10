@@ -1,18 +1,5 @@
 package com.dementor.mentor.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
@@ -34,6 +21,13 @@ import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRep
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -230,7 +224,6 @@ public class MentorServiceTest {
                         1L,
                         "update@email.com",
                         "업데이트된 자기소개",
-                        "업데이트된 특기",
                         null
                 );
 
@@ -282,7 +275,6 @@ public class MentorServiceTest {
                         1L,               // jobId (예시 값)
                         "update@email.com", // email
                         "업데이트된 자기소개", // introduction
-                        "업데이트된 특기",   // bestFor
                         null              // attachmentId
                 );
 
@@ -331,7 +323,6 @@ public class MentorServiceTest {
                         1L,               // jobId (예시 값)
                         "update@email.com", // email
                         "업데이트된 자기소개", // introduction
-                        "업데이트된 특기",   // bestFor
                         null              // attachmentId
                 );
 

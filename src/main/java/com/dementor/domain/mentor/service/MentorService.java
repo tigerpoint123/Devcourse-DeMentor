@@ -1,17 +1,5 @@
 package com.dementor.domain.mentor.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
 import com.dementor.domain.apply.repository.ApplyRepository;
@@ -44,9 +32,19 @@ import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +61,7 @@ public class MentorService {
 
     //멘토 지원하기
     @Transactional
-    public void applyMentor(MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto) {
+    public MentorApplyProposal applyMentor(MentorApplyProposalRequest.MentorApplyProposalRequestDto requestDto) {
         // 회원 엔티티 조회
         Member member = memberRepository.findById(requestDto.memberId())
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
@@ -88,16 +86,16 @@ public class MentorService {
 
         // 멘토 애플리케이션 엔티티 생성 - 초기 상태는 PENDING
         MentorApplyProposal mentorApplyProposal = MentorApplyProposal.builder()
-            .member(member)
-            .job(job)
-            .name(requestDto.name())
-            .career(requestDto.career())
-            .phone(requestDto.phone())
-            .email(requestDto.email())
-            .currentCompany(requestDto.currentCompany())
-            .introduction(requestDto.introduction())
-            .status(MentorApplyProposalStatus.PENDING)
-            .build();
+                .member(member)
+                .job(job)
+                .name(requestDto.name())
+                .career(requestDto.career())
+                .phone(requestDto.phone())
+                .email(requestDto.email())
+                .currentCompany(requestDto.currentCompany())
+                .introduction(requestDto.introduction())
+                .status(MentorApplyProposalStatus.PENDING)
+                .build();
 
         // 멘토 애플리케이션 저장 (ID 생성)
         MentorApplyProposal savedApplication = mentorApplyProposalRepository.save(mentorApplyProposal);
@@ -116,11 +114,12 @@ public class MentorService {
                         });
             }
         }
+        return savedApplication;
     }
 
     //멘토 정보 업데이트
     @Transactional
-    public void updateMentor(Long memberId, MentorUpdateRequest.MentorUpdateRequestDto requestDto) {
+    public MentorEditProposal updateMentor(Long memberId, MentorUpdateRequest.MentorUpdateRequestDto requestDto) {
         Mentor mentor = mentorRepository.findById(memberId)
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND,
                         "멘토를 찾을 수 없습니다: " + memberId));
@@ -130,12 +129,6 @@ public class MentorService {
         if (mentor.getModificationStatus() == ModificationStatus.PENDING) {
             throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
                     "이미 정보 수정 요청 중입니다: " + memberId);
-        }
-
-        // 변경 사항이 있는지 확인
-        if (!requestDto.hasChanges(mentor)) {
-            throw new MentorException(MentorErrorCode.INVALID_MENTOR_APPLICATION,
-                    "변경된 내용이 없습니다.");
         }
 
         // 변경 사항 추출
@@ -178,6 +171,7 @@ public class MentorService {
         // 멘토의 수정 상태 업데이트
         mentor.updateModificationStatus(ModificationStatus.PENDING);
         mentorRepository.save(mentor);
+        return savedModification;
     }
 
     //멘토 정보 조회
