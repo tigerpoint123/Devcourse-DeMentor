@@ -241,8 +241,6 @@ public class MentorServiceTest {
         mentor.update(
                 "업데이트 회사",
                 8,
-                "01098765432",
-                "update@email.com",
                 "업데이트된 자기소개"
         );
         mentor.updateModificationStatus(ModificationStatus.NONE);

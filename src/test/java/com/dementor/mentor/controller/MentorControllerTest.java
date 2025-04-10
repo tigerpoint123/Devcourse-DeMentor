@@ -211,7 +211,7 @@ public class MentorControllerTest {
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.message").value("멘토 정보 수정 요청에 성공했습니다."))
                 .andExpect(jsonPath("$.data.memberId").value(testMentorId))
-                .andExpect(jsonPath("$.data.modificationStatus").value("PENDING"));
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
     }
 
     @Test

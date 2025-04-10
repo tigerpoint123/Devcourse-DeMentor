@@ -75,8 +75,6 @@ public class Mentor {
     public void update(String currentCompany, Integer career, String introduction) {
         this.currentCompany = currentCompany;
         this.career = career;
-        // this.phone = phone;
-        // this.email = email;
         this.introduction = introduction;
         this.modificationStatus = ModificationStatus.PENDING;
     }
