@@ -20,15 +20,16 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -140,17 +141,26 @@ public class MentorControllerTest {
                         5,
                         "테스트 회사",
                         "테스트 자기소개",
-                        "테스트 특기",
                         null
                 );
 
+        // Multipart 본문 중 하나로 보낼 JSON
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "mentorApplyData", // controller의 @RequestPart("mentorApplyData")와 일치
+                null,
+                "application/json",
+                objectMapper.writeValueAsBytes(requestDto)
+        );
+
         // When
         ResultActions resultActions = mvc
-                .perform(
-                        post("/api/mentor")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
-                                .with(user(memberPrincipal))
+                .perform(MockMvcRequestBuilders.multipart("/api/mentor")
+                        .file(jsonPart)
+                        .with(request -> {
+                            request.setMethod("POST"); // multipart는 기본적으로 POST 아님
+                            return request;
+                        })
+                        .with(user(memberPrincipal))
                 )
                 .andDo(print());
 
@@ -179,13 +189,23 @@ public class MentorControllerTest {
                         null              // attachmentId
                 );
 
+        // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "mentorUpdateData", // @RequestPart("mentorUpdateData")와 일치해야 함
+                null,
+                "application/json",
+                objectMapper.writeValueAsBytes(requestDto)
+        );
+
         // When
         ResultActions resultActions = mvc
-                .perform(
-                        put("/api/mentor/" + testMentorId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
-                                .with(user(mentorPrincipal))
+                .perform(MockMvcRequestBuilders.multipart("/api/mentor/" + testMentorId)
+                        .file(jsonPart)
+                        .with(request -> {
+                            request.setMethod("PUT"); // PUT으로 강제 설정
+                            return request;
+                        })
+                        .with(user(mentorPrincipal))
                 )
                 .andDo(print());
         // Then
