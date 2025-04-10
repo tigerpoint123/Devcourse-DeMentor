@@ -49,7 +49,7 @@ public class MentorApplyProposal extends BaseEntity {
     @Column(length = 50, nullable = false)
     private String email;
 
-    @Column(length = 255, nullable = false)
+    @Column(length = 500, nullable = false)
     private String introduction;
 
 //    private PostAttachment postAttachment;

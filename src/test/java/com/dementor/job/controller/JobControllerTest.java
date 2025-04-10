@@ -84,11 +84,12 @@ public class JobControllerTest { // TODO : fixture monkey 전부 적용하면 �
         mockMvc.perform(post("/api/admin/job")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.code").value("201"))
                 .andExpect(jsonPath("$.message").value("직무 생성 성공"))
-                .andExpect(jsonPath("$.data").isNumber());
+                .andExpect(jsonPath("$.data.jobId").isNumber())
+                .andExpect(jsonPath("$.data.name").value("C++ 개발자"));
     }
 
     @Test

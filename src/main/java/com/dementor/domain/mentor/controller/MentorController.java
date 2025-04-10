@@ -5,12 +5,6 @@ import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.dto.request.MentorApplyStatusRequest;
 import com.dementor.domain.mentor.dto.request.MentorChangeRequest;
 import com.dementor.domain.mentor.dto.response.*;
-import com.dementor.domain.mentor.dto.response.*;
-import com.dementor.domain.mentor.dto.response.MentorApplyResponse;
-import com.dementor.domain.mentor.dto.response.MentorApplyStatusResponse;
-import com.dementor.domain.mentor.dto.response.MentorChangeResponse;
-import com.dementor.domain.mentor.dto.response.MentorInfoResponse;
-import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
 import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentor.service.MentorService;
@@ -80,7 +74,7 @@ public class MentorController {
 
             // 마크다운 이미지 처리 (마크다운이 있는 경우)
             if (requestDto.introduction() != null && !requestDto.introduction().isEmpty()) {
-                postAttachmentService.uploadMarkdownContent(requestDto.introduction(), mentorApplyProposal.getId());
+                postAttachmentService.uploadMarkdownContentForApply(requestDto.introduction(), mentorApplyProposal.getId());
             }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
@@ -133,7 +127,7 @@ public class MentorController {
 
             // 마크다운 이미지 처리 (마크다운이 있는 경우)
             if (requestDto.getIntroduction() != null && !requestDto.getIntroduction().isEmpty()) {
-                postAttachmentService.uploadMarkdownContent(requestDto.getIntroduction(), mentorEditProposal.getId());
+                postAttachmentService.uploadMarkdownContentForEdit(requestDto.getIntroduction(), mentorEditProposal.getId());
             }
 
             MentorEditUpdateRenewalResponse response = MentorEditUpdateRenewalResponse.from(mentorEditProposal);

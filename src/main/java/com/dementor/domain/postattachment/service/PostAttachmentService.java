@@ -189,40 +189,55 @@ public class PostAttachmentService {
         return uploadedFiles;
     }
 
-    //마크다운 이미지 처리용 업로드 메소드
+    //멘토 지원용 마크다운 이미지 처리 메소드
     @Transactional
-    public List<FileInfoDto> uploadMarkdownContent(
+    public List<FileInfoDto> uploadMarkdownContentForApply(
             String markdownText,
-            Long proposalId) {
+            Long applyProposalId) {
 
-        // proposal ID로 적절한 엔티티 조회
-        MentorApplyProposal applyProposal = null;
-        MentorEditProposal editProposal = null;
-        boolean isApplyProposal = false;
-
-        // 먼저 ApplyProposal이 있는지 확인
-        Optional<MentorApplyProposal> optionalApplyProposal = mentorApplyProposalRepository.findById(proposalId);
-        if (optionalApplyProposal.isPresent()) {
-            applyProposal = optionalApplyProposal.get();
-            isApplyProposal = true;
-        } else {
-            // ApplyProposal이 없는 경우 EditProposal 확인
-            editProposal = mentorEditProposalRepository.findById(proposalId)
-                    .orElseThrow(() -> new PostAttachmentException(
-                            PostAttachmentErrorCode.EDIT_PROPOSAL_NOT_FOUND,
-                            "멘토 지원서 또는 정보 수정 요청을 찾을 수 없습니다."));
-        }
-
-        // 멤버 ID 조회
-        Long memberId = isApplyProposal ?
-                applyProposal.getMember().getId() :
-                editProposal.getMember().getId();
+        MentorApplyProposal applyProposal = mentorApplyProposalRepository.findById(applyProposalId)
+                .orElseThrow(() -> new PostAttachmentException(
+                        PostAttachmentErrorCode.APPLY_PROPOSAL_NOT_FOUND,
+                        "멘토 지원서를 찾을 수 없습니다."));
 
         List<FileInfoDto> uploadedFiles = new ArrayList<>();
 
         // 마크다운 텍스트 처리 (있는 경우만)
         if (markdownText != null && !markdownText.isEmpty()) {
-            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, applyProposal, editProposal);
+            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, applyProposal, null);
+
+            for (PostAttachment attachment : markdownAttachments) {
+                FileInfoDto fileInfo = FileInfoDto.builder()
+                        .attachmentId(attachment.getId())
+                        .originalFilename(attachment.getOriginalFilename())
+                        .fileSize(attachment.getFileSize())
+                        .fileUrl("/api/files/markdown-images/" + attachment.getUniqueIdentifier())
+                        .uniqueIdentifier(attachment.getUniqueIdentifier())
+                        .build();
+
+                uploadedFiles.add(fileInfo);
+            }
+        }
+
+        return uploadedFiles;
+    }
+
+    //멘토 수정용 마크다운 이미지 처리 메소드
+    @Transactional
+    public List<FileInfoDto> uploadMarkdownContentForEdit(
+            String markdownText,
+            Long editProposalId) {
+
+        MentorEditProposal editProposal = mentorEditProposalRepository.findById(editProposalId)
+                .orElseThrow(() -> new PostAttachmentException(
+                        PostAttachmentErrorCode.EDIT_PROPOSAL_NOT_FOUND,
+                        "멘토 정보 수정 요청을 찾을 수 없습니다."));
+
+        List<FileInfoDto> uploadedFiles = new ArrayList<>();
+
+        // 마크다운 텍스트 처리 (있는 경우만)
+        if (markdownText != null && !markdownText.isEmpty()) {
+            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, null, editProposal);
 
             for (PostAttachment attachment : markdownAttachments) {
                 FileInfoDto fileInfo = FileInfoDto.builder()
