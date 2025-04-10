@@ -1,15 +1,20 @@
 package com.dementor.domain.admin.controller;
 
-import com.dementor.domain.mentoreditproposal.dto.MentorEditFindAllRenewalResponse;
-import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalResponse;
-import com.dementor.domain.mentoreditproposal.service.AdminModificationService;
-import com.dementor.global.ApiResponse;
-import com.dementor.global.common.pagination.PaginationUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditFindAllRenewalResponse;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalResponse;
+import com.dementor.global.ApiResponse;
+import com.dementor.global.common.pagination.PaginationUtil;
+
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
