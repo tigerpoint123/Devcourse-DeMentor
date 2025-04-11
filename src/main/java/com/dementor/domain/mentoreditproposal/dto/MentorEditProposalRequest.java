@@ -1,6 +1,7 @@
 package com.dementor.domain.mentoreditproposal.dto;
 
 import com.dementor.domain.mentor.entity.Mentor;
+
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -27,9 +28,9 @@ public class MentorEditProposalRequest {
 
 	public boolean hasChanges(Mentor mentor) {
 		return (career != null && !career.equals(mentor.getCareer())) ||
-				(currentCompany != null && !currentCompany.equals(mentor.getCurrentCompany())) ||
-				(jobId != null && !jobId.equals(mentor.getJob().getId())) ||
-				(introduction != null && !introduction.equals(mentor.getIntroduction()));
+			(currentCompany != null && !currentCompany.equals(mentor.getCurrentCompany())) ||
+			(jobId != null && !jobId.equals(mentor.getJob().getId())) ||
+			(introduction != null && !introduction.equals(mentor.getIntroduction()));
 	}
 
 }

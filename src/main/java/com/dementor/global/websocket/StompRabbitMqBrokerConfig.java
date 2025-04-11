@@ -14,35 +14,35 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class StompRabbitMqBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${spring.rabbitmq.host}")
-    private String rabbitmqHost;
+	@Value("${spring.rabbitmq.host}")
+	private String rabbitmqHost;
 
-    @Value("${spring.rabbitmq.username}")
-    private String rabbitmqUsername;
+	@Value("${spring.rabbitmq.username}")
+	private String rabbitmqUsername;
 
-    @Value("${spring.rabbitmq.password}")
-    private String rabbitmqPassword;
+	@Value("${spring.rabbitmq.password}")
+	private String rabbitmqPassword;
 
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws").withSockJS();
-    }
+	@Override
+	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		registry.addEndpoint("/ws").withSockJS();
+	}
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry
-                .setApplicationDestinationPrefixes("/app")
-                .enableStompBrokerRelay("/topic")
-                .setRelayHost(rabbitmqHost)
-                .setRelayPort(61613)
-                .setClientLogin(rabbitmqUsername)
-                .setClientPasscode(rabbitmqPassword)
-                .setSystemLogin(rabbitmqUsername)
-                .setSystemPasscode(rabbitmqPassword);
-    }
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry registry) {
+		registry
+			.setApplicationDestinationPrefixes("/app")
+			.enableStompBrokerRelay("/topic")
+			.setRelayHost(rabbitmqHost)
+			.setRelayPort(61613)
+			.setClientLogin(rabbitmqUsername)
+			.setClientPasscode(rabbitmqPassword)
+			.setSystemLogin(rabbitmqUsername)
+			.setSystemPasscode(rabbitmqPassword);
+	}
 
-    @Bean
-    public MessageConverter messageConverter() {
-        return new Jackson2JsonMessageConverter();
-    }
+	@Bean
+	public MessageConverter messageConverter() {
+		return new Jackson2JsonMessageConverter();
+	}
 }

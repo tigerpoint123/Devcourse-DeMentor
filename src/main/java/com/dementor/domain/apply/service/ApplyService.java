@@ -2,6 +2,7 @@ package com.dementor.domain.apply.service;
 
 import com.dementor.domain.chat.entity.ChatRoom;
 import com.dementor.domain.chat.service.ChatRoomService;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,10 +49,10 @@ public class ApplyService {
 	public ApplyIdResponse createApply(ApplyCreateRequest req, Long memberId) {
 
 		MentoringClass mentoringClass = mentoringClassRepository.findById(req.getClassId())
-				.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
+			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
 		Member member = memberRepository.findById(memberId)
-				.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 		//자신의 멘토링 클래스에 신청할 수 없음
 		if (mentoringClass.getMentor().getId().equals(memberId)) {
@@ -64,12 +65,12 @@ public class ApplyService {
 		}
 
 		Apply apply = Apply.builder()
-				.mentoringClass(mentoringClass)
-				.inquiry(req.getInquiry())
-				.applyStatus(ApplyStatus.PENDING)
-				.schedule(req.getSchedule())
-				.member(member)
-				.build();
+			.mentoringClass(mentoringClass)
+			.inquiry(req.getInquiry())
+			.applyStatus(ApplyStatus.PENDING)
+			.schedule(req.getSchedule())
+			.member(member)
+			.build();
 
 		Apply savedApply = applyRepository.save(apply);
 
@@ -78,11 +79,10 @@ public class ApplyService {
 		Member mentor = mentoringClass.getMember();
 		Member mentee = apply.getMember();
 
-
 		// 멘토링 채팅방 생성
 		ChatRoom room = chatRoomService.getOrCreateMentoringChatRoom(
-				mentor.getId(),
-				mentee.getId()
+			mentor.getId(),
+			mentee.getId()
 		);
 
 		return ApplyIdResponse.from(savedApply, room);
@@ -93,7 +93,7 @@ public class ApplyService {
 	public void deleteApply(Long applyId, Long memberId) {
 
 		Apply apply = applyRepository.findById(applyId)
-				.orElseThrow(() -> new ApplyException(ApplyErrorCode.APPLY_NOT_FOUND));
+			.orElseThrow(() -> new ApplyException(ApplyErrorCode.APPLY_NOT_FOUND));
 
 		if (!apply.getMember().getId().equals(memberId)) {
 			throw new ApplyException(ApplyErrorCode.NOT_YOUR_APPLY);
@@ -106,7 +106,7 @@ public class ApplyService {
 	//내가 신청한 멘토링 목록 조회 (페이징)
 	public ApplyPageResponse getApplyList(Long memberId, int page, int size) {
 		memberRepository.findById(memberId)
-				.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+			.orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
 		Pageable pageable = PageRequest.of(page, size);
 
@@ -119,10 +119,10 @@ public class ApplyService {
 	public ApplyScheduleResponse getApplySchedulesByClassId(Long classId, String startDate, String endDate) {
 
 		mentoringClassRepository.findById(classId)
-				.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
+			.orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
 		List<Apply> applies = applyRepository.findAllByClassIdAndScheduleBetween(
-				classId, startDate, endDate);
+			classId, startDate, endDate);
 
 		return ApplyScheduleResponse.fromList(applies);
 	}
