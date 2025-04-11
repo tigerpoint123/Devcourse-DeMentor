@@ -10,9 +10,9 @@
 <h1>채팅 테스트 페이지</h1>
 
 <form id="messageForm">
-    <input type="text" id="senderId" placeholder="보내는 사람 ID" required />
-    <input type="text" id="senderType" placeholder="보내는 사람 타입 (e.g. USER)" required />
-    <input type="text" id="content" placeholder="메시지 내용" required />
+    <input type="text" id="senderId" placeholder="보내는 사람 ID" required/>
+    <input type="text" id="senderType" placeholder="보내는 사람 타입 (e.g. USER)" required/>
+    <input type="text" id="content" placeholder="메시지 내용" required/>
     <button type="submit">보내기</button>
 </form>
 
@@ -67,7 +67,7 @@
         stompClient.send(
             `/app/chat/rooms/${chatRoomId}/messages/create`,
             {},
-            JSON.stringify({ senderId, senderType, content })
+            JSON.stringify({senderId, senderType, content})
         );
 
         document.getElementById("content").value = "";

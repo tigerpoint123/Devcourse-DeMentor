@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatMessageSliceDto {
-    private List<ChatMessageResponseDto> messages;
-    private boolean hasMore;
-    private Long nextCursor;
+	private List<ChatMessageResponseDto> messages;
+	private boolean hasMore;
+	private Long nextCursor;
 }

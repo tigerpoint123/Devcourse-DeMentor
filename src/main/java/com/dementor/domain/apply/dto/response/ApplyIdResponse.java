@@ -3,6 +3,7 @@ package com.dementor.domain.apply.dto.response;
 import com.dementor.domain.apply.entity.Apply;
 
 import com.dementor.domain.chat.entity.ChatRoom;
+
 import lombok.Builder;
 import lombok.Getter;
 

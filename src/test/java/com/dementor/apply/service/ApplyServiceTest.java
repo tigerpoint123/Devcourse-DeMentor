@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import com.dementor.domain.chat.entity.ChatRoom;
 import com.dementor.domain.chat.entity.RoomType;
 import com.dementor.domain.chat.repository.ChatRoomRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,52 +74,52 @@ public class ApplyServiceTest {
 	void setUp() {
 		//테스트 멘티 생성
 		testMember = Member.builder()
-				.email("test@test.com")
-				.password("password")
-				.nickname("test")
-				.name("test")
-				.userRole(UserRole.MENTEE)
-				.build();
+			.email("test@test.com")
+			.password("password")
+			.nickname("test")
+			.name("test")
+			.userRole(UserRole.MENTEE)
+			.build();
 		testMember = memberRepository.save(testMember);
 
 		//테스트용 멘토 추가
 		testMentor = Member.builder()
-				.email("mentor@test.com")
-				.password("password")
-				.nickname("testMentor")
-				.name("테스트멘토")
-				.userRole(UserRole.MENTOR)
-				.build();
+			.email("mentor@test.com")
+			.password("password")
+			.nickname("testMentor")
+			.name("테스트멘토")
+			.userRole(UserRole.MENTOR)
+			.build();
 		testMentor = memberRepository.save(testMentor);
 
 		//Job 생성
 		Job job = Job.builder()
-				.name("백엔드")
-				.build();
+			.name("백엔드")
+			.build();
 		job = jobRepository.save(job);
 
 		//멘토 객체 생성
 		Mentor mentor = Mentor.builder()
-				.member(testMentor)
-				.job(job)
-				.name("테스트멘토")
-				.currentCompany("테스트 회사")
-				.career(3)
-				.phone("010-1234-5678")
-				.email("mentor@example.com")
-				.introduction("테스트 멘토 소개")
-				.modificationStatus(ModificationStatus.NONE)
-				.build();
+			.member(testMentor)
+			.job(job)
+			.name("테스트멘토")
+			.currentCompany("테스트 회사")
+			.career(3)
+			.phone("010-1234-5678")
+			.email("mentor@example.com")
+			.introduction("테스트 멘토 소개")
+			.modificationStatus(ModificationStatus.NONE)
+			.build();
 		mentor = mentorRepository.save(mentor);
 
 		//멘토링 클래스 생성
 		MentoringClass mentoring = MentoringClass.builder()
-				.title("테스트 멘토링")
-				.stack("Java, Spring")
-				.content("테스트 멘토링 내용")
-				.price(10000)
-				.mentor(mentor)
-				.build();
+			.title("테스트 멘토링")
+			.stack("Java, Spring")
+			.content("테스트 멘토링 내용")
+			.price(10000)
+			.mentor(mentor)
+			.build();
 
 		this.mentoringClass = mentoringClassRepository.save(mentoring);
 		this.mentoringClassId = this.mentoringClass.getId();
@@ -133,14 +134,11 @@ public class ApplyServiceTest {
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
 
-
 		ApplyIdResponse result = applyService.createApply(request, testMember.getId());
-
 
 		assertNotNull(result);
 		assertNotNull(result.getApplyId());
 		assertNotNull(result.getChatRoomId()); // ChatRoom
-
 
 		Apply savedApply = applyRepository.findById(result.getApplyId()).orElse(null);
 		assertNotNull(savedApply);
@@ -164,7 +162,6 @@ public class ApplyServiceTest {
 		request.setClassId(99999L);
 		request.setInquiry("테스트 문의입니다");
 		request.setSchedule(LocalDateTime.now().plusDays(1));
-
 
 		assertThrows(MentoringClassException.class, () -> {
 			applyService.createApply(request, testMember.getId());
@@ -202,7 +199,6 @@ public class ApplyServiceTest {
 
 		applyService.deleteApply(applyId, testMember.getId());
 
-
 		Apply deletedApply = applyRepository.findById(applyId).orElse(null);
 		assertNull(deletedApply, "멘토링 신청 취소가 되지 않았습니다.");
 	}
@@ -220,12 +216,12 @@ public class ApplyServiceTest {
 		Long applyId = result.getApplyId();
 
 		Member anotherMember = Member.builder()
-				.email("another@test.com")
-				.password("password")
-				.nickname("another")
-				.name("another")
-				.userRole(UserRole.MENTEE)
-				.build();
+			.email("another@test.com")
+			.password("password")
+			.nickname("another")
+			.name("another")
+			.userRole(UserRole.MENTEE)
+			.build();
 		anotherMember = memberRepository.save(anotherMember);
 
 		Member AnotherMember = anotherMember;
@@ -242,18 +238,16 @@ public class ApplyServiceTest {
 
 		for (int i = 0; i < 15; i++) {
 			Apply apply = Apply.builder()
-					.mentoringClass(mentoringClass)
-					.member(testMember)
-					.inquiry("테스트 문의 " + i)
-					.applyStatus(ApplyStatus.PENDING)
-					.schedule(LocalDateTime.now().plusDays(i % 5 + 1))
-					.build();
+				.mentoringClass(mentoringClass)
+				.member(testMember)
+				.inquiry("테스트 문의 " + i)
+				.applyStatus(ApplyStatus.PENDING)
+				.schedule(LocalDateTime.now().plusDays(i % 5 + 1))
+				.build();
 			applyRepository.save(apply);
 		}
 
-
 		ApplyPageResponse page1Result = applyService.getApplyList(testMember.getId(), 0, 10);
-
 
 		assertEquals(15L, page1Result.getPagination().getTotal_elements());
 		assertEquals(2, page1Result.getPagination().getTotal_pages());
@@ -265,7 +259,6 @@ public class ApplyServiceTest {
 		assertEquals(2, page2Result.getPagination().getTotal_pages());
 		assertEquals(5, page2Result.getApplyments().size());
 	}
-
 
 	@Test
 	@DisplayName("존재하지 않는 멘토링 클래스의 신청 날짜 목록 조회 시 예외 발생")

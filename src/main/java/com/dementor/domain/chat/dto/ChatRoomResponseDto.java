@@ -1,7 +1,7 @@
 package com.dementor.domain.chat.dto;
 
-
 import com.dementor.domain.chat.entity.RoomType;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,9 +15,9 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRoomResponseDto {
-    private Long chatRoomId;
-    private RoomType roomType;     // "MENTORING_CHAT" or "ADMIN_CHAT"
-    private String lastMessage;  // 마지막 메시지 내용
-    private ZonedDateTime lastMessageAt; // 마지막 메시지 보낸시간
-    private String targetNickname;  //상대방 닉네임
+	private Long chatRoomId;
+	private RoomType roomType;     // "MENTORING_CHAT" or "ADMIN_CHAT"
+	private String lastMessage;  // 마지막 메시지 내용
+	private ZonedDateTime lastMessageAt; // 마지막 메시지 보낸시간
+	private String targetNickname;  //상대방 닉네임
 }

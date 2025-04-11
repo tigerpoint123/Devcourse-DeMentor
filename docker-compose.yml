@@ -3,11 +3,11 @@ version: "3"
 services:
   rabbit-mq:
     image: rabbitmq:management
-    container_name: rabbitmq-1
+    container_name: rabbitmq_1
     volumes:
-      - ./dockerProjects/rabbitmq-1/volumes/etc/rabbitmq:/etc/rabbitmq
-      - ./dockerProjects/rabbitmq-1/volumes/var/lib/rabbitmq:/var/lib/rabbitmq
-      - ./dockerProjects/rabbitmq-1/volumes/var/log/rabbitmq:/var/log/rabbitmq
+      - ./dockerProjects/rabbitmq_1/volumes/etc/rabbitmq:/etc/rabbitmq
+      - ./dockerProjects/rabbitmq_1/volumes/var/lib/rabbitmq:/var/lib/rabbitmq
+      - ./dockerProjects/rabbitmq_1/volumes/var/log/rabbitmq:/var/log/rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
