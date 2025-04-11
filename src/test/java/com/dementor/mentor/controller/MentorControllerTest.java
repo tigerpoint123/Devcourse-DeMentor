@@ -13,7 +13,6 @@ import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRep
 import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
-import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -185,22 +184,6 @@ public class MentorControllerTest {
                 "업데이트 회사",       // currentCompany
                 "업데이트된 자기소개", // introduction
                 null                  // attachmentId
-        );
-
-        // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
-        MockMultipartFile jsonPart = new MockMultipartFile(
-                "mentorUpdateData", // @RequestPart("mentorUpdateData")와 일치해야 함
-                null,
-                "application/json",
-                objectMapper.writeValueAsBytes(requestDto)
-        );
-
-        // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
-        MockMultipartFile jsonPart = new MockMultipartFile(
-                "mentorUpdateData", // @RequestPart("mentorUpdateData")와 일치해야 함
-                null,
-                "application/json",
-                objectMapper.writeValueAsBytes(requestDto)
         );
 
         // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
