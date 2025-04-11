@@ -72,12 +72,11 @@ public class Mentor {
     }
 
     // 필드 수정 메서드
-    public void update(String currentCompany, Integer career, String introduction) {
+    public void update(String currentCompany, Integer career, Job job, String introduction, ModificationStatus modificationStatus) {
         this.currentCompany = currentCompany;
+        this.job = job;
         this.career = career;
-        // this.phone = phone;
-        // this.email = email;
         this.introduction = introduction;
-        this.modificationStatus = ModificationStatus.PENDING;
+        this.modificationStatus = modificationStatus;
     }
 }

@@ -41,7 +41,6 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
-import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -58,7 +57,6 @@ public class MentorService {
 	private final MentorEditProposalRepository mentorEditProposalRepository;
 	private final MentorApplyProposalRepository mentorApplyProposalRepository;
 	private final ObjectMapper objectMapper;
-	private final PostAttachmentService postAttachmentService;
 	private final ApplyRepository applyRepository;
 
 	//멘토 지원하기
@@ -386,7 +384,6 @@ public class MentorService {
 		return changes;
 	}
 
-	@Transactional
 	public MentorApplyResponse.GetApplyMenteePageList getApplyByMentor(Long memberId, int page, int size) {
 
 		Mentor mentor = mentorRepository.findById(memberId)
