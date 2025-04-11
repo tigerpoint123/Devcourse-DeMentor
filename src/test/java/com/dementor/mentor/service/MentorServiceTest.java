@@ -242,6 +242,11 @@ public class MentorServiceTest {
 		assertNotNull(updatedMentor, "멘토 정보가 조회되지 않습니다.");
 		assertEquals(ModificationStatus.PENDING, updatedMentor.getModificationStatus());
 
+
+		Job job = jobRepository.findById(testJob.getId())
+			.orElseThrow(() -> new AssertionError("JOB이 없습니다."));
+		;
+
 		// 수정 요청 승인 프로세스 - 수정 요청이 저장되어 있는 상태
 		MentorEditProposal modification = mentorEditProposalRepository.findLatestByMemberId(testMentor.getId())
 			.orElseThrow(() -> new AssertionError("수정 요청이 없습니다."));
@@ -256,7 +261,9 @@ public class MentorServiceTest {
 			8,
 			// "01098765432",
 			// "update@email.com",
-			"업데이트된 자기소개"
+			job,
+			"업데이트된 자기소개",
+			ModificationStatus.APPROVED
 		);
 		mentor.updateModificationStatus(ModificationStatus.NONE);
 		mentorRepository.save(mentor);

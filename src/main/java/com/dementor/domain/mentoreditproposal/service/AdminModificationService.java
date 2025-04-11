@@ -1,5 +1,11 @@
 package com.dementor.domain.mentoreditproposal.service;
 
+import static java.time.LocalTime.*;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -9,13 +15,10 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.AdminModificationRepository;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
 
-import static java.time.LocalTime.now;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +45,11 @@ public class AdminModificationService {
 		mentor.update(
 			mentorEditProposal.getCurrentCompany(),
 			mentorEditProposal.getCareer(),
-			// mentorEditProposal.getPhone,
-			// mentorEditProposal.getEmail,
-			mentorEditProposal.getIntroduction()
+			mentorEditProposal.getJob(),
+			mentorEditProposal.getIntroduction(),
+			ModificationStatus.APPROVED
 			);
 
-		mentor.updateModificationStatus(ModificationStatus.APPROVED);
 		mentorEditProposal.updateStatus(MentorEditProposalStatus.APPROVED);
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
@@ -63,21 +65,15 @@ public class AdminModificationService {
 		return response;
 	}
 
+	@Transactional
 	public MentorEditUpdateRenewalResponse rejectMentorUpdate(Long memberId) {
 		MentorEditProposal mentorEditProposal = mentorEditProposalRepository.findOneRequestByMemberId(memberId);
 
 		Mentor mentor = mentorRepository.findByMemberId(memberId)
 				.orElseThrow(() -> new EntityNotFoundException("Mentor not found"));
 
-		mentor.update(
-				mentorEditProposal.getCurrentCompany(),
-				mentorEditProposal.getCareer(),
-				// mentorEditProposal.getPhone,
-				// mentorEditProposal.getEmail,
-				mentorEditProposal.getIntroduction()
-		);
-
 		mentor.updateModificationStatus(ModificationStatus.REJECTED);
+
 		mentorEditProposal.updateStatus(MentorEditProposalStatus.REJECTED);
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
