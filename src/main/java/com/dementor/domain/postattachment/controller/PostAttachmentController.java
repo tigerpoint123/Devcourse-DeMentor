@@ -1,12 +1,9 @@
 package com.dementor.domain.postattachment.controller;
 
-import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.dto.response.FileResponse;
 import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
-import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.dementor.global.ApiResponse;
@@ -41,12 +38,11 @@ public class PostAttachmentController {
     private final MentorEditProposalRepository mentorEditProposalRepository;
 
     //파일 업로드 API
-    @PostMapping(value = "/upload/apply/{proposalId}")
+    @PostMapping(value = "/upload/apply")
     @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
-    @Operation(summary = "멘토 지원서 마크다운 이미지 업로드", description = "멘토 지원 시 마크다운에 포함된 이미지를 업로드합니다.")
-    public ResponseEntity<ApiResponse<?>> uploadMarkdownContentForApply(
+    @Operation(summary = "마크다운 이미지 업로드", description = "마크다운에 포함된 이미지를 업로드합니다.")
+    public ResponseEntity<ApiResponse<?>> uploadMarkdownContent(
             @RequestParam(value = "introductionMarkdown", required = false) String introduction,
-            @PathVariable(value = "proposalId") Long proposalId,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         try {
@@ -56,81 +52,23 @@ public class PostAttachmentController {
                         .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "마크다운 텍스트는 필수입니다."));
             }
 
-            // 지원서 확인
-            MentorApplyProposal applyProposal = mentorApplyProposalRepository.findById(proposalId)
-                    .orElseThrow(() -> new PostAttachmentException(
-                            PostAttachmentErrorCode.APPLY_PROPOSAL_NOT_FOUND,
-                            "멘토 지원서를 찾을 수 없습니다."));
-
-            // 본인 소유 지원서인지 확인
-            if (!applyProposal.getMember().getId().equals(userDetails.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "본인의 지원서만 수정할 수 있습니다."));
+            // 사용자 정보 확인
+            if (userDetails == null || userDetails.getId() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.of(false, HttpStatus.UNAUTHORIZED, "인증된 사용자만 이용할 수 있습니다."));
             }
 
-            List<FileInfoDto> allUploadedFiles = postAttachmentService.uploadMarkdownContentForApply(
-                    introduction, proposalId);
+            // 사용자 ID 전달
+            List<FileInfoDto> allUploadedFiles = postAttachmentService.uploadMarkdownContent(introduction);
 
             FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()
                     .status(HttpStatus.CREATED.value())
-                    .message("업로드에 성공했습니다.")
+                    .message("이미지 업로드에 성공했습니다.")
                     .data(allUploadedFiles)
                     .build();
 
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.of(true, HttpStatus.CREATED, "업로드에 성공했습니다.", responseDto));
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, e.getMessage()));
-        } catch (PostAttachmentException e) {
-            return ResponseEntity.status(e.getErrorCode().getStatus().value())
-                    .body(ApiResponse.of(false, e.getErrorCode().getStatus(), e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.of(false, HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다: " + e.getMessage()));
-        }
-    }
-
-    //파일 업로드 API
-    @PostMapping(value = "/upload/edit/{proposalId}")
-    @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
-    @Operation(summary = "멘토 수정서 마크다운 이미지 업로드", description = "멘토 정보 수정 시 마크다운에 포함된 이미지를 업로드합니다.")
-    public ResponseEntity<ApiResponse<?>> uploadMarkdownContentForEdit(
-            @RequestParam(value = "introductionMarkdown", required = false) String introduction,
-            @PathVariable(value = "proposalId") Long proposalId,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        try {
-            // 마크다운 텍스트는 필수
-            if (introduction == null || introduction.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(ApiResponse.of(false, HttpStatus.BAD_REQUEST, "마크다운 텍스트는 필수입니다."));
-            }
-
-            // 수정 요청 확인
-            MentorEditProposal editProposal = mentorEditProposalRepository.findById(proposalId)
-                    .orElseThrow(() -> new PostAttachmentException(
-                            PostAttachmentErrorCode.EDIT_PROPOSAL_NOT_FOUND,
-                            "멘토 정보 수정 요청을 찾을 수 없습니다."));
-
-            // 본인 소유 수정 요청인지 확인
-            if (!editProposal.getMember().getId().equals(userDetails.getId())) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(ApiResponse.of(false, HttpStatus.FORBIDDEN, "본인의 수정 요청만 변경할 수 있습니다."));
-            }
-
-            List<FileInfoDto> allUploadedFiles = postAttachmentService.uploadMarkdownContentForEdit(
-                    introduction, proposalId);
-
-            FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()
-                    .status(HttpStatus.CREATED.value())
-                    .message("업로드에 성공했습니다.")
-                    .data(allUploadedFiles)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.of(true, HttpStatus.CREATED, "업로드에 성공했습니다.", responseDto));
+                    .body(ApiResponse.of(true, HttpStatus.CREATED, "이미지 업로드에 성공했습니다.", responseDto));
 
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
