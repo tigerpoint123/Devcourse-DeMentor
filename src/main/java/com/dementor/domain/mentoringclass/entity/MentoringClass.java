@@ -1,5 +1,6 @@
 package com.dementor.domain.mentoringclass.entity;
 
+import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.global.base.BaseEntity;
 import jakarta.persistence.*;
@@ -55,4 +56,9 @@ public class MentoringClass extends BaseEntity {
         this.stack = String.join(",", stack);
     }
 
+
+    // 멘토의 memberId 얻기 (applyService. for 멘토링챗 타입의 chatroom생성 )
+    public Member getMember() {
+        return mentor != null ? mentor.getMember() : null;
+    }
 }
