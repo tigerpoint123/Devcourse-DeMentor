@@ -1,7 +1,7 @@
 package com.dementor.domain.mentoreditproposal.repository;
 
-import java.util.Optional;
-
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
+import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalResponse;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
+import java.util.Optional;
 
 @Repository
 public interface MentorEditProposalRepository extends JpaRepository<MentorEditProposal, Long> {
@@ -35,6 +33,5 @@ public interface MentorEditProposalRepository extends JpaRepository<MentorEditPr
     @Query("SELECT m FROM MentorEditProposal m WHERE m.member.id = :memberId ORDER BY m.createdAt DESC")
     Optional<MentorEditProposal> findLatestByMemberId(@Param("memberId") Long memberId);
 
-    // 요청 하나만 response
-    MentorEditProposal findOneRequestByMemberId(Long memberId);
+    MentorEditProposal findOneRequestByMemberIdAndStatus(Long memberId, MentorEditProposalStatus mentorEditProposalStatus);
 }
