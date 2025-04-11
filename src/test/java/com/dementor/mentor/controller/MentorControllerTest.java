@@ -1,26 +1,5 @@
 package com.dementor.mentor.controller;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.dementor.domain.job.entity.Job;
 import com.dementor.domain.job.repository.JobRepository;
 import com.dementor.domain.member.entity.Member;
@@ -31,12 +10,29 @@ import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.dto.MentorUpdateRequest;
+import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -145,17 +141,26 @@ public class MentorControllerTest {
                         5,
                         "테스트 회사",
                         "테스트 자기소개",
-                        "테스트 특기",
                         null
                 );
 
+        // Multipart 본문 중 하나로 보낼 JSON
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "mentorApplyData", // controller의 @RequestPart("mentorApplyData")와 일치
+                null,
+                "application/json",
+                objectMapper.writeValueAsBytes(requestDto)
+        );
+
         // When
         ResultActions resultActions = mvc
-                .perform(
-                        post("/api/mentor")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
-                                .with(user(memberPrincipal))
+                .perform(MockMvcRequestBuilders.multipart("/api/mentor")
+                        .file(jsonPart)
+                        .with(request -> {
+                            request.setMethod("POST"); // multipart는 기본적으로 POST 아님
+                            return request;
+                        })
+                        .with(user(memberPrincipal))
                 )
                 .andDo(print());
 
@@ -173,25 +178,31 @@ public class MentorControllerTest {
     @WithMockUser(roles = "MENTOR")
     void updateMentorSuccess() throws Exception {
         // Given
-        MentorUpdateRequest.MentorUpdateRequestDto requestDto =
-                new MentorUpdateRequest.MentorUpdateRequestDto(
-                        8,          // career
-                        "01098765432",    // phone
-                        "업데이트 회사",    // currentCompany
-                        1L,               // jobId (예시 값)
-                        "update@email.com", // email
-                        "업데이트된 자기소개", // introduction
-                        "업데이트된 특기",   // bestFor
-                        null              // attachmentId
-                );
+        MentorEditProposalRequest requestDto = new MentorEditProposalRequest(
+                testJobId,                   // jobId
+                8,                    // career
+                "업데이트 회사",       // currentCompany
+                "업데이트된 자기소개", // introduction
+                null                  // attachmentId
+        );
+
+        // JSON 데이터를 multipart로 보내기 위한 MockMultipartFile
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "mentorUpdateData", // @RequestPart("mentorUpdateData")와 일치해야 함
+                null,
+                "application/json",
+                objectMapper.writeValueAsBytes(requestDto)
+        );
 
         // When
         ResultActions resultActions = mvc
-                .perform(
-                        put("/api/mentor/" + testMentorId)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto))
-                                .with(user(mentorPrincipal))
+                .perform(MockMvcRequestBuilders.multipart("/api/mentor/" + testMentorId)
+                        .file(jsonPart)
+                        .with(request -> {
+                            request.setMethod("PUT"); // PUT으로 강제 설정
+                            return request;
+                        })
+                        .with(user(mentorPrincipal))
                 )
                 .andDo(print());
         // Then
@@ -200,7 +211,7 @@ public class MentorControllerTest {
                 .andExpect(jsonPath("$.isSuccess").value(true))
                 .andExpect(jsonPath("$.message").value("멘토 정보 수정 요청에 성공했습니다."))
                 .andExpect(jsonPath("$.data.memberId").value(testMentorId))
-                .andExpect(jsonPath("$.data.modificationStatus").value("PENDING"));
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
     }
 
     @Test
@@ -258,6 +269,10 @@ public class MentorControllerTest {
         // 수정 요청을 생성 (이미 setUp 메서드에서 testMentor가 APPROVED 상태)
         MentorEditProposal modification = MentorEditProposal.builder()
                 .member(testMentor)
+                .career(8)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.PENDING)
                 .build();
         mentorEditProposalRepository.save(modification);
@@ -292,7 +307,10 @@ public class MentorControllerTest {
         // PENDING 상태의 수정 요청 생성
         MentorEditProposal pendingModification = MentorEditProposal.builder()
                 .member(testMentor)
-
+                .career(8)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.PENDING)
                 .build();
         mentorEditProposalRepository.save(pendingModification);
@@ -300,7 +318,10 @@ public class MentorControllerTest {
         // APPROVED 상태의 수정 요청 생성
         MentorEditProposal approvedModification = MentorEditProposal.builder()
                 .member(testMentor)
-
+                .career(5)
+                .currentCompany("변경된 회사")
+                .job(testJob)
+                .introduction("변경된 자기소개")
                 .status(MentorEditProposalStatus.APPROVED)
                 .build();
         mentorEditProposalRepository.save(approvedModification);

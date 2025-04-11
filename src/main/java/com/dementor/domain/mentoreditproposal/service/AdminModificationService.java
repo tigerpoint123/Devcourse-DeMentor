@@ -1,11 +1,5 @@
 package com.dementor.domain.mentoreditproposal.service;
 
-import static java.time.LocalTime.*;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
@@ -15,10 +9,14 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.AdminModificationRepository;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
-
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import static java.time.LocalTime.now;
 
 @Service
 @RequiredArgsConstructor
@@ -37,7 +35,7 @@ public class AdminModificationService {
 	}
 
 	public MentorEditUpdateRenewalResponse approveMentorUpdate(Long memberId) {
-		MentorEditProposal mentorEditProposal = mentorEditProposalRepository.findOneRequestByMemberId(memberId);
+		MentorEditProposal mentorEditProposal = mentorEditProposalRepository.findOneRequestByMemberIdAndStatus(memberId, MentorEditProposalStatus.PENDING);
 
 		Mentor mentor = mentorRepository.findByMemberId(memberId)
 			.orElseThrow(() -> new EntityNotFoundException("Mentor not found"));
@@ -67,7 +65,7 @@ public class AdminModificationService {
 
 	@Transactional
 	public MentorEditUpdateRenewalResponse rejectMentorUpdate(Long memberId) {
-		MentorEditProposal mentorEditProposal = mentorEditProposalRepository.findOneRequestByMemberId(memberId);
+		MentorEditProposal mentorEditProposal = mentorEditProposalRepository.findOneRequestByMemberIdAndStatus(memberId, MentorEditProposalStatus.PENDING);
 
 		Mentor mentor = mentorRepository.findByMemberId(memberId)
 				.orElseThrow(() -> new EntityNotFoundException("Mentor not found"));
