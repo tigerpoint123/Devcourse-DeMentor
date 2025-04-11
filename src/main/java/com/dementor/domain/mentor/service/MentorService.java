@@ -28,8 +28,6 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
-import com.dementor.domain.postattachment.service.PostAttachmentService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -53,8 +51,6 @@ public class MentorService {
 	private final PostAttachmentRepository attachmentRepository;
 	private final MentorEditProposalRepository mentorEditProposalRepository;
 	private final MentorApplyProposalRepository mentorApplyProposalRepository;
-	private final ObjectMapper objectMapper;
-	private final PostAttachmentService postAttachmentService;
 	private final ApplyRepository applyRepository;
 
     //멘토 지원하기

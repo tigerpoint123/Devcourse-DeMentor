@@ -1,7 +1,5 @@
 package com.dementor.domain.postattachment.controller;
 
-import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
 import com.dementor.domain.postattachment.dto.response.FileResponse;
 import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
@@ -34,11 +32,9 @@ import java.util.Map;
 public class PostAttachmentController {
 
     private final PostAttachmentService postAttachmentService;
-    private final MentorApplyProposalRepository mentorApplyProposalRepository;
-    private final MentorEditProposalRepository mentorEditProposalRepository;
 
     //파일 업로드 API
-    @PostMapping(value = "/upload/apply")
+    @PostMapping(value = "/upload")
     @PreAuthorize("hasRole('MENTEE') or hasRole('MENTOR')")
     @Operation(summary = "마크다운 이미지 업로드", description = "마크다운에 포함된 이미지를 업로드합니다.")
     public ResponseEntity<ApiResponse<?>> uploadMarkdownContent(
@@ -58,7 +54,7 @@ public class PostAttachmentController {
                         .body(ApiResponse.of(false, HttpStatus.UNAUTHORIZED, "인증된 사용자만 이용할 수 있습니다."));
             }
 
-            // 사용자 ID 전달
+            // 이미지 업로드 처리
             List<FileInfoDto> allUploadedFiles = postAttachmentService.uploadMarkdownContent(introduction);
 
             FileResponse.FileUploadResponseDto responseDto = FileResponse.FileUploadResponseDto.builder()

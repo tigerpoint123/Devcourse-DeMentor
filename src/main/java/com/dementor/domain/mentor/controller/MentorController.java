@@ -72,10 +72,6 @@ public class MentorController {
                 postAttachmentService.uploadFilesApply(files,mentorApplyProposal);
             }
 
-            // 마크다운 이미지 처리 (마크다운이 있는 경우)
-            if (requestDto.introduction() != null && !requestDto.introduction().isEmpty()) {
-                postAttachmentService.uploadMarkdownContentForApply(requestDto.introduction(), mentorApplyProposal.getId());
-            }
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.of(true, HttpStatus.CREATED, "멘토 지원에 성공했습니다."));
         } catch (MentorException e) {
@@ -123,11 +119,6 @@ public class MentorController {
             // 일반 파일 업로드
             if (files != null && !files.isEmpty()) {
                 postAttachmentService.uploadFilesEdit(files, mentorEditProposal);
-            }
-
-            // 마크다운 이미지 처리 (마크다운이 있는 경우)
-            if (requestDto.getIntroduction() != null && !requestDto.getIntroduction().isEmpty()) {
-                postAttachmentService.uploadMarkdownContentForEdit(requestDto.getIntroduction(), mentorEditProposal.getId());
             }
 
             MentorEditUpdateRenewalResponse response = MentorEditUpdateRenewalResponse.from(mentorEditProposal);
