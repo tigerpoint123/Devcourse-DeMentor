@@ -255,6 +255,32 @@ public class PostAttachmentService {
         return uploadedFiles;
     }
 
+    @Transactional
+    public List<FileInfoDto> uploadMarkdownContent(String markdownText) {
+        List<FileInfoDto> uploadedFiles = new ArrayList<>();
+
+        // 마크다운 텍스트 처리
+        if (markdownText != null && !markdownText.isEmpty()) {
+            // null을 전달하여 특정 proposal에 연결하지 않음
+            List<PostAttachment> markdownAttachments = processMarkdownImages(markdownText, null, null);
+
+            for (PostAttachment attachment : markdownAttachments) {
+
+                FileInfoDto fileInfo = FileInfoDto.builder()
+                        .attachmentId(attachment.getId())
+                        .originalFilename(attachment.getOriginalFilename())
+                        .fileSize(attachment.getFileSize())
+                        .fileUrl("/api/files/markdown-images/" + attachment.getUniqueIdentifier())
+                        .uniqueIdentifier(attachment.getUniqueIdentifier())
+                        .build();
+
+                uploadedFiles.add(fileInfo);
+            }
+        }
+
+        return uploadedFiles;
+    }
+
     // 파일 접근 권한 확인 메서드
     private boolean hasAccessPermission(Long memberId, PostAttachment attachment) {
         // 파일 소유자인 경우 접근 허용
@@ -276,6 +302,16 @@ public class PostAttachmentService {
         while (matcher.find()) {
             String altText = matcher.group(1);
             String imageUrl = matcher.group(2);
+
+            // GitHub 이미지 URL 감지
+            if (imageUrl.contains("github.com/user-attachments") ||
+                    imageUrl.contains("githubusercontent.com") ||
+                    imageUrl.contains("github-production-user-asset") ||
+                    imageUrl.contains("github.io") && imageUrl.contains("assets")) {
+
+                log.warn("GitHub 이미지는 직접 액세스할 수 없습니다. 처리를 건너뜁니다: {}", imageUrl);
+                continue; // GitHub 이미지는 건너뛰기
+            }
 
             if (imageUrl.contains("/api/files/markdown-images/")) {
                 String uniqueIdentifier = imageUrl.substring(imageUrl.lastIndexOf('/') + 1);
