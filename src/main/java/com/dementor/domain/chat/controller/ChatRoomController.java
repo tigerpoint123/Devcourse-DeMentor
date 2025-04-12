@@ -59,10 +59,15 @@ public class ChatRoomController {
 	//멤버가 자신의 채팅방목록 조회
 	@GetMapping("/member/rooms")
 	public ResponseEntity<List<ChatRoomResponseDto>> getMyRoomsAsMember(
-		@RequestParam Long memberId
+//		@RequestParam Long memberId
+			@AuthenticationPrincipal CustomUserDetails userDetails
+
 	) {
+		Long memberId = userDetails.getId();  // 로그인한 사용자 ID 추출
+
 		return ResponseEntity.ok(chatRoomService.getAllMyChatRooms(memberId));
 	}
+
 
 	//관리자가 자신의 채팅방목록 조회
 	@GetMapping("/admin/rooms")
