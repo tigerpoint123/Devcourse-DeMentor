@@ -1,34 +1,5 @@
 package com.dementor.domain.postattachment.service;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.imageio.ImageIO;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
 import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
@@ -40,9 +11,29 @@ import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import com.dementor.firebase.service.FirebaseStorageService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -74,12 +65,12 @@ public class PostAttachmentService {
 
 	//멘토 지원서용 파일 업로드 메소드
 	@Transactional
-	public List<FileInfoDto> uploadFilesApply(
+	public void uploadFilesApply(
 		List<MultipartFile> files,
 		MentorApplyProposal applyProposal) {
 
 		if (files == null || files.isEmpty()) {
-			return Collections.emptyList();
+			return;
 		}
 
 		Long memberId = applyProposal.getMember().getId();
@@ -89,8 +80,6 @@ public class PostAttachmentService {
 			throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
 				"파일 업로드 제한을 초과했습니다. 최대 " + maxFilesPerUser + "개까지 가능합니다.");
 		}
-
-		List<FileInfoDto> uploadedFiles = new ArrayList<>();
 
 		for (MultipartFile file : files) {
 			if (file.isEmpty()) {
@@ -117,14 +106,6 @@ public class PostAttachmentService {
 					.build();
 
 				postAttachmentRepository.save(attachment);
-
-				FileInfoDto fileInfo = FileInfoDto.builder()
-					.attachmentId(attachment.getId())
-					.originalFilename(originalFilename)
-					.fileSize(file.getSize())
-					.build();
-
-				uploadedFiles.add(fileInfo);
 			} catch (Exception e) {
 				log.error("파일 업로드 실패: {}", e.getMessage());
 				throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
@@ -132,17 +113,16 @@ public class PostAttachmentService {
 			}
 		}
 
-		return uploadedFiles;
 	}
 
 	//멘토 정보 수정용 파일 업로드 메소드
 	@Transactional
-	public List<FileInfoDto> uploadFilesEdit(
+	public void uploadFilesEdit(
 		List<MultipartFile> files,
 		MentorEditProposal editProposal) {
 
 		if (files == null || files.isEmpty()) {
-			return Collections.emptyList();
+			return;
 		}
 
 		Long memberId = editProposal.getMember().getId();
@@ -152,8 +132,6 @@ public class PostAttachmentService {
 			throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_LIMIT_EXCEEDED,
 				"파일 업로드 제한을 초과했습니다. 최대 " + maxFilesPerUser + "개까지 가능합니다.");
 		}
-
-		List<FileInfoDto> uploadedFiles = new ArrayList<>();
 
 		for (MultipartFile file : files) {
 			if (file.isEmpty()) {
@@ -180,14 +158,6 @@ public class PostAttachmentService {
 					.build();
 
 				postAttachmentRepository.save(attachment);
-
-				FileInfoDto fileInfo = FileInfoDto.builder()
-					.attachmentId(attachment.getId())
-					.originalFilename(originalFilename)
-					.fileSize(file.getSize())
-					.build();
-
-				uploadedFiles.add(fileInfo);
 			} catch (Exception e) {
 				log.error("파일 업로드 실패: {}", e.getMessage());
 				throw new PostAttachmentException(PostAttachmentErrorCode.FILE_UPLOAD_ERROR,
@@ -195,7 +165,6 @@ public class PostAttachmentService {
 			}
 		}
 
-		return uploadedFiles;
 	}
 
 	//멘토 지원용 마크다운 이미지 처리 메소드
