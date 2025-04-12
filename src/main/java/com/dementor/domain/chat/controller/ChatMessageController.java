@@ -41,14 +41,12 @@ public class ChatMessageController {
         @AuthenticationPrincipal CustomUserDetails user
 
     ) {
-		dto.setChatRoomId(chatRoomId);
-        dto.setSenderId(user.getId());
-        // senderType은 Role_ADMIN / ROLE_mentee mentor 에 따라, ADMIN/MEMBER로 분리
+
+        Long senderId = user.getId();
         String authority = user.getAuthorities().iterator().next().getAuthority();
-        dto.setSenderType(authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER);
+        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
 
-
-        ChatMessageResponseDto response = chatMessageService.sendMessage(dto);
+        ChatMessageResponseDto response = chatMessageService.sendMessage(chatRoomId, dto, senderId, senderType);
 		return ResponseEntity.ok(response);
 	}
 
@@ -60,12 +58,10 @@ public class ChatMessageController {
         @AuthenticationPrincipal CustomUserDetails user // 로그인한 사용자 정보 자동 주입
 
 	) {
-        dto.setChatRoomId(chatRoomId); // 채팅방 Id는 경로 변수로 주입
-        dto.setSenderId(user.getId());
-        // senderType은 ROLE 문자열 기준으로 분기
+        Long senderId = user.getId();
         String authority = user.getAuthorities().iterator().next().getAuthority();
-        dto.setSenderType(authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER);
+        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
 
-        chatMessageService.sendMessage(dto);
+        chatMessageService.sendMessage(chatRoomId,dto, senderId, senderType);
     }
 }

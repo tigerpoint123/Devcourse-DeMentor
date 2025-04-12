@@ -15,7 +15,7 @@ import lombok.Setter;
 public class ChatMessageSendDto {  // 클라이언트->서버
 
 	//    private MessageType type;  // ENTER / MESSAGE / EXIT
-	private Long chatRoomId;
+//	private Long chatRoomId;
 	private String content;    // 메시지 본문
 
 }
