@@ -3,7 +3,7 @@ package com.dementor.domain.chat.controller;
 import com.dementor.domain.admin.entity.Admin;
 import com.dementor.domain.admin.repository.AdminRepository;
 import com.dementor.domain.chat.dto.ChatRoomResponseDto;
-import com.dementor.domain.chat.service.ChatMessageService;
+//import com.dementor.domain.chat.service.ChatMessageService;
 
 import com.dementor.domain.chat.service.ChatRoomService;
 import com.dementor.domain.member.entity.Member;
@@ -25,7 +25,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 public class ChatRoomController {
 
 	private final ChatRoomService chatRoomService;
-	private final ChatMessageService chatMessageService;
+//	private final ChatMessageService chatMessageService;
 
 	private final MemberRepository memberRepository;
 	private final AdminRepository adminRepository;
@@ -72,20 +72,22 @@ public class ChatRoomController {
 	//관리자가 자신의 채팅방목록 조회
 	@GetMapping("/admin/rooms")
 	public ResponseEntity<List<ChatRoomResponseDto>> getMyRoomsAsAdmin(
-		@RequestParam Long adminId
+//		@RequestParam Long adminId
+		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
-		return ResponseEntity.ok(chatRoomService.getAllMyAdminChatRooms(adminId));
+		return ResponseEntity.ok(chatRoomService.getAllMyAdminChatRooms(userDetails));
 	}
 
 	// ---------------------채팅방 상세 조회--------------------------------------
 	@GetMapping("/room/{chatRoomId}")
 	public ResponseEntity<ChatRoomResponseDto> getChatRoomDetail(
 		@PathVariable Long chatRoomId,
-		@RequestParam Long viewerId,
-		@RequestParam String viewerType
+//		@RequestParam Long viewerId,
+//		@RequestParam String viewerType
+		@AuthenticationPrincipal CustomUserDetails userDetails
+
 	) {
-		ChatRoomResponseDto response = chatRoomService.getChatRoomDetail(chatRoomId, viewerId, viewerType);
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(chatRoomService.getChatRoomDetail(chatRoomId, userDetails));
 	}
 
 }
