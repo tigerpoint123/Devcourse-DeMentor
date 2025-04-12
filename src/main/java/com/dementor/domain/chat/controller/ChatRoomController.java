@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.dementor.global.security.CustomUserDetails;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
@@ -33,14 +36,21 @@ public class ChatRoomController {
 	@PostMapping("/admin-room")
 	public ResponseEntity<ChatRoomResponseDto> createAdminChatRoom(
 		@RequestParam Long adminId,
-		@RequestParam Long memberId
-	) {
+//		@RequestParam Long
+		@AuthenticationPrincipal CustomUserDetails userDetails
+
+	) {// 로그인된 멤버 Id 가저오기
+		Long memberId = userDetails.getId(); // 로그인된 사용자 ID 가져오기
+
+		//멤버 엔티티 조회
+		Member member = memberRepository.findById(memberId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+		//고정 기본 관리자 조회 (예정)
 		Admin admin = adminRepository.findById(adminId)
 			.orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
 
-		Member member = memberRepository.findById(memberId)
-			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-
+		//채팅방 생성
 		ChatRoomResponseDto room = chatRoomService.createAdminChatRooms(admin, member); //  반환값 받도록 변경
 
 		return ResponseEntity.ok(room);
