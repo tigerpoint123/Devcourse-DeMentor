@@ -74,12 +74,6 @@ public class ChatMessageService {
 	@Transactional
 	public ChatMessageResponseDto sendMessage(ChatMessageSendDto dto) {
 
-		// 참여자 검증 로직 추가 (기존 ChatRoomService 로직 재사용)
-		chatRoomService.getChatRoomDetail(
-			dto.getChatRoomId(),
-			dto.getSenderId(),          // senderId == viewerId
-			dto.getSenderType().name().toLowerCase() // senderType == viewerType ( enum → "member"/"admin")
-		);
 
 		// 채팅방 유효성 검사
 		ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
