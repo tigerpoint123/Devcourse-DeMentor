@@ -35,11 +35,10 @@ public class ChatRoomController {
 	//관리자 챗 채팅방 생성
 	@PostMapping("/admin-room")
 	public ResponseEntity<ChatRoomResponseDto> createAdminChatRoom(
-		@RequestParam Long adminId,
-//		@RequestParam Long
 		@AuthenticationPrincipal CustomUserDetails userDetails
 
-	) {// 로그인된 멤버 Id 가저오기
+	) {
+		// 로그인된 멤버 Id 가저오기
 		Long memberId = userDetails.getId(); // 로그인된 사용자 ID 가져오기
 
 		//멤버 엔티티 조회
@@ -47,7 +46,7 @@ public class ChatRoomController {
 				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
 		//고정 기본 관리자 조회 (예정)
-		Admin admin = adminRepository.findById(adminId)
+		Admin admin = adminRepository.findById(5L)
 			.orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
 
 		//채팅방 생성
