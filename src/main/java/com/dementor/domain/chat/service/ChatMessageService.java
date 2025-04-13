@@ -73,8 +73,16 @@ public class ChatMessageService {
 	 * - DB에 저장 후, RabbitMQ 통해 실시간 브로드캐스트
 	 */
 	@Transactional
-    public ChatMessageResponseDto sendMessage(Long chatRoomId, ChatMessageSendDto dto, Long senderId, SenderType senderType) {
+//	public ChatMessageResponseDto sendMessage(Long chatRoomId, ChatMessageSendDto dto, Long senderId, SenderType senderType) {
+    public ChatMessageResponseDto sendMessage(Long chatRoomId, ChatMessageSendDto dto) {
 
+//
+//		// 참여자 검증 로직 추가 (기존 ChatRoomService 로직 재사용)
+//		chatRoomService.getChatRoomDetail(
+//				dto.getChatRoomId(),
+//				dto.getSenderId(),          // senderId == viewerId
+//				dto.getSenderType().name().toLowerCase() // senderType == viewerType ( enum → "member"/"admin")
+//		);
 
 		// 채팅방 유효성 검사
 		ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
@@ -83,8 +91,8 @@ public class ChatMessageService {
         // 메시지 엔티티 생성
         ChatMessage chatMessage = ChatMessage.builder()
                 .chatRoom(chatRoom)
-                .senderId(senderId)
-                .senderType(senderType)
+                .senderId(dto.getSenderId())
+                .senderType(dto.getSenderType())
                 .content(dto.getContent())
                 .sentAt(LocalDateTime.now())
                 .build();

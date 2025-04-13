@@ -37,16 +37,19 @@ public class ChatMessageController {
 	@PostMapping
 	public ResponseEntity<ChatMessageResponseDto> sendMessage(
 		@PathVariable Long chatRoomId,
-		@RequestBody ChatMessageSendDto dto,
-        @AuthenticationPrincipal CustomUserDetails user
+		@RequestBody ChatMessageSendDto dto
+//        @AuthenticationPrincipal CustomUserDetails user
 
     ) {
 
-        Long senderId = user.getId();
-        String authority = user.getAuthorities().iterator().next().getAuthority();
-        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
+		ChatMessageResponseDto response = chatMessageService.sendMessage(chatRoomId, dto);
 
-        ChatMessageResponseDto response = chatMessageService.sendMessage(chatRoomId, dto, senderId, senderType);
+//        Long senderId = user.getId();
+//        String authority = user.getAuthorities().iterator().next().getAuthority();
+//        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
+//
+//        ChatMessageResponseDto response = chatMessageService.sendMessage(chatRoomId, dto, senderId, senderType);
+//
 		return ResponseEntity.ok(response);
 	}
 
@@ -54,14 +57,15 @@ public class ChatMessageController {
 	@MessageMapping("/chat/rooms/{chatRoomId}/messages/create")
 	public void receiveMessageViaWebsocket(
 		@DestinationVariable Long chatRoomId,
-		ChatMessageSendDto dto,
-        @AuthenticationPrincipal CustomUserDetails user // 로그인한 사용자 정보 자동 주입
+		ChatMessageSendDto dto
+//        @AuthenticationPrincipal CustomUserDetails user // 로그인한 사용자 정보 자동 주입
 
 	) {
-        Long senderId = user.getId();
-        String authority = user.getAuthorities().iterator().next().getAuthority();
-        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
+//        Long senderId = user.getId();
+//        String authority = user.getAuthorities().iterator().next().getAuthority();
+//        SenderType senderType = authority.equals("ROLE_ADMIN") ? SenderType.ADMIN : SenderType.MEMBER;
 
-        chatMessageService.sendMessage(chatRoomId,dto, senderId, senderType);
+//        chatMessageService.sendMessage(chatRoomId,dto, senderId, senderType);
+		chatMessageService.sendMessage(chatRoomId, dto);
     }
 }
