@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -59,6 +60,18 @@ public class ChatRoomService {
 	// 관리자 채팅방 생성
 	@Transactional
 	public ChatRoomResponseDto createAdminChatRooms(Admin admin, Member member) {
+
+		// 이미 존재하는 ADMIN_CHAT 채팅방이 있는지 확인
+		Optional<ChatRoom> existingRoom = chatRoomRepository.findAdminChatRoomByAdminIdAndMemberId(
+				admin.getId(), member.getId()
+		);
+
+		if (existingRoom.isPresent()) {
+			// 이미 존재한다면 해당 채팅방을 그대로 반환
+			return toDto(existingRoom.get(), admin.getId());
+		}
+
+		//없다면 새로 생성
 		ChatRoom room = ChatRoom.builder()
 			.roomType(RoomType.ADMIN_CHAT)
 			.adminId(admin.getId())
