@@ -61,14 +61,16 @@ public class ChatRoomService {
 	@Transactional
 	public ChatRoomResponseDto createAdminChatRooms(Admin admin, Member member) {
 
-		// 이미 존재하는 ADMIN_CHAT 채팅방이 있는지 확인
-		Optional<ChatRoom> existingRoom = chatRoomRepository.findAdminChatRoomByAdminIdAndMemberId(
-				admin.getId(), member.getId()
+		// 중복생성 방지
+		Long fixedAdminId = admin.getId(); // 또는 고정된 5L
+
+		List<ChatRoom> existingRooms = chatRoomRepository.findAdminChatRoomByAdminIdAndMemberId(
+				fixedAdminId, member.getId()
 		);
 
-		if (existingRoom.isPresent()) {
-			// 이미 존재한다면 해당 채팅방을 그대로 반환
-			return toDto(existingRoom.get(), admin.getId());
+		if (!existingRooms.isEmpty()) {
+			// 여러 개가 있어도 첫 번째 채팅방만 사용
+			return toDto(existingRooms.get(0), fixedAdminId);
 		}
 
 		//없다면 새로 생성

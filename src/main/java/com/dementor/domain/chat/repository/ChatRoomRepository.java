@@ -43,7 +43,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
       AND r.adminId = :adminId
       AND r.memberId = :memberId
 """)
-	Optional<ChatRoom> findAdminChatRoomByAdminIdAndMemberId(
+	List<ChatRoom> findAdminChatRoomByAdminIdAndMemberId(
 			@Param("adminId") Long adminId,
 			@Param("memberId") Long memberId
 	);
