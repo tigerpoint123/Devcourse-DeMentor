@@ -83,7 +83,7 @@ public class ChatRoomService {
 
 		chatRoomRepository.save(room);
 
-		return toDto(room, admin.getId());  //dto 매개변수 viewerid
+		return toDto(room, member.getId());  //dto 매개변수 viewerid
 
 	}
 	//--------------------------채팅방 목록 조회--------------------------------------
