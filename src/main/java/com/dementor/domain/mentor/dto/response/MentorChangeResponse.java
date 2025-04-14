@@ -43,7 +43,7 @@ public class MentorChangeResponse {
 		public static AttachmentInfo from(PostAttachment attachment) {
 			return new AttachmentInfo(
 					attachment.getId(),
-					attachment.getOriginalFilename(),
+					attachment.getFilename(),
 					"/api/files/" + attachment.getId() + "/download"
 			);
 		}
