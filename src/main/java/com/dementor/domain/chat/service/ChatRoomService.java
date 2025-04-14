@@ -108,14 +108,8 @@ public class ChatRoomService {
 
 	// 관리자(adminId)기준 참여중인 모든 채팅방 조회
 	@Transactional(readOnly = true)
-	public List<ChatRoomResponseDto> getAllMyAdminChatRooms(CustomUserDetails userDetails) {
+	public List<ChatRoomResponseDto> getAllMyAdminChatRooms(Long adminId) {
 
-		String authority = userDetails.getAuthorities().iterator().next().getAuthority();
-		if (!"ROLE_ADMIN".equals(authority)) {
-			throw new SecurityException("관리자만 접근할 수 있습니다.");
-		}
-
-		Long adminId = userDetails.getId();  // 로그인된 관리자 ID
 		List<ChatRoom> rooms = chatRoomRepository.findAdminChatRoomsByAdminId(adminId);
 		return rooms.stream().map(room -> toDto(room, adminId, ViewerType.ADMIN)).toList();
 	}

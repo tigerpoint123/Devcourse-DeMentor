@@ -31,29 +31,20 @@ public class ChatRoomController {
 	private final AdminRepository adminRepository;
 
 	// 멘토링 채팅방은 별도 api 필요없음( ApplyService.createApply() 내부에서 채팅방이 자동으로 생성)
-	//ApplyService에서 apply 저장 후, mentor, mentee를 DB에서 꺼내서 chatRoomService.createMentoringChatRooms(...) 로 2번 저장까지 완료
+
 	//관리자 챗 채팅방 생성
 	@PostMapping("/admin-room")
 	public ResponseEntity<ChatRoomResponseDto> createAdminChatRoom(
 		@AuthenticationPrincipal CustomUserDetails userDetails
 
 	) {
-		// 로그인된 멤버 Id 가저오기
 		Long memberId = userDetails.getId(); // 로그인된 사용자 ID 가져오기
 
-//		//멤버 엔티티 조회
-//		Member member = memberRepository.findById(memberId)
-//				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-//
-//		//고정 기본 관리자 조회
-//		Admin admin = adminRepository.findById(5L)
-//			.orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
-//
 		//채팅방 생성
 		ChatRoomResponseDto room = chatRoomService.createAdminChatRooms(memberId); //  반환값 받도록 변경
-
 		return ResponseEntity.ok(room);
 	}
+
 
 	//멤버가 자신의 채팅방목록 조회
 	@GetMapping("/member/rooms")
@@ -61,6 +52,10 @@ public class ChatRoomController {
 			@AuthenticationPrincipal CustomUserDetails userDetails
 
 	) {
+		String authority = userDetails.getAuthorities().iterator().next().getAuthority();
+		if ("ROLE_ADMIN".equals(authority)) {
+			throw new SecurityException("관리자는 접근할 수 없습니다.");
+		}
 		Long memberId = userDetails.getId();  // 로그인한 사용자 ID 추출
 
 		return ResponseEntity.ok(chatRoomService.getAllMyChatRooms(memberId));
@@ -72,10 +67,16 @@ public class ChatRoomController {
 	public ResponseEntity<List<ChatRoomResponseDto>> getMyRoomsAsAdmin(
 		@AuthenticationPrincipal CustomUserDetails userDetails
 	) {
-		return ResponseEntity.ok(chatRoomService.getAllMyAdminChatRooms(userDetails));
+		String authority = userDetails.getAuthorities().iterator().next().getAuthority();
+		if (!"ROLE_ADMIN".equals(authority)) {
+			throw new SecurityException("관리자만 접근할 수 있습니다.");
+		}
+		Long adminId = userDetails.getId();
+		return ResponseEntity.ok(chatRoomService.getAllMyAdminChatRooms(adminId));
 	}
 
-	// ---------------------채팅방 상세 조회--------------------------------------
+
+	// 채팅방 상세조회
 	@GetMapping("/room/{chatRoomId}")
 	public ResponseEntity<ChatRoomResponseDto> getChatRoomDetail(
 		@PathVariable Long chatRoomId,
