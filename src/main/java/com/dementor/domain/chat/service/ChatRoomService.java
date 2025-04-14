@@ -63,7 +63,6 @@ public class ChatRoomService {
 
 	// 관리자 채팅방 생성
 	@Transactional
-//	public ChatRoomResponseDto createAdminChatRooms(Admin admin, Member member) {
 	public ChatRoomResponseDto createAdminChatRooms(Long memberId) {
 
 		// 멤버 조회
@@ -92,6 +91,7 @@ public class ChatRoomService {
 		chatRoomRepository.save(room);
 		return toDto(room, member.getId(), ViewerType.MEMBER); // 수정: viewerType 추가
 	}
+
 	//--------------------------채팅방 목록 조회--------------------------------------
 
 	// 사용자(memberId) 기준 참여 중인 모든 채팅방 목록 조회
@@ -120,7 +120,9 @@ public class ChatRoomService {
 		return rooms.stream().map(room -> toDto(room, adminId, ViewerType.ADMIN)).toList();
 	}
 
+
 	//---------------------채팅방 상세 조회(viewerId,viewerType 매칭) --------------------------------------
+
 	@Transactional(readOnly = true)
 	public ChatRoomResponseDto getChatRoomDetail(Long chatRoomId, CustomUserDetails userDetails) {
 		ChatRoom room = chatRoomRepository.findById(chatRoomId)
@@ -153,8 +155,8 @@ public class ChatRoomService {
 	}
 
 
-	//-----------------------------닉네임관련-----------------------------------
-	// ChatRoomResponseDto 변환 & 닉네임 조회
+	//------------------------------ ChatRoomResponseDto 변환 -------------------------------------
+
 	private ChatRoomResponseDto toDto(ChatRoom room, Long viewerId, ViewerType viewerType) {
 
 		// 가장 최신 메시지 1개 가져옴
@@ -164,53 +166,52 @@ public class ChatRoomService {
 
 		//상대방 닉네임 가져오기
 		String targetNickname = getTargetNickname(room, viewerId, viewerType);
+		//상대방 Id 가져오기
+		Long targetId = getTargetId(room, viewerId, viewerType);
 
 		return new ChatRoomResponseDto(
 				room.getChatRoomId(),
 				room.getRoomType(),
 				lastMessage != null ? lastMessage.getContent() : null,
 				lastMessage != null ? lastMessage.getSentAt().atZone(ZoneId.of("Asia/Seoul")) : null,
-				targetNickname
+				targetNickname,
+				targetId
 		);
 	}
 
-	// 자신의 입장에서 상대방 닉네임 반환 (캐시를 이용해서 닉네임 조회)
+//	----------------------------------상대방  Id(pk), 닉네임 관련-------------------------------------
+	// 자신의 입장에서 상대방 닉네임 반환 (targetNickname 설정)
 	public String getTargetNickname(ChatRoom room, Long viewerId, ViewerType viewerType) {
+		Long targetId = getTargetId(room, viewerId, viewerType);
 
-		// viewerType은 MEMBER로 보장됨 (TargetId 내가 멘토면 상대 멘티Id, 멘티면 멘토Id)
-		if (room.getRoomType() == RoomType.MENTORING_CHAT) {
-			Long targetId = viewerId.equals(room.getMentorId())
-					? room.getMenteeId()
-					: room.getMentorId();
-
-//			// 캐시 적용: 처음만 DB에서 조회, 이후 캐시에서 가져옴
-//			return nicknameCache.computeIfAbsent(targetId, id ->
-			//					memberRepository.findById(id)
-
-			// db에서 해당Id 가진 memeber객체 찾기
+		// 멘토링 챗에서 viewerType은 MEMBER로 보장됨 (TargetId 내가 멘토면 상대 멘티Id, 멘티면 멘토Id)
+		if (room.getRoomType() == RoomType.MENTORING_CHAT ||
+				(room.getRoomType() == RoomType.ADMIN_CHAT && viewerType == ViewerType.ADMIN)) {
 			return memberRepository.findById(targetId)
-					//값이 존재하면 getNickname으로 닉네임 얻기
 					.map(Member::getNickname)
 					.orElse("회원 정보가 없습니다");
-//			);
 		}
 
-		// 관리자 채팅: viewer가 관리자면 → 상대 member 닉네임 조회
-		if (room.getRoomType() == RoomType.ADMIN_CHAT) {
-			switch (viewerType) {
-				case ADMIN -> {
-					return memberRepository.findById(room.getMemberId())
-							.map(Member::getNickname)
-							.orElse("알 수 없음");
-				}
-				case MEMBER -> {
-					return "관리자";
-				}
-			}
+		// ADMIN_CHAT이면서 viewer가 MEMBER인 경우 → 상대는 관리자
+		if (room.getRoomType() == RoomType.ADMIN_CHAT && viewerType == ViewerType.MEMBER) {
+			return "관리자";
 		}
 
 		return "알 수 없음";
 	}
+
+
+	private Long getTargetId(ChatRoom room, Long viewerId, ViewerType viewerType) {
+		if (room.getRoomType() == RoomType.MENTORING_CHAT) {
+			return viewerId.equals(room.getMentorId()) ? room.getMenteeId() : room.getMentorId();
+		}
+		if (room.getRoomType() == RoomType.ADMIN_CHAT) {
+			return viewerType == ViewerType.ADMIN ? room.getMemberId() : room.getAdminId();
+		}
+		return null;
+	}
+
+
 }
 
 
