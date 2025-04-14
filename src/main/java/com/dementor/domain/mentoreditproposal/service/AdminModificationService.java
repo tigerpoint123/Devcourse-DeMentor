@@ -9,16 +9,16 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.AdminModificationRepository;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
-
+import com.dementor.domain.postattachment.entity.PostAttachment;
+import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import static java.time.LocalTime.now;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +26,7 @@ public class AdminModificationService {
 	private final AdminModificationRepository adminModificationRepository;
 	private final MentorEditProposalRepository mentorEditProposalRepository;
 	private final MentorRepository mentorRepository;
+	private final PostAttachmentRepository postAttachmentRepository;
 
 	public Page<MentorEditFindAllRenewalResponse> findAllModificationRequest(Pageable pageable) {
 		Page<MentorEditProposal> mentorEditProposalPage;
@@ -33,7 +34,10 @@ public class AdminModificationService {
 		// TODO : Pending 상태인것만 찾고 싶으면 추가 조건문 작성 필요
 		mentorEditProposalPage = adminModificationRepository.findAll(pageable);
 
-		return mentorEditProposalPage.map(MentorEditFindAllRenewalResponse::from);
+		return mentorEditProposalPage.map(proposal -> {
+			List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(proposal.getId());
+			return MentorEditFindAllRenewalResponse.from(proposal, attachments);
+		});
 	}
 
 	public MentorEditUpdateRenewalResponse approveMentorUpdate(Long memberId) {
@@ -55,15 +59,8 @@ public class AdminModificationService {
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
 
-		// MentorEditUpdateRenewalResponse 객체 생성
-		MentorEditUpdateRenewalResponse response = new MentorEditUpdateRenewalResponse(
-			mentor.getId(),
-			memberId,
-			mentorEditProposal.getStatus(),
-			now().toString()
-		);
-
-		return response;
+		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(mentorEditProposal.getId());
+		return MentorEditUpdateRenewalResponse.from(mentorEditProposal, attachments);
 	}
 
 	@Transactional
@@ -80,14 +77,7 @@ public class AdminModificationService {
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
 
-		// MentorEditUpdateRenewalResponse 객체 생성
-		MentorEditUpdateRenewalResponse response = new MentorEditUpdateRenewalResponse(
-			mentor.getId(),
-			memberId,
-			mentorEditProposal.getStatus(),
-			now().toString()
-		);
-
-		return response;
+		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(mentorEditProposal.getId());
+		return MentorEditUpdateRenewalResponse.from(mentorEditProposal, attachments);
 	}
 }
