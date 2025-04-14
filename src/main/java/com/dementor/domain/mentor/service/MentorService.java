@@ -29,6 +29,7 @@ import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalRespons
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
+import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
 import jakarta.transaction.Transactional;
@@ -57,6 +58,7 @@ public class MentorService {
 	private final MentorApplyProposalRepository mentorApplyProposalRepository;
 	private final ApplyRepository applyRepository;
 	private final PostAttachmentService postAttachmentService;
+	private final PostAttachmentRepository postAttachmentRepository;
 
 	//멘토 지원하기
 	@Transactional
@@ -139,7 +141,8 @@ public class MentorService {
 		}
 
 		// 응답 데이터 구성
-		return MentorEditUpdateRenewalResponse.from(savedModification);
+		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(savedModification.getId());
+		return MentorEditUpdateRenewalResponse.from(savedModification, attachments);
 	}
 
 	// 멘토 지원서 생성 및 저장을 위한 내부 메소드
@@ -275,11 +278,17 @@ public class MentorService {
 				new MentorChangeResponse.FieldChange<>(mentor.getIntroduction(), proposal.getIntroduction()));
 		}
 
+		List<PostAttachment> postAttachments = postAttachmentRepository.findByMentorEditProposalId(proposal.getId());
+		List<MentorChangeResponse.AttachmentInfo> attachments = postAttachments.stream()
+				.map(MentorChangeResponse.AttachmentInfo::from)
+				.collect(Collectors.toList());
+
 		return new MentorChangeResponse.ChangeRequestData(
 			proposal.getId(),
 			proposal.getStatus().name(),
 			proposal.getCreatedAt(),
-			modifiedFields
+			modifiedFields,
+			attachments
 		);
 	}
 
