@@ -9,7 +9,6 @@ import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
 import com.dementor.domain.mentoreditproposal.repository.AdminModificationRepository;
 import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
-import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -17,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -34,10 +31,7 @@ public class AdminModificationService {
 		// TODO : Pending 상태인것만 찾고 싶으면 추가 조건문 작성 필요
 		mentorEditProposalPage = adminModificationRepository.findAll(pageable);
 
-		return mentorEditProposalPage.map(proposal -> {
-			List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(proposal.getId());
-			return MentorEditFindAllRenewalResponse.from(proposal, attachments);
-		});
+		return mentorEditProposalPage.map(MentorEditFindAllRenewalResponse::from);
 	}
 
 	public MentorEditUpdateRenewalResponse approveMentorUpdate(Long memberId) {
@@ -59,8 +53,7 @@ public class AdminModificationService {
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
 
-		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(mentorEditProposal.getId());
-		return MentorEditUpdateRenewalResponse.from(mentorEditProposal, attachments);
+		return MentorEditUpdateRenewalResponse.from(mentorEditProposal);
 	}
 
 	@Transactional
@@ -77,7 +70,6 @@ public class AdminModificationService {
 		mentorEditProposalRepository.save(mentorEditProposal);
 		mentorRepository.save(mentor);
 
-		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(mentorEditProposal.getId());
-		return MentorEditUpdateRenewalResponse.from(mentorEditProposal, attachments);
+		return MentorEditUpdateRenewalResponse.from(mentorEditProposal);
 	}
 }

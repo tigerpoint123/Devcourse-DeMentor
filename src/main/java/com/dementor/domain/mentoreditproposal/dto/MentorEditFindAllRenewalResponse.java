@@ -1,11 +1,7 @@
 package com.dementor.domain.mentoreditproposal.dto;
 
-import com.dementor.domain.mentorapplyproposal.dto.response.AttachmentInfo;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
 import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
-import com.dementor.domain.postattachment.entity.PostAttachment;
-
-import java.util.List;
 
 public record MentorEditFindAllRenewalResponse(
 	Long id,
@@ -16,12 +12,10 @@ public record MentorEditFindAllRenewalResponse(
 	Integer career,
 	String currentCompany,
 	String introduction,
-	String jobName,
-	List<AttachmentInfo> attachments
+	String jobName
 ) {
 	public static MentorEditFindAllRenewalResponse from(
-			MentorEditProposal mentorEditProposal,
-			List<PostAttachment> attachments
+			MentorEditProposal mentorEditProposal
 	) {
 		return new MentorEditFindAllRenewalResponse(
 			mentorEditProposal.getId(),
@@ -32,10 +26,7 @@ public record MentorEditFindAllRenewalResponse(
 			mentorEditProposal.getCareer(),
 			mentorEditProposal.getCurrentCompany(),
 			mentorEditProposal.getIntroduction(),
-			mentorEditProposal.getJob().getName(),
-			attachments.stream()
-					.map(AttachmentInfo::from)
-					.toList()
+			mentorEditProposal.getJob().getName()
 		);
 	}
 }

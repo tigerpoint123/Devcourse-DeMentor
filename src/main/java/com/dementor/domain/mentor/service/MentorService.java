@@ -97,7 +97,7 @@ public class MentorService {
 		}
 
 		// 응답 데이터 구성
-		return ApplymentResponse.from(savedProposal, savedProposal.getJob());
+		return ApplymentResponse.from(savedProposal);
 	}
 
 	//멘토 정보 업데이트
@@ -141,8 +141,7 @@ public class MentorService {
 		}
 
 		// 응답 데이터 구성
-		List<PostAttachment> attachments = postAttachmentRepository.findByMentorEditProposalId(savedModification.getId());
-		return MentorEditUpdateRenewalResponse.from(savedModification, attachments);
+		return MentorEditUpdateRenewalResponse.from(savedModification);
 	}
 
 	// 멘토 지원서 생성 및 저장을 위한 내부 메소드

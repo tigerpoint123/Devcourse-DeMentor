@@ -36,7 +36,7 @@ public class AdminMentorApplymentService {
 
 	public Page<ApplymentResponse> findAllApplyment(Pageable pageable) {
 		return mentorApplyProposalRepository.findAll(pageable)
-			.map(application -> ApplymentResponse.from(application, application.getJob()));
+			.map(ApplymentResponse::from);
 	}
 
 	public ApplymentDetailResponse findOneApplyment(Long memberId) {
