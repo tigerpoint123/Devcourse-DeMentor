@@ -39,7 +39,7 @@ public class MentorChangeResponse {
 	) {
 	}
 
-	public record AttachmentInfo(Long id, String originalFilename, String downloadUrl) {
+	public record AttachmentInfo(Long attachmentId, String fileName, String fileUrl) {
 		public static AttachmentInfo from(PostAttachment attachment) {
 			return new AttachmentInfo(
 					attachment.getId(),
