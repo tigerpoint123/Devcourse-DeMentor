@@ -35,8 +35,8 @@ public class ChatRoomService {
 	private final AdminRepository adminRepository;
 
 
-	//닉네임 캐시 저장 - (닉네임캐싱) 최초 1회만 DB 조회 후 메모리 캐시에서 꺼냄
-	private final Map<Long, String> nicknameCache = new ConcurrentHashMap<>();
+//	//닉네임 캐시 저장 - (닉네임캐싱) 최초 1회만 DB 조회 후 메모리 캐시에서 꺼냄
+//	private final Map<Long, String> nicknameCache = new ConcurrentHashMap<>();
 
 	// 멘토링 채팅방 생성 or //기존 채팅방 반환
 	@Transactional
@@ -66,7 +66,6 @@ public class ChatRoomService {
 //	public ChatRoomResponseDto createAdminChatRooms(Admin admin, Member member) {
 	public ChatRoomResponseDto createAdminChatRooms(Long memberId) {
 
-
 		// 멤버 조회
 		Member member = memberRepository.findById(memberId)
 				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -74,7 +73,6 @@ public class ChatRoomService {
 		// DB에서 고정 관리자 조회 (ID = 5L)
 		Admin admin = adminRepository.findById(5L)
 				.orElseThrow(() -> new IllegalArgumentException("관리자를 찾을 수 없습니다."));
-
 
 		Long fixedAdminId = admin.getId();
 
@@ -110,11 +108,9 @@ public class ChatRoomService {
 
 	// 관리자(adminId)기준 참여중인 모든 채팅방 조회
 	@Transactional(readOnly = true)
-//	public List<ChatRoomResponseDto> getAllMyAdminChatRooms(Long adminId) {
 	public List<ChatRoomResponseDto> getAllMyAdminChatRooms(CustomUserDetails userDetails) {
 
 		String authority = userDetails.getAuthorities().iterator().next().getAuthority();
-
 		if (!"ROLE_ADMIN".equals(authority)) {
 			throw new SecurityException("관리자만 접근할 수 있습니다.");
 		}
@@ -132,27 +128,24 @@ public class ChatRoomService {
 
 		Long viewerId = userDetails.getId();
 		String authority = userDetails.getAuthorities().iterator().next().getAuthority(); // ex: ROLE_MENTOR, ROLE_ADMIN
-		ViewerType viewerType = "ROLE_ADMIN".equals(authority) ? ViewerType.ADMIN : ViewerType.MEMBER;
 
+		ViewerType viewerType;
+		switch (authority) {
+			case "ROLE_ADMIN" -> viewerType = ViewerType.ADMIN;
+			case "ROLE_MENTOR", "ROLE_MENTEE" -> viewerType = ViewerType.MEMBER;
+			default -> throw new SecurityException("알 수 없는 권한입니다.");
+		}
+
+		// 접근 권한 검증
 		if (room.getRoomType() == RoomType.MENTORING_CHAT) {
-			// getRole()을 직접 호출하지 않고 authority 기반으로 판단
-			if (!"ROLE_MENTOR".equals(authority) && !"ROLE_MENTEE".equals(authority)) {
+			if (viewerType != ViewerType.MEMBER ||
+					!(viewerId.equals(room.getMentorId()) || viewerId.equals(room.getMenteeId()))) {
 				throw new SecurityException("멘토링 채팅방은 멘토 또는 멘티만 접근할 수 있습니다.");
 			}
-
-			if (!viewerId.equals(room.getMentorId()) && !viewerId.equals(room.getMenteeId())) {
-				throw new SecurityException("해당 채팅방에 접근할 수 없습니다.");
-			}
-
 		} else if (room.getRoomType() == RoomType.ADMIN_CHAT) {
-			if ("ROLE_ADMIN".equals(authority)) {
-				if (!viewerId.equals(room.getAdminId())) {
-					throw new SecurityException("해당 채팅방에 접근할 수 없습니다.");
-				}
-			} else {
-				if (!viewerId.equals(room.getMemberId())) {
-					throw new SecurityException("해당 채팅방에 접근할 수 없습니다.");
-				}
+			if ((viewerType == ViewerType.ADMIN && !viewerId.equals(room.getAdminId())) ||
+					(viewerType == ViewerType.MEMBER && !viewerId.equals(room.getMemberId()))) {
+				throw new SecurityException("해당 채팅방에 접근할 수 없습니다.");
 			}
 		}
 
@@ -161,12 +154,15 @@ public class ChatRoomService {
 
 
 	//-----------------------------닉네임관련-----------------------------------
-	// ChatRoomResponseDto 변환 & 실시간 닉네임 조회
+	// ChatRoomResponseDto 변환 & 닉네임 조회
 	private ChatRoomResponseDto toDto(ChatRoom room, Long viewerId, ViewerType viewerType) {
+
+		// 가장 최신 메시지 1개 가져옴
 		List<ChatMessage> messages = chatMessageRepository
 				.findTop1ByChatRoom_ChatRoomIdOrderBySentAtDesc(room.getChatRoomId());
 		ChatMessage lastMessage = messages.isEmpty() ? null : messages.get(0);
 
+		//상대방 닉네임 가져오기
 		String targetNickname = getTargetNickname(room, viewerId, viewerType);
 
 		return new ChatRoomResponseDto(
@@ -180,31 +176,34 @@ public class ChatRoomService {
 
 	// 자신의 입장에서 상대방 닉네임 반환 (캐시를 이용해서 닉네임 조회)
 	public String getTargetNickname(ChatRoom room, Long viewerId, ViewerType viewerType) {
-		if (room.getRoomType() == RoomType.MENTORING_CHAT) {  //viewerType이 member라는 가정
+
+		// viewerType은 MEMBER로 보장됨 (TargetId 내가 멘토면 상대 멘티Id, 멘티면 멘토Id)
+		if (room.getRoomType() == RoomType.MENTORING_CHAT) {
 			Long targetId = viewerId.equals(room.getMentorId())
 					? room.getMenteeId()
 					: room.getMentorId();
 
-			// 캐시 적용: 처음만 DB에서 조회, 이후 캐시에서 가져옴
-			return nicknameCache.computeIfAbsent(targetId, id ->
-					memberRepository.findById(id)
-							.map(Member::getNickname)
-							.orElse("알 수 없음")
-			);
+//			// 캐시 적용: 처음만 DB에서 조회, 이후 캐시에서 가져옴
+//			return nicknameCache.computeIfAbsent(targetId, id ->
+			//					memberRepository.findById(id)
+
+			// db에서 해당Id 가진 memeber객체 찾기
+			return memberRepository.findById(targetId)
+					//값이 존재하면 getNickname으로 닉네임 얻기
+					.map(Member::getNickname)
+					.orElse("회원 정보가 없습니다");
+//			);
 		}
 
 		// 관리자 채팅: viewer가 관리자면 → 상대 member 닉네임 조회
 		if (room.getRoomType() == RoomType.ADMIN_CHAT) {
-			if (viewerType == ViewerType.ADMIN) {
-				if (viewerId.equals(room.getAdminId())) {
-
+			switch (viewerType) {
+				case ADMIN -> {
 					return memberRepository.findById(room.getMemberId())
 							.map(Member::getNickname)
 							.orElse("알 수 없음");
 				}
-			} else if (viewerType == ViewerType.MEMBER) {
-				if (viewerId.equals(room.getMemberId())) {
-					// viewer가 이 방의 멤버일 경우 → 상대는 관리자
+				case MEMBER -> {
 					return "관리자";
 				}
 			}
