@@ -12,6 +12,7 @@ public record MentorEditUpdateRenewalResponse(
 	Long memberId,
 	MentorEditProposalStatus status,
 	String modifiedAt,
+	String jobName,
 	List<AttachmentInfo> attachments
 ) {
 	public static MentorEditUpdateRenewalResponse from(
@@ -23,6 +24,7 @@ public record MentorEditUpdateRenewalResponse(
 			mentorEditProposal.getMember().getId(),
 			mentorEditProposal.getStatus(),
 			mentorEditProposal.getModifiedAt().toString(),
+			mentorEditProposal.getJob().getName(),
 			attachments.stream()
 					.map(AttachmentInfo::from)
 					.toList()

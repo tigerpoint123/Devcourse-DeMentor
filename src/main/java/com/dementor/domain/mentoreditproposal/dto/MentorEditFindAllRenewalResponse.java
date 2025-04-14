@@ -16,6 +16,7 @@ public record MentorEditFindAllRenewalResponse(
 	Integer career,
 	String currentCompany,
 	String introduction,
+	String jobName,
 	List<AttachmentInfo> attachments
 ) {
 	public static MentorEditFindAllRenewalResponse from(
@@ -31,6 +32,7 @@ public record MentorEditFindAllRenewalResponse(
 			mentorEditProposal.getCareer(),
 			mentorEditProposal.getCurrentCompany(),
 			mentorEditProposal.getIntroduction(),
+			mentorEditProposal.getJob().getName(),
 			attachments.stream()
 					.map(AttachmentInfo::from)
 					.toList()
