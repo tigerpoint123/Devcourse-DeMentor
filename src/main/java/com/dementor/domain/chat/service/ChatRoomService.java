@@ -218,6 +218,9 @@ public class ChatRoomService {
 	}
 
 
+	public long count() {
+		return chatRoomRepository.count();
+	}
 }
 
 
