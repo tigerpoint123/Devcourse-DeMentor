@@ -42,6 +42,13 @@ Service : https://www.dementor.site
 
 <br>
 
+## 2. 실행 컨테이너
+- mysql-team03
+- redis-server
+- rabbitMQ ( == web3_4_tried-it_begit)
+
+<br>
+
 ## 4. 역할 분담
 
 ### 🍊 최대욱
