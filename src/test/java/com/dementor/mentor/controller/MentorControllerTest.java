@@ -9,11 +9,11 @@ import com.dementor.domain.mentor.dto.request.MentorApplyProposalRequest;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.entity.ModificationStatus;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentorapplyproposal.repository.MentorApplyProposalRepository;
-import com.dementor.domain.mentoreditproposal.dto.MentorEditProposalRequest;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposalStatus;
-import com.dementor.domain.mentoreditproposal.repository.MentorEditProposalRepository;
+import com.dementor.domain.mentor.repository.MentorApplyProposalRepository;
+import com.dementor.domain.mentor.dto.edit.MentorEditProposalRequest;
+import com.dementor.domain.mentor.entity.MentorEditProposal;
+import com.dementor.domain.mentor.entity.MentorEditProposalStatus;
+import com.dementor.domain.mentor.repository.MentorEditProposalRepository;
 import com.dementor.global.security.CustomUserDetails;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

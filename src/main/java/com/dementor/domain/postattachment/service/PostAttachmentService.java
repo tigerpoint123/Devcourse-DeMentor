@@ -1,8 +1,8 @@
 package com.dementor.domain.postattachment.service;
 
 import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.mentorapplyproposal.entity.MentorApplyProposal;
-import com.dementor.domain.mentoreditproposal.entity.MentorEditProposal;
+import com.dementor.domain.mentor.entity.MentorApplyProposal;
+import com.dementor.domain.mentor.entity.MentorEditProposal;
 import com.dementor.domain.postattachment.dto.response.FileResponse.FileInfoDto;
 import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;

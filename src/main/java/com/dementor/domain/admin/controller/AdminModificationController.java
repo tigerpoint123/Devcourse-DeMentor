@@ -1,10 +1,10 @@
 package com.dementor.domain.admin.controller;
 
-import com.dementor.domain.mentoreditproposal.dto.MentorEditFindAllRenewalResponse;
-import com.dementor.domain.mentoreditproposal.dto.MentorEditUpdateRenewalResponse;
-import com.dementor.domain.mentoreditproposal.service.AdminModificationService;
+import com.dementor.domain.mentor.dto.edit.MentorEditFindAllRenewalResponse;
+import com.dementor.domain.mentor.dto.edit.MentorEditUpdateRenewalResponse;
+import com.dementor.domain.mentor.service.AdminModificationService;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.common.pagination.PaginationUtil;
+import com.dementor.global.pagination.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 

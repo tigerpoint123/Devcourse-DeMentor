@@ -7,7 +7,7 @@ import com.dementor.domain.job.dto.response.JobFindResponse;
 import com.dementor.domain.job.dto.response.JobUpdateResponse;
 import com.dementor.domain.job.service.JobService;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.common.swaggerDocs.JobClassSwagger;
+import com.dementor.global.swaggerDocs.JobClassSwagger;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

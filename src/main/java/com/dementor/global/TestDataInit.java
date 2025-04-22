@@ -11,7 +11,6 @@ import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.mentor.entity.Mentor;
 import com.dementor.domain.mentor.repository.MentorRepository;
-import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -29,18 +28,16 @@ public class TestDataInit implements CommandLineRunner {
     private final JobRepository jobRepository;
     private final MentorRepository mentorRepository;
     private final AdminRepository adminRepository;
-    private final MentoringClassRepository mentoringClassRepository;
     private final ChatRoomService chatRoomService;
 
     public TestDataInit(MemberRepository memberRepository, PasswordEncoder passwordEncoder, JobRepository jobRepository,
                         MentorRepository mentorRepository,
-                        AdminRepository adminRepository, MentoringClassRepository mentoringClassRepository, ChatRoomService chatRoomService) {
+                        AdminRepository adminRepository, ChatRoomService chatRoomService) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jobRepository = jobRepository;
         this.mentorRepository = mentorRepository;
         this.adminRepository = adminRepository;
-        this.mentoringClassRepository = mentoringClassRepository;
         this.chatRoomService = chatRoomService;
     }
 
@@ -145,24 +142,5 @@ public class TestDataInit implements CommandLineRunner {
             );
         }
 
-        // if (mentoringClassRepository.count() <= 10) {
-        //     Mentor mentor = mentorRepository.findByName("테스트 멘토")
-        //             .orElseThrow(() -> new RuntimeException("테스트 멘토 회원을 찾을 수 없습니다"));
-        //
-        //     log.info("멘토 id : {}", mentor.getId());
-        //
-        //     for (int i = 0; i < 50; i++) {
-        //         MentoringClass mentoringClass = MentoringClass.builder()
-        //                 .title("테스트 데이터 제목" + i)
-        //                 .content("테스트 데이터 내용" + i)
-        //                 .price(10000 + i)
-        //                 .stack("Spring, Java")
-        //                 .mentor(mentor)
-        //                 .build();
-        //
-        //         MentoringClass savedMentoringClass = mentoringClassRepository.save(mentoringClass);
-        //         log.info("저장된 클래스 id : {}", savedMentoringClass.getId());
-        //     }
-        // }
     }
 }

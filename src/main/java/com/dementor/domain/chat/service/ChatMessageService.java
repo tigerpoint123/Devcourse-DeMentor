@@ -8,7 +8,7 @@ import com.dementor.domain.chat.repository.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
 
-//import com.dementor.global.websocket.StompRabbitMqBrokerConfig;
+//import com.dementor.global.config.StompRabbitMqBrokerConfig;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;

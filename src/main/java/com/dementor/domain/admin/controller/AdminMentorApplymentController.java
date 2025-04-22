@@ -1,14 +1,14 @@
 package com.dementor.domain.admin.controller;
 
-import com.dementor.domain.mentorapplyproposal.dto.request.ApplymentRejectRequest;
-import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentApprovalResponse;
-import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentDetailResponse;
-import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentRejectResponse;
-import com.dementor.domain.mentorapplyproposal.dto.response.ApplymentResponse;
-import com.dementor.domain.mentorapplyproposal.service.AdminMentorApplymentService;
+import com.dementor.domain.mentor.dto.applyment.request.ApplymentRejectRequest;
+import com.dementor.domain.mentor.dto.applyment.response.ApplymentApprovalResponse;
+import com.dementor.domain.mentor.dto.applyment.response.ApplymentDetailResponse;
+import com.dementor.domain.mentor.dto.applyment.response.ApplymentRejectResponse;
+import com.dementor.domain.mentor.dto.applyment.response.ApplymentResponse;
+import com.dementor.domain.mentor.service.AdminMentorApplymentService;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.common.pagination.PaginationUtil;
-import com.dementor.global.common.swaggerDocs.AdminMentorApplymentSwagger;
+import com.dementor.global.pagination.PaginationUtil;
+import com.dementor.global.swaggerDocs.AdminMentorApplymentSwagger;
 
 import lombok.RequiredArgsConstructor;
 

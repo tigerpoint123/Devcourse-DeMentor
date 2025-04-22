@@ -27,8 +27,8 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindRespons
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
-import com.dementor.global.common.pagination.PaginationUtil;
-import com.dementor.global.common.swaggerDocs.MentoringClassSwagger;
+import com.dementor.global.pagination.PaginationUtil;
+import com.dementor.global.swaggerDocs.MentoringClassSwagger;
 import com.dementor.global.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
