@@ -55,7 +55,7 @@ public class NotificationService {
             );
 
         } catch (Exception e) {
-            log.error("Failed to send notification to user: " + receiver.getId(), e);
+            log.error("Failed to send notification to user: {}", receiver.getId(), e);
             throw new Exception("알림 전송 중 오류가 발생했습니다: " + e.getMessage());
         }
     }

@@ -1,23 +1,17 @@
 package com.dementor.domain.apply.service;
 
-import com.dementor.domain.chat.entity.ChatRoom;
-import com.dementor.domain.chat.service.ChatRoomService;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.dementor.domain.apply.dto.request.ApplyCreateRequest;
 import com.dementor.domain.apply.dto.response.ApplyIdResponse;
 import com.dementor.domain.apply.dto.response.ApplyPageResponse;
 import com.dementor.domain.apply.dto.response.ApplyScheduleResponse;
 import com.dementor.domain.apply.entity.Apply;
 import com.dementor.domain.apply.entity.ApplyStatus;
+import com.dementor.domain.apply.event.MentoringApplyEvent;
 import com.dementor.domain.apply.exception.ApplyErrorCode;
 import com.dementor.domain.apply.exception.ApplyException;
 import com.dementor.domain.apply.repository.ApplyRepository;
+import com.dementor.domain.chat.entity.ChatRoom;
+import com.dementor.domain.chat.service.ChatRoomService;
 import com.dementor.domain.member.entity.Member;
 import com.dementor.domain.member.exception.MemberErrorCode;
 import com.dementor.domain.member.exception.MemberException;
@@ -26,19 +20,23 @@ import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-
+import com.dementor.global.event.Events;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ApplyService {
-
+	private final Events events;
 	private final ApplyRepository applyRepository;
 	private final MentoringClassRepository mentoringClassRepository;
 	private final MemberRepository memberRepository;
@@ -73,6 +71,16 @@ public class ApplyService {
 			.build();
 
 		Apply savedApply = applyRepository.save(apply);
+
+		//--------------- 이벤트 생성 ---------------------
+		events.raise(new MentoringApplyEvent(
+				savedApply.getId(),
+				mentoringClass.getId(),
+				mentoringClass.getMentor().getId(),
+				member.getId(),
+				mentoringClass.getTitle(),
+				member.getNickname()
+		));
 
 		//---------------챗 영역---------------------
 		//  멘토, 멘티 memberId 추출

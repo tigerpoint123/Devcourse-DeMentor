@@ -27,16 +27,20 @@ public class StompRabbitMqBrokerConfig implements WebSocketMessageBrokerConfigur
 	public void registerStompEndpoints(StompEndpointRegistry registry) {
 		registry
 				.addEndpoint("/ws")
-				.setAllowedOrigins(
-						"https://www.dementor.site",
-						"https://api.dementor.site",
-						"https://admin.dementor.site",
-						"https://local.dementor.site:5173",
-						"https://localhost:5173",
-						"https://admin-local.dementor.site:5174",
-						"https://cdpn.io"
-				)
-				.withSockJS();
+//				.setAllowedOrigins(
+//						"https://www.dementor.site",
+//						"https://api.dementor.site",
+//						"https://admin.dementor.site",
+//						"https://local.dementor.site:5173",
+//						"https://localhost:5173",
+//						"http://localhost:8080",
+//						"https://admin-local.dementor.site:5174",
+//						"https://cdpn.io"
+//				)
+//				.withSockJS()
+//				.setWebSocketEnabled(true)  // 웹소켓 명시적 활성화
+//				.setSupressCors(true);	// CORS 억제
+				.setAllowedOrigins("*");    // SockJS 제거
 	}
 
 	@Override
