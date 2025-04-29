@@ -47,10 +47,22 @@ Service : https://www.dementor.site
 - redis-server
 - rabbitMQ ( == web3_4_tried-it_begit)
 - angry_bartik
-- web3_4_tried-it_begit (rabbitMQ, prometheus, grafana)
+- web3_4_tried-it_begit (rabbitMQ, grafana, influxdb)
 
 ### 2-1. K6 도커 명령어 (powershell)
-> docker run --rm -v "${PWD}:/scripts" grafana/k6 run --out experimental-prometheus-rw=http://host.docker.internal:9090/api/v1/write /scripts/script.js
+> docker run --rm --network web3_4_tried-it_begit_monitoring -v "//c/workplace/WEB3_4_Tried-IT_BE.git:/scripts" grafana/k6:latest run -u 10 -i 100 --out influxdb=http://influxdb:8086/k6 /scripts/script.js
+> 
+> -u 10 : 10명의 가상 사용자가
+> 
+> -i 100 : 각 100번의 http 요청
+> 
+
+### 2-2. 테스트 방법
+> web3_4_tried-it_begit(grafana, influxdb) 실행
+> 
+> 스크립트 실행 (powershell) : docker run --rm --network web3_4_tried-it_begit_monitoring -v "//c/workplace/WEB3_4_Tried-IT_BE.git:/scripts" grafana/k6:latest run -u 10 -i 100 --out influxdb=http://influxdb:8086/k6 /scripts/script.js
+> 
+> grafana (localhost:3000) 에서 대시보드로 실시간 모니터링 (admin / admin or 1234)
 
 ## 4. 역할 분담
 

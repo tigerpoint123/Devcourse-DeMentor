@@ -18,15 +18,15 @@ services:
     command: >
       sh -c "echo 'loopback_users = none' >> /etc/rabbitmq/rabbitmq.conf && rabbitmq-plugins enable rabbitmq_management && rabbitmq-plugins enable rabbitmq_stomp && rabbitmq-plugins enable rabbitmq_mqtt && rabbitmq-server"
       
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: prometheus
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    ports:
-      - "9090:9090"
-    networks:
-      - monitoring
+#  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: prometheus
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#    ports:
+#      - "9090:9090"
+#    networks:
+#      - monitoring
 
   grafana:
     image: grafana/grafana:latest
@@ -35,6 +35,17 @@ services:
       - "3000:3000"
     networks:
       - monitoring
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    networks:
+      - monitoring
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_ADMIN_ENABLED=true
 
 networks:
   monitoring:
