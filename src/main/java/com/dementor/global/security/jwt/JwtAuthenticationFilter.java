@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import lombok.extern.slf4j.Slf4j;
 
 import com.dementor.global.security.cookie.CookieUtil;
 import com.dementor.global.security.jwt.dto.TokenDto;
@@ -22,6 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtTokenProvider jwtTokenProvider;
@@ -38,27 +40,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		log.info("JWT 인증 필터 시작 - 요청 URI: {}", request.getRequestURI());
+
 		// 리프레시 엔드포인트는 리프레시 토큰 검증
 		if (request.getRequestURI().equals("/api/admin/refresh") || request.getRequestURI()
 			.equals("/api/member/refresh")) {
 			String refreshToken = resolveRefreshToken(request);
+			log.info("리프레시 엔드포인트 요청 - 리프레시 토큰: {}", refreshToken);
+			
 			if (StringUtils.hasText(refreshToken) && jwtTokenProvider.validateRefreshToken(refreshToken)) {
 				Authentication auth = jwtTokenProvider.getRefreshAuthentication(refreshToken);
 				SecurityContextHolder.getContext().setAuthentication(auth);
+				log.info("리프레시 토큰 인증 성공");
 			}
 			filterChain.doFilter(request, response);
 			return;
 		}
 
 		String accessToken = resolveAccessToken(request);
+		log.info("액세스 토큰 추출: {}", accessToken);
 
 		// 일반 엔드포인트는 액세스 토큰 검증
 		if (StringUtils.hasText(accessToken)) {
 			if (jwtTokenProvider.validateAccessToken(accessToken)) {
 				Authentication auth = jwtTokenProvider.getAuthentication(accessToken);
-				System.out.println("Authorities: " + auth.getAuthorities());
+				log.info("액세스 토큰 인증 성공 - 권한: {}", auth.getAuthorities());
 				SecurityContextHolder.getContext().setAuthentication(auth);
 			} else {
+				log.warn("액세스 토큰 검증 실패 - 토큰 갱신 시도");
 				// 액세스 토큰이 만료된 경우 리프레시 토큰으로 갱신 시도
 				String refreshToken = resolveRefreshToken(request);
 				if (StringUtils.hasText(refreshToken)) {
@@ -109,6 +118,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					return;
 				}
 			}
+		} else {
+			log.warn("액세스 토큰이 없음");
 		}
 
 		filterChain.doFilter(request, response);
@@ -117,10 +128,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	private String resolveAccessToken(HttpServletRequest request) {
 		String bearerToken = request.getHeader("Authorization");
 		if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-			return bearerToken.substring(7).trim();
+			String token = bearerToken.substring(7).trim();
+			log.debug("Authorization 헤더에서 토큰 추출: {}", token);
+			return token;
 		}
 
 		if (request.getCookies() == null) {
+			log.debug("쿠키가 없음");
 			return null;
 		}
 
@@ -128,11 +142,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			.filter(cookie -> cookieUtil.getAccessCookieName().equals(cookie.getName()))
 			.findFirst();
 
-		return tokenCookie.map(Cookie::getValue).orElse(null);
+		if (tokenCookie.isPresent()) {
+			log.debug("쿠키에서 액세스 토큰 추출: {}", tokenCookie.get().getValue());
+			return tokenCookie.get().getValue();
+		}
+		
+		log.debug("액세스 토큰 쿠키가 없음");
+		return null;
 	}
 
 	private String resolveRefreshToken(HttpServletRequest request) {
 		if (request.getCookies() == null) {
+			log.debug("쿠키가 없음");
 			return null;
 		}
 
@@ -140,7 +161,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			.filter(cookie -> cookieUtil.getRefreshCookieName().equals(cookie.getName()))
 			.findFirst();
 
-		return tokenCookie.map(Cookie::getValue).orElse(null);
+		if (tokenCookie.isPresent()) {
+			log.debug("쿠키에서 리프레시 토큰 추출: {}", tokenCookie.get().getValue());
+			return tokenCookie.get().getValue();
+		}
+		
+		log.debug("리프레시 토큰 쿠키가 없음");
+		return null;
 	}
 
 }

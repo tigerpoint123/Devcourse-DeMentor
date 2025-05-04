@@ -13,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.CascadeType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -44,11 +45,11 @@ public class Apply {
 	private LocalDateTime schedule;
 
 	//회원 연관관계
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	private Member member;
 
 	//멘토링 수업 연관관계
-	@ManyToOne
+	@ManyToOne(cascade = CascadeType.ALL)
 	private MentoringClass mentoringClass;
 
 	// 상태 변경 메서드

@@ -17,7 +17,9 @@ public record MentoringClassFindResponse(
 	@Schema(description = "수업 제목", example = "스프링 부트 완전 정복")
 	String title,
 	@Schema(description = "수업 가격", example = "50000")
-	int price
+	int price,
+	@Schema(description = "좋아요 수", example = "10")
+	int favoriteCount
 ) {
 	public record MentorInfo(
 		@Schema(description = "멘토 ID")
@@ -43,7 +45,8 @@ public record MentoringClassFindResponse(
 			mentoringClass.getStack(),
 			mentoringClass.getContent(),
 			mentoringClass.getTitle(),
-			mentoringClass.getPrice()
+			mentoringClass.getPrice(),
+			mentoringClass.getFavoriteCount()
 		);
 	}
 }

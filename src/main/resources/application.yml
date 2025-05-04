@@ -63,10 +63,10 @@ jwt:
       name: accessToken
     refresh-cookie:
       name: refreshToken
-    domain: host.docker.internal
-    http-only: true # XSS 공격 방어를 위한 핵심 설정
-    secure: false  # 개발환경에서는 false, 운영환경에서는 true, HTTPS 연결에서만 쿠키 전송 허용
-    path: / # 쿠키가 유효한 경로 지정
+    domain: localhost
+    http-only: true
+    secure: false
+    path: /
     max-age-seconds: 86400
 
 file:

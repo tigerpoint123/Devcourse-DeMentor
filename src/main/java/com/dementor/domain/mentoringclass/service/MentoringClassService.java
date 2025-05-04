@@ -2,6 +2,8 @@ package com.dementor.domain.mentoringclass.service;
 
 import com.dementor.domain.mentor.dto.response.MyMentoringResponse;
 import com.dementor.domain.mentor.entity.Mentor;
+import com.dementor.domain.mentor.exception.MentorErrorCode;
+import com.dementor.domain.mentor.exception.MentorException;
 import com.dementor.domain.mentor.repository.MentorRepository;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
@@ -51,7 +53,7 @@ public class MentoringClassService {
 	@Transactional
 	public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
 		Mentor mentor = mentorRepository.findById(mentorId)
-			.orElseThrow(() -> new IllegalArgumentException("멘토를 찾을 수 없습니다.")); // TODO : 멘토 예외처리를 가져와야 함
+			.orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND));
 
 		// 입력값 검증
 		if (request.title() == null || request.content() == null)

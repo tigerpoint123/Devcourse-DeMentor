@@ -43,12 +43,12 @@ public class FavoriteController implements FavoriteSwagger {
                 );
     }
 
-    @DeleteMapping("/{favoriteId}")
+    @DeleteMapping("/{classId}")
     public ResponseEntity<ApiResponse<Void>> deleteFavorite(
-            @PathVariable Long favoriteId,
+            @PathVariable Long classId,
             @CurrentUser Long memberId
     ) {
-        favoriteService.deleteFavorite(favoriteId, memberId);
+        favoriteService.deleteFavorite(classId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(
@@ -66,7 +66,6 @@ public class FavoriteController implements FavoriteSwagger {
         @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
         HttpServletRequest request
     ) {
-        System.out.println("Authorization 헤더: " + request.getHeader("Authorization"));
         Pageable domainPageable = PaginationUtil.getFavoritePageable(pageable);
 
         Page<FavoriteFindResponse> response = favoriteService.findAllFavorite(memberId, domainPageable);
