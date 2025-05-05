@@ -12,7 +12,7 @@ import com.dementor.domain.mentor.dto.applyment.response.ApplymentResponse;
 import com.dementor.domain.mentor.repository.MentorApplyProposalRepository;
 import com.dementor.domain.mentor.dto.edit.MentorEditProposalRequest;
 import com.dementor.domain.mentor.dto.edit.MentorEditUpdateRenewalResponse;
-import com.dementor.domain.mentoringclass.service.MentoringClassService;
+import com.dementor.domain.mentoringclass.service.MentoringClassServiceImpl;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.service.PostAttachmentService;
 import com.dementor.global.ApiResponse;
@@ -40,7 +40,7 @@ import java.util.Map;
 public class MentorController {
 	private final MentorService mentorService;
 	private final MentorRepository mentorRepository;
-	private final MentoringClassService mentoringClassService;
+	private final MentoringClassServiceImpl mentoringClassService;
 	private final PostAttachmentService postAttachmentService;
 	private final MentorApplyProposalRepository mentorApplyProposalRepository;
 

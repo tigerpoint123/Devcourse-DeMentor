@@ -1,25 +1,5 @@
 package com.dementor.domain.mentoringclass.controller;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateRequest;
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
@@ -28,16 +8,33 @@ import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateRespo
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.pagination.PaginationUtil;
-import com.dementor.global.swaggerDocs.MentoringClassSwagger;
 import com.dementor.global.security.CustomUserDetails;
-
+import com.dementor.global.swaggerDocs.MentoringClassSwagger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
 @Slf4j
+/*
+* TODO :
+*  1. 멘토링 클래스 조회 캐싱
+*  2. 캐시 만료 전략
+*  3. 캐시 키 관리
+*
+* */
 public class MentoringClassController implements MentoringClassSwagger {
 	private final MentoringClassService mentoringClassService;
 
