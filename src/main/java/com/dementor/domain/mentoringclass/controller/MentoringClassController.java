@@ -28,13 +28,6 @@ import java.util.List;
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
 @Slf4j
-/*
-* TODO :
-*  1. 멘토링 클래스 조회 캐싱
-*  2. 캐시 만료 전략
-*  3. 캐시 키 관리
-*
-* */
 public class MentoringClassController implements MentoringClassSwagger {
 	private final MentoringClassService mentoringClassService;
 

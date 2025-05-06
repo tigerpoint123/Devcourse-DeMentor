@@ -52,15 +52,8 @@ export default function () {
         }
     };
 
-    // console.log('k6 요청 params:', JSON.stringify(params));
     const memberId = 2; // 실제 로그인한 사용자의 memberId로 대체
     const res = http.get(`${BASE_URL}/api/favorite/${memberId}`, params);
-    // console.log('API 응답 상태:', res.status);
-    // console.log('API 응답 헤더:', JSON.stringify(res.headers));
-    // console.log('API 응답 본문:', res.body);
-    //
-    // console.log('Login response body:', loginRes.body);
-    // console.log('Access token:', accessToken);
     check(res, {
         'API 호출 성공': (r) => r.status === 200,
     });
