@@ -50,7 +50,7 @@ Service : https://www.dementor.site
 - web3_4_tried-it_begit (rabbitMQ, grafana, influxdb)
 
 ### 2-1. K6 도커 명령어 (powershell)
-> docker run --rm --network web3_4_tried-it_begit_monitoring -v "//c/workplace/WEB3_4_Tried-IT_BE.git:/scripts" grafana/k6:latest run -u 10 -i 100 --out influxdb=http://influxdb:8086/k6 /scripts/script.js
+> docker run --rm --network web3_4_tried-it_begit_monitoring -v "C:\workplace\WEB3_4_Tried-IT_BE.git:/scripts" grafana/k6:latest run --vus 1 --duration 5m --out influxdb=http://influxdb:8086/k6 /scripts/k6_script/script.js
 > 
 > -u 10 : 10명의 가상 사용자가
 > 

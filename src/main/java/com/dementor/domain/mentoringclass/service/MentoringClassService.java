@@ -28,4 +28,5 @@ public interface MentoringClassService {
 
     List<MyMentoringResponse> getMentorClassFromMentor(Long memberId);
 
+    int findFavoriteCount(Long classId);
 }

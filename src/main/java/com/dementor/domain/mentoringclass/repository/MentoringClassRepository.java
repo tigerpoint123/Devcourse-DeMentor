@@ -22,4 +22,7 @@ public interface MentoringClassRepository extends JpaRepository<MentoringClass, 
 	Page<MentoringClass> findByMentor_Job_Id(Long mentor_job_id, Pageable pageable);
 
 	List<MentoringClass> findByMentor_Id(Long mentorId);
+
+	@Query("SELECT mc.favoriteCount FROM MentoringClass mc WHERE mc.id = :id")
+    int findFavoriteCountById(Long id);
 }

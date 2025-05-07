@@ -71,6 +71,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
                         .requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
+                        .requestMatchers(HttpMethod.GET, "/api/class/favoriteCount/{classId}").permitAll() // 즐겨찾기 카운트 조회 허용
 
                         .requestMatchers("/api/authenticate").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용

@@ -146,4 +146,18 @@ public class MentoringClassController implements MentoringClassSwagger {
 			));
 	}
 
+	@Override
+	@GetMapping("/favoriteCount/{classId}")
+	public ResponseEntity<ApiResponse<Integer>> findFavoriteCount(@PathVariable Long classId) {
+		int favoriteCount = mentoringClassService.findFavoriteCount(classId);
+		return ResponseEntity
+				.status(HttpStatus.OK)
+				.body(ApiResponse.of(
+						true,
+						HttpStatus.OK,
+						"즐겨찾기 개수 조회 성공",
+						favoriteCount
+				));
+	}
+
 }

@@ -171,4 +171,9 @@ public class MentoringClassServiceImpl implements MentoringClassService {
 			.collect(Collectors.toList());
 	}
 
+	@Override
+	public int findFavoriteCount(Long classId) {
+		return mentoringClassRepository.findFavoriteCountById(classId);
+	}
+
 }
