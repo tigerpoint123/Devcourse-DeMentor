@@ -20,17 +20,34 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/favorite")
 @RequiredArgsConstructor
-// TODO : 즐겨찾기 캐싱 전략 ( k6 + Grafana + Prometheus )
 public class FavoriteController implements FavoriteSwagger {
 
     private final FavoriteService favoriteService;
 
     @PostMapping("/{classId}")
-    public ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavorite(
+    public ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavoriteRedis(
             @PathVariable Long classId,
             @CurrentUser Long memberId
     ) {
-        FavoriteAddResponse response = favoriteService.addFavorite(classId, memberId);
+        FavoriteAddResponse response = favoriteService.addFavoriteRedis(classId, memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(
+                        ApiResponse.of(
+                                true,
+                                HttpStatus.OK,
+                                "즐겨찾기 등록 성공",
+                                response
+                        )
+                );
+    }
+
+    @PostMapping("/db/{classId}")
+    public ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavoriteDB(
+            @PathVariable Long classId,
+            @CurrentUser Long memberId
+    ) {
+        FavoriteAddResponse response = favoriteService.addFavoriteDB(classId, memberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(

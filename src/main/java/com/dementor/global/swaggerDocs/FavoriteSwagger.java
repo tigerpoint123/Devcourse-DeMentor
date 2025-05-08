@@ -17,10 +17,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface FavoriteSwagger {
 
     @Operation(summary = "즐겨찾기 등록", description = "회원이 특정 멘토링 수업을 즐겨찾기 추가합니다.")
-    ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavorite(
+    ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavoriteRedis(
             @PathVariable Long classId,
             @CurrentUser Long memberId
     );
+
+    ResponseEntity<ApiResponse<FavoriteAddResponse>> addFavoriteDB(
+            @PathVariable Long classId,
+            @CurrentUser Long memberId
+    ) ;
 
     @Operation(summary = "즐겨찾기 삭제", description = "회원이 특정 멘토링 수업을 즐겨찾기 삭제합니다.")
     ResponseEntity<ApiResponse<Void>> deleteFavorite(

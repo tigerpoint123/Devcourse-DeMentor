@@ -3,37 +3,22 @@ import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
-// Prometheus 메트릭 정의
 const loginCounter = new Counter('login_total');
 const redisFavoriteCounter = new Counter('redis_favorite_operations_total');
-const dbFavoriteCounter = new Counter('db_favorite_operations_total');
 const errorCounter = new Counter('error_total');
 
-// 테스트 옵션
 export const options = {
     scenarios: {
         redis_test: {
             executor: 'ramping-arrival-rate',
             startRate: 10,
             timeUnit: '1s',
-            preAllocatedVUs: 100,
-            maxVUs: 200,
+            preAllocatedVUs: 50,
+            maxVUs: 100,
             stages: [
-                { target: 50, duration: '10s' },
-                { target: 50, duration: '20s' },
-                { target: 0, duration: '10s' },
-            ],
-        },
-        db_test: {
-            executor: 'ramping-arrival-rate',
-            startRate: 10,
-            timeUnit: '1s',
-            preAllocatedVUs: 100,
-            maxVUs: 200,
-            stages: [
-                { target: 50, duration: '10s' },
-                { target: 50, duration: '20s' },
-                { target: 0, duration: '10s' },
+                { target: 30, duration: '5s' },    // 5초 동안 초당 30건까지 증가
+                { target: 30, duration: '10s' },   // 10초 동안 초당 30건 유지
+                { target: 0, duration: '5s' },     // 5초 동안 0건까지 감소
             ],
         }
     }
@@ -42,7 +27,6 @@ export const options = {
 export default function () {
     const BASE_URL = 'http://host.docker.internal:8080';
     
-    // 1. 로그인 API 호출 (POST)
     const loginRes = http.post(`${BASE_URL}/api/members/login`, JSON.stringify({
         email: 'tigerrla@naver.com',
         password: '1234',
@@ -79,8 +63,7 @@ export default function () {
         }
     };
 
-    // Redis를 사용한 즐겨찾기 추가 (기본 API)
-    const classId = 44;
+    const classId = 37;
     const addFavoriteRes = http.post(
         `${BASE_URL}/api/favorite/${classId}`,
         null,
@@ -96,22 +79,6 @@ export default function () {
         console.log('Redis 즐겨찾기 추가 실패:', addFavoriteRes.status, addFavoriteRes.body);
     }
 
-    // DB를 사용한 즐겨찾기 추가 (새로운 API)
-    const addFavoriteDbRes = http.post(
-        `${BASE_URL}/api/favorite/db/${classId}`,
-        null,
-        params
-    );
-    
-    check(addFavoriteDbRes, {
-        'DB 즐겨찾기 추가 성공': (r) => r.status === 200,
-    });
-    dbFavoriteCounter.add(1);
-    if (addFavoriteDbRes.status !== 200) {
-        errorCounter.add(1);
-        console.log('DB 즐겨찾기 추가 실패:', addFavoriteDbRes.status, addFavoriteDbRes.body);
-    }
-
     sleep(1);
 }
 
@@ -120,4 +87,4 @@ export function handleSummary(data) {
         'stdout': textSummary(data, { indent: ' ', enableColors: true }),
         'metrics.json': JSON.stringify(data),
     };
-}
+} 

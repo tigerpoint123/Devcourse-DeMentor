@@ -21,7 +21,20 @@ public class FavoriteService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public FavoriteAddResponse addFavorite(Long classId, Long memberId) {
+    public FavoriteAddResponse addFavoriteRedis(Long classId, Long memberId) {
+        Favorite favorite = Favorite.builder()
+                .mentoringClassId(classId)
+                .memberId(memberId)
+                .build();
+
+        favorite = favoriteRepository.save(favorite);
+        eventPublisher.publishEvent(new FavoriteAddedEvent(classId));
+
+        return FavoriteAddResponse.of(favorite);
+    }
+
+    @Transactional
+    public FavoriteAddResponse addFavoriteDB(Long classId, Long memberId) {
         Favorite favorite = Favorite.builder()
                 .mentoringClassId(classId)
                 .memberId(memberId)
@@ -42,8 +55,10 @@ public class FavoriteService {
         eventPublisher.publishEvent(new FavoriteRemovedEvent(favorite.getMentoringClassId()));
     }
 
+    @Transactional(readOnly = true)
     public Page<FavoriteFindResponse> findAllFavorite(Long memberId, Pageable domainPageable) {
         Page<Favorite> mentoringClasses = favoriteRepository.findByMemberId(memberId, domainPageable);
         return mentoringClasses.map(FavoriteFindResponse::from);
     }
+
 }

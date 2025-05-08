@@ -11,4 +11,5 @@ public interface FavoriteRepository extends JpaRepository<Favorite, Long> {
     Page<Favorite> findByMemberId(Long memberId, Pageable domainPageable);
 
     Optional<Favorite> findByMentoringClassIdAndMemberId(Long classId, Long memberId);
+
 }
