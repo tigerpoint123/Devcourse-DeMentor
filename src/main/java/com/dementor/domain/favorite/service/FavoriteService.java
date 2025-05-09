@@ -5,6 +5,8 @@ import com.dementor.domain.favorite.dto.response.FavoriteFindResponse;
 import com.dementor.domain.favorite.entity.Favorite;
 import com.dementor.domain.favorite.event.FavoriteAddedEvent;
 import com.dementor.domain.favorite.event.FavoriteRemovedEvent;
+import com.dementor.domain.favorite.exception.FavoriteException;
+import com.dementor.domain.favorite.exception.FavoriteExceptionCode;
 import com.dementor.domain.favorite.repository.FavoriteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,29 +25,36 @@ public class FavoriteService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public FavoriteAddResponse addFavoriteRedis(Long classId, Long memberId) {
-        Favorite favorite = Favorite.builder()
+    public FavoriteAddResponse addFavoriteDB(Long classId, Long memberId) {
+        Optional<Favorite> favorite = favoriteRepository.findByMentoringClassIdAndMemberId(classId, memberId);
+        if (favorite.isPresent())
+            throw new FavoriteException(FavoriteExceptionCode.FAVORITE_ALREADY_EXISTS);
+
+        Favorite newFavorite = Favorite.builder()
                 .mentoringClassId(classId)
                 .memberId(memberId)
                 .build();
 
-        favorite = favoriteRepository.save(favorite);
-        eventPublisher.publishEvent(new FavoriteAddedEvent(classId));
+        newFavorite = favoriteRepository.save(newFavorite);
 
-        return FavoriteAddResponse.of(favorite);
+        return FavoriteAddResponse.of(newFavorite);
     }
 
     @Transactional
-    public FavoriteAddResponse addFavoriteDB(Long classId, Long memberId) {
-        Favorite favorite = Favorite.builder()
+    public FavoriteAddResponse addFavoriteRedis(Long classId, Long memberId) {
+        Optional<Favorite> favorite = favoriteRepository.findByMentoringClassIdAndMemberId(classId, memberId);
+        if (favorite.isPresent())
+            throw new FavoriteException(FavoriteExceptionCode.FAVORITE_ALREADY_EXISTS);
+
+        Favorite newFavorite = Favorite.builder()
                 .mentoringClassId(classId)
                 .memberId(memberId)
                 .build();
 
-        favorite = favoriteRepository.save(favorite);
+        newFavorite = favoriteRepository.save(newFavorite);
         eventPublisher.publishEvent(new FavoriteAddedEvent(classId));
 
-        return FavoriteAddResponse.of(favorite);
+        return FavoriteAddResponse.of(newFavorite);
     }
 
     @Transactional
@@ -55,7 +66,6 @@ public class FavoriteService {
         eventPublisher.publishEvent(new FavoriteRemovedEvent(favorite.getMentoringClassId()));
     }
 
-    @Transactional(readOnly = true)
     public Page<FavoriteFindResponse> findAllFavorite(Long memberId, Pageable domainPageable) {
         Page<Favorite> mentoringClasses = favoriteRepository.findByMemberId(memberId, domainPageable);
         return mentoringClasses.map(FavoriteFindResponse::from);

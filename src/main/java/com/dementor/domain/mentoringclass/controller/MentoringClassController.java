@@ -72,16 +72,32 @@ public class MentoringClassController implements MentoringClassSwagger {
 
 	@Override
 	@GetMapping("/{classId}")
-	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassById(
+	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromRedis(
 		@PathVariable Long classId
 	) {
-		MentoringClassDetailResponse response = mentoringClassService.findOneClass(classId);
+		MentoringClassDetailResponse response = mentoringClassService.findOneClassFromRedis(classId);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(ApiResponse.of(
 				true,
 				HttpStatus.OK,
 				"멘토링 수업 상세 조회 성공",
+				response
+			));
+	}
+
+	@Override
+	@GetMapping("/db/{classId}")
+	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromDb(
+		@PathVariable Long classId
+	) {
+		MentoringClassDetailResponse response = mentoringClassService.findOneClassFromDb(classId);
+		return ResponseEntity
+			.status(HttpStatus.OK)
+			.body(ApiResponse.of(
+				true,
+				HttpStatus.OK,
+				"멘토링 수업 상세 조회 성공 (DB)",
 				response
 			));
 	}

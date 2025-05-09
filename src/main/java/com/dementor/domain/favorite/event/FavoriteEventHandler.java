@@ -24,7 +24,7 @@ public class FavoriteEventHandler {
     private final RedisTemplate<String, String> redisTemplate;
     private final MentoringClassRepository mentoringClassRepository;
     private final FavoriteRepository favoriteRepository;
-    
+
     private static final String FAVORITE_COUNT_KEY = "favorite:count:";
 
     @PostConstruct
@@ -32,7 +32,7 @@ public class FavoriteEventHandler {
     public void initializeFavoriteCounts() {
         log.info("=== 레디스 즐겨찾기 카운트 초기화 시작 ===");
         List<MentoringClass> mentoringClasses = mentoringClassRepository.findAll();
-        
+
         for (MentoringClass mentoringClass : mentoringClasses) {
             String key = FAVORITE_COUNT_KEY + mentoringClass.getId();
             String count = String.valueOf(mentoringClass.getFavoriteCount());

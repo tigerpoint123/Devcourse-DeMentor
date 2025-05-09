@@ -3,8 +3,7 @@ import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 
-const loginCounter = new Counter('login_total');
-const dbFavoriteCounter = new Counter('db_favorite_operations_total');
+const dbClassCounter = new Counter('db_class_requests_total');
 const errorCounter = new Counter('error_total');
 
 export const options = {
@@ -26,61 +25,23 @@ export const options = {
 
 export default function () {
     const BASE_URL = 'http://host.docker.internal:8080';
+    const classId = 37; // 테스트할 특정 클래스 ID
     
-    const loginRes = http.post(`${BASE_URL}/api/members/login`, JSON.stringify({
-        email: 'tigerrla@naver.com',
-        password: '1234',
-    }), {
-        headers: { 'Content-Type': 'application/json' },
-    });
-
-    check(loginRes, {
-        '로그인 성공': (r) => r.status === 200,
-    });
-    loginCounter.add(1);
-
-    const cookies = loginRes.headers['Set-Cookie'];
-    let accessToken = null;
-    if (typeof cookies === 'string') {
-        const tokenMatch = cookies.match(/accessToken=([^;]+)/);
-        if (tokenMatch) {
-            accessToken = tokenMatch[1];
-            console.log('추출된 토큰:', accessToken); // 디버깅용
+    const dbClassRes = http.get(
+        `${BASE_URL}/api/class/db/${classId}`,
+        {
+            headers: { 'Content-Type': 'application/json' }
         }
-    }
-    
-    if (!accessToken) {
-        console.log('액세스 토큰을 찾을 수 없습니다.');
-        return;
-    }
-
-    const params = {
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}`
-        },
-        cookies: {
-            'accessToken': accessToken
-        }
-    };
-
-    // 쿠키는 제거하고 Authorization 헤더만 사용
-    console.log('요청 헤더:', params.headers); // 디버깅용
-
-    const classId = 37;
-    const addFavoriteRes = http.post(
-        `${BASE_URL}/api/favorite/db/${classId}`,
-        null,
-        params
     );
     
-    check(addFavoriteRes, {
-        'DB 즐겨찾기 추가 성공': (r) => r.status === 200,
+    check(dbClassRes, {
+        'DB 클래스 상세 조회 성공': (r) => r.status === 200,
     });
-    dbFavoriteCounter.add(1);
-    if (addFavoriteRes.status !== 200) {
+    dbClassCounter.add(1);
+    
+    if (dbClassRes.status !== 200) {
         errorCounter.add(1);
-        console.log('DB 즐겨찾기 추가 실패:', addFavoriteRes.status, addFavoriteRes.body);
+        console.log('DB 클래스 상세 조회 실패:', dbClassRes.status, dbClassRes.body);
     }
 
     sleep(1);

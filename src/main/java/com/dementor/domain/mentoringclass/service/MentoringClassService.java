@@ -18,7 +18,9 @@ public interface MentoringClassService {
     @Transactional
     MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request);
 
-    MentoringClassDetailResponse findOneClass(Long classId);
+    MentoringClassDetailResponse findOneClassFromRedis(Long classId);
+
+    MentoringClassDetailResponse findOneClassFromDb(Long classId);
 
     @Transactional
     void deleteClass(Long classId) ;

@@ -192,4 +192,22 @@ public class FavoriteTest {
                 .andExpect(jsonPath("$.data.size").value(10))
                 .andExpect(jsonPath("$.data.number").value(0));
     }
+
+    @Test
+    @DisplayName("이미 등록된 즐겨찾기 중복 등록 시도")
+    void addDuplicateFavorite() throws Exception {
+        //given
+        Long memberId = mentee.getId();
+        Long classId = mentoringClass.getId();
+        
+        // 첫 번째 즐겨찾기 등록
+        mockMvc.perform(post("/api/favorite/{classId}", classId))
+                .andExpect(status().isOk());
+        
+        //when & then
+        mockMvc.perform(post("/api/favorite/{classId}", classId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.message").value("이미 즐겨찾기에 등록된 클래스입니다."));
+    }
 }
