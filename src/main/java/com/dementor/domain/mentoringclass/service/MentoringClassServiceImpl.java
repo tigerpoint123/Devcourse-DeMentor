@@ -21,15 +21,19 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,72 +47,41 @@ public class MentoringClassServiceImpl implements MentoringClassService {
     private final MentorRepository mentorRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private static final String POPULAR_CLASSES_CACHE_KEY = "popular:classes:";
-    private static final String CLASS_DETAIL_CACHE_KEY = "class:detail:";
-    private static final long CACHE_TTL = 3600; // 1시간
+    private static final int POPULAR_CLASS_LIMIT = 10; // 인기 클래스 기준 수
+
+    // 서버 시작 시 자동으로 pre-warming 실행
+    @PostConstruct
+    public void init() {
+        log.info("멘토링 클래스 pre-warming 시작");
+        warmUpPopularClasses();
+        log.info("멘토링 클래스 pre-warming 완료");
+    }
+
+    // 1시간마다 pre-warming 실행 (캐시 TTL과 동일하게 설정)
+    @Scheduled(fixedRate = 3600000) // 1시간 = 3600000 밀리초
+    public void scheduledPreWarming() {
+        log.info("멘토링 클래스 주기적 pre-warming 시작");
+        // 비동기로 pre-warming 실행
+        CompletableFuture.runAsync(() -> {
+            try {
+                warmUpPopularClasses();
+            } catch (Exception e) {
+                log.error("멘토링 클래스 pre-warming 실패", e);
+            }
+        });
+        log.info("멘토링 클래스 주기적 pre-warming 완료");
+    }
 
     public Page<MentoringClassFindResponse> findAllClass(List<Long> jobId, Pageable pageable) {
-        // 인기순 정렬인 경우에만 캐시 사용
-        if (isPopularSort(pageable))
-            return findPopularClassesWithCache(jobId, pageable);
-
         Page<MentoringClass> mentoringClasses;
-        if (jobId == null || jobId.isEmpty()) {
+        if (jobId == null || jobId.isEmpty())
             mentoringClasses = mentoringClassRepository.findAll(pageable);
-        } else if (jobId.size() == 1) {
+        else if (jobId.size() == 1)
             mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId.get(0), pageable);
-        } else {
+        else
             mentoringClasses = mentoringClassRepository.findByMentor_Job_IdIn(jobId, pageable);
-        }
 
         return mentoringClasses.map(MentoringClassFindResponse::from);
-    }
-
-    private boolean isPopularSort(Pageable pageable) {
-        return pageable.getSort().stream()
-                .anyMatch(order -> order.getProperty().equals("favoriteCount"));
-    }
-
-    private Page<MentoringClassFindResponse> findPopularClassesWithCache(List<Long> jobId, Pageable pageable) {
-        String cacheKey = POPULAR_CLASSES_CACHE_KEY +
-                (jobId != null ? String.join(",", jobId.stream().map(String::valueOf).toList()) : "all") +
-                ":page:" + pageable.getPageNumber();
-
-        try {
-            // Redis에서 캐시된 결과 조회
-            String cachedResult = redisTemplate.opsForValue().get(cacheKey);
-            if (cachedResult != null) {
-                return deserializePage(cachedResult);
-            }
-        } catch (Exception e) {
-            log.error("Redis 캐시 조회 실패", e);
-        }
-
-        // 캐시 미스 시 DB 조회
-        Page<MentoringClass> mentoringClasses;
-        if (jobId == null || jobId.isEmpty()) {
-            mentoringClasses = mentoringClassRepository.findAll(pageable);
-        } else if (jobId.size() == 1) {
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_Id(jobId.get(0), pageable);
-        } else {
-            mentoringClasses = mentoringClassRepository.findByMentor_Job_IdIn(jobId, pageable);
-        }
-
-        Page<MentoringClassFindResponse> result = mentoringClasses.map(MentoringClassFindResponse::from);
-
-        try {
-            // 결과를 Redis에 캐싱
-            redisTemplate.opsForValue().set(
-                    cacheKey,
-                    serializePage(result),
-                    CACHE_TTL,
-                    TimeUnit.SECONDS
-            );
-        } catch (Exception e) {
-            log.error("Redis 캐시 저장 실패", e);
-        }
-
-        return result;
     }
 
     @Transactional
@@ -149,33 +122,63 @@ public class MentoringClassServiceImpl implements MentoringClassService {
         return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
 
+    @Cacheable(value = "mentoringClass", key = "#classId", unless = "#result == null")
     public MentoringClassDetailResponse findOneClassFromRedis(Long classId) {
-        String cacheKey = CLASS_DETAIL_CACHE_KEY + classId;
-
-        try {
-            String cachedResult = redisTemplate.opsForValue().get(cacheKey);
-            if (cachedResult != null) {
-                return objectMapper.readValue(cachedResult, MentoringClassDetailResponse.class);
-            }
-        } catch (Exception e) {
-            log.error("Redis 캐시 조회 실패", e);
-        }
-
+        log.info("캐시 미스 발생: 멘토링 클래스 ID {}", classId);
+        
+        // DB에서 조회 (캐시에 없을 때만 실행됨)
         MentoringClassDetailResponse response = findOneClassFromDb(classId);
-
-        try {
-            // 결과를 Redis에 캐싱
-            redisTemplate.opsForValue().set(
-                cacheKey,
-                objectMapper.writeValueAsString(response),
-                CACHE_TTL,
-                TimeUnit.SECONDS
-            );
-        } catch (Exception e) {
-            log.error("Redis 캐시 저장 실패", e);
+        
+        // 인기 클래스인 경우에만 pre-warming 실행
+        if (isPopularClass(classId)) {
+            log.info("인기 클래스 캐시 미스: 멘토링 클래스 ID {} - pre-warming 시작", classId);
+            // 비동기로 pre-warming 실행
+            CompletableFuture.runAsync(() -> {
+                try {
+                    warmUpPopularClasses();
+                    log.info("인기 클래스 pre-warming 완료: 멘토링 클래스 ID {}", classId);
+                } catch (Exception e) {
+                    log.error("멘토링 클래스 pre-warming 실패: {}", classId, e);
+                }
+            });
         }
-
+        
         return response;
+    }
+
+    private boolean isPopularClass(Long classId) {
+        try {
+            // 인기순 정렬된 상위 10개 클래스 ID 조회
+            List<Long> topClassIds = mentoringClassRepository.findTopIdsByOrderByFavoriteCountDesc(
+                PageRequest.of(0, POPULAR_CLASS_LIMIT)
+            );
+            
+            // 현재 클래스가 상위 10개에 포함되는지 확인
+            return topClassIds.contains(classId);
+        } catch (Exception e) {
+            log.error("인기 클래스 확인 실패: {}", classId, e);
+            return false;
+        }
+    }
+
+    private void warmUpPopularClasses() {
+        try {
+            // 인기 클래스 ID 목록 조회
+            List<Long> popularClassIds = mentoringClassRepository.findTopIdsByOrderByFavoriteCountDesc(
+                PageRequest.of(0, POPULAR_CLASS_LIMIT)
+            );
+
+            // 병렬로 pre-warming 실행
+            popularClassIds.parallelStream().forEach(classId -> {
+                try {
+                    findOneClassFromRedis(classId);
+                } catch (Exception e) {
+                    log.error("멘토링 클래스 ID {} pre-warming 실패: {}", classId, e.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            log.error("인기 클래스 pre-warming 실패", e);
+        }
     }
 
     public MentoringClassDetailResponse findOneClassFromDb(Long classId) {
@@ -278,7 +281,8 @@ public class MentoringClassServiceImpl implements MentoringClassService {
     private Page<MentoringClassFindResponse> deserializePage(String json) {
         List<MentoringClassFindResponse> content = objectMapper.convertValue(
                 json,
-                new TypeReference<List<MentoringClassFindResponse>>() {}
+                new TypeReference<List<MentoringClassFindResponse>>() {
+                }
         );
 
         return new PageImpl<>(content);
