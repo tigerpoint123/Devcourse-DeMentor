@@ -69,10 +69,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/admin/job").permitAll() // 직무 조회는 모두 허용해야 함
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                        // 클래스 조회 관련 엔드포인트는 모두 허용
                         .requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
-                        .requestMatchers(HttpMethod.GET, "/api/class/{classId}").permitAll() // 특정 수업 조회 허용
-                        .requestMatchers(HttpMethod.GET, "/api/class/db/{classId}").permitAll() // 특정 수업 조회 허용
-                        .requestMatchers(HttpMethod.GET, "/api/class/favoriteCount/{classId}").permitAll() // 즐겨찾기 카운트 조회 허용
+                        .requestMatchers(HttpMethod.GET, "/api/class/**").permitAll() // 클래스 관련 모든 GET 요청 허용
 
                         .requestMatchers("/api/authenticate").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용
