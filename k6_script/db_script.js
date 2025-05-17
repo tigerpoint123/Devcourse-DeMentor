@@ -25,10 +25,10 @@ export const options = {
 
 export default function () {
     const BASE_URL = 'http://host.docker.internal:8080';
-    const classId = 37; // 테스트할 특정 클래스 ID
+    const classId = 66; // 테스트할 인기 x 클래스 ID
     
     const dbClassRes = http.get(
-        `${BASE_URL}/api/class/db/${classId}`,
+        `${BASE_URL}/api/class/${classId}`,
         {
             headers: { 'Content-Type': 'application/json' }
         }

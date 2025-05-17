@@ -25,7 +25,7 @@ export const options = {
 
 export default function () {
     const BASE_URL = 'http://host.docker.internal:8080';
-    const classId = 37; // 테스트할 특정 클래스 ID
+    const classId = 37; // 테스트할 인기 클래스 ID
     
     const redisClassRes = http.get(
         `${BASE_URL}/api/class/${classId}`,

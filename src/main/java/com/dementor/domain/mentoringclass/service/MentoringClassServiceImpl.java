@@ -139,11 +139,11 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
             MentoringClassDetailResponse response = findOneClassFromDb(classId);
 
             // Redis에 캐시 저장 (1시간 TTL)
-            redisTemplate.opsForValue().set(
-                    cacheKey,
-                    objectMapper.writeValueAsString(response),
-                    CACHE_TTL
-            );
+//            redisTemplate.opsForValue().set(
+//                    cacheKey,
+//                    objectMapper.writeValueAsString(response),
+//                    CACHE_TTL
+//            );
 
             log.info("Redis 캐시 저장 완료: 멘토링 클래스 ID {}", classId);
             return response;
