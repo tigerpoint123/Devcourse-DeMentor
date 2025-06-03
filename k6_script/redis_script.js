@@ -15,9 +15,9 @@ export const options = {
             preAllocatedVUs: 50,
             maxVUs: 100,
             stages: [
-                { target: 50, duration: '5s' },    // 5초 동안 초당 30건까지 증가
-                { target: 50, duration: '10s' },   // 10초 동안 초당 30건 유지
-                { target: 0, duration: '5s' },     // 5초 동안 0건까지 감소
+                { target: 50, duration: '5s' },    
+                { target: 50, duration: '10s' },   
+                { target: 0, duration: '5s' },     
             ],
         }
     }
