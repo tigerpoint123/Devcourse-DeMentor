@@ -33,6 +33,10 @@ public class OpenSearchDataInit {
             doc.setId(entity.getId().toString());
             doc.setTitle(entity.getTitle());
             doc.setContent(entity.getContent());
+            doc.setStack(entity.getStack() != null ? String.join(",", entity.getStack()) : "");
+            doc.setPrice(entity.getPrice());
+            doc.setMentor(entity.getMentor());
+            doc.setFavoriteCount(entity.getFavoriteCount());
             try {
                 openSearchService.saveDocument("mentoring_class", doc.getId(), doc);
             } catch (Exception e) {
