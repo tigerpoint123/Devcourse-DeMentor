@@ -6,12 +6,14 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.rest_client.RestClientTransport;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.opensearch.client.RestClient;
 
 @Configuration
 public class OpenSearchConfig {
 
+    @Bean
     public OpenSearchClient openSearchClient() {
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(
