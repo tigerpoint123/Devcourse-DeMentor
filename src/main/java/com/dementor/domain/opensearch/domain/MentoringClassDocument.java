@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class MentoringDocument {
+public class MentoringClassDocument {
     private String id;
     private String title;
     private String content;

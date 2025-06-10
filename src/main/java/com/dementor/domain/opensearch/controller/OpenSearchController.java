@@ -1,6 +1,6 @@
 package com.dementor.domain.opensearch.controller;
 
-import com.dementor.domain.opensearch.domain.MentoringDocument;
+import com.dementor.domain.opensearch.domain.MentoringClassDocument;
 import com.dementor.domain.opensearch.service.OpenSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -19,7 +19,7 @@ public class OpenSearchController {
     private final OpenSearchService openSearchService;
 
     @GetMapping
-    public List<MentoringDocument> search(
+    public List<MentoringClassDocument> search(
             @RequestParam String keyword
     ) throws IOException {
         return openSearchService.search("my_index", keyword);
