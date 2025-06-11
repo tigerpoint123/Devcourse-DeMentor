@@ -46,8 +46,6 @@ Service : https://www.dementor.site
 - mysql-team03
 - redis-server
 - rabbitMQ ( == web3_4_tried-it_begit)
-- angry_bartik
-- web3_4_tried-it_begit (rabbitMQ, grafana, influxdb)
 
 ### 2-1. K6 도커 명령어 (powershell)
 > redis 버전 : docker run --rm --network web3_4_tried-it_begit_monitoring -v "C:\workplace\WEB3_4_Tried-IT_BE.git:/scripts" grafana/k6:latest run --out influxdb=http://influxdb:8086/k6 /scripts/k6_script/redis_script.js
