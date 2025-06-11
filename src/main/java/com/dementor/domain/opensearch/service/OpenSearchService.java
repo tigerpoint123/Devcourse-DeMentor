@@ -34,9 +34,13 @@ public class OpenSearchService {
         SearchRequest request = SearchRequest.of(s -> s
                 .index(index)
                 .query(q -> q
-                        .match(m -> m
-                                .field("content")
-                                .query(FieldValue.of(keyword)))));
+                        .bool(b -> b
+                                .should(s1 -> s1.match(m -> m.field("content").query(FieldValue.of(keyword))))
+                                .should(s2 -> s2.match(m -> m.field("title").query(FieldValue.of(keyword))))
+                                .should(s3 -> s3.match(m -> m.field("stack").query(FieldValue.of(keyword))))
+                        )
+                )
+        );;
 
         SearchResponse<MentoringClassDocument> response = openSearchClient.search(request, MentoringClassDocument.class);
         List<MentoringClassDocument> results = response.hits().hits().stream()
