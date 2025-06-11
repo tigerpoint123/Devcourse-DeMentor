@@ -1,7 +1,7 @@
 package com.dementor.domain.opensearch.service;
 
-import com.dementor.domain.opensearch.domain.MentoringClassDocument;
-import com.dementor.domain.opensearch.domain.MentoringClassIndexMapping;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.opensearch.indexMapping.MentoringClassIndexMapping;
 import lombok.RequiredArgsConstructor;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -21,7 +21,6 @@ public class OpenSearchService {
 
     private final OpenSearchClient openSearchClient;
 
-    // TODO : 데이터 추가/수정/삭제 시, OpenSearch에 반영하는 로직 추가 필요
     public void saveDocument(String index, String id, MentoringClassDocument document) throws IOException {
         IndexRequest<MentoringClassDocument> request = IndexRequest.of(i -> i
                 .index(index)

@@ -1,6 +1,6 @@
 package com.dementor.domain.opensearch.controller;
 
-import com.dementor.domain.opensearch.domain.MentoringClassDocument;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.opensearch.service.OpenSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,13 +15,15 @@ import java.util.List;
 @RequestMapping("/api/search")
 @RequiredArgsConstructor
 public class OpenSearchController {
+    // TODO : 데이터 추가/수정/삭제 시, OpenSearch에 반영하는 로직 추가 필요
 
     private final OpenSearchService openSearchService;
+    String indexName = "mentoring_class";
 
     @GetMapping
     public List<MentoringClassDocument> search(
             @RequestParam String keyword
     ) throws IOException {
-        return openSearchService.search("mentoring_class", keyword);
+        return openSearchService.search(indexName, keyword);
     }
 }

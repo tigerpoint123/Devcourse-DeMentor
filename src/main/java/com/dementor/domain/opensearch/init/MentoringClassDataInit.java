@@ -1,35 +1,40 @@
-package com.dementor.domain.opensearch;
+package com.dementor.domain.opensearch.init;
 
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.domain.opensearch.domain.JobInfo;
-import com.dementor.domain.opensearch.domain.MentorInfo;
-import com.dementor.domain.opensearch.domain.MentoringClassDocument;
+import com.dementor.domain.opensearch.document.JobInfo;
+import com.dementor.domain.opensearch.document.MentorInfo;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.opensearch.service.OpenSearchService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class OpenSearchDataInit {
+@Slf4j
+public class MentoringClassDataInit {
 
     private final OpenSearchService openSearchService;
     private final MentoringClassRepository mentoringClassRepository;
+    private final OpenSearchClient openSearchClient;
+    String indexName = "mentoring_class";
 
     // TODO : 대용량 데이터라면 ?
     @PostConstruct
     @Transactional(readOnly = true)
-    public void init() {
-        // 1. 인덱스 존재 여부 확인 및 생성
-        try {
-            openSearchService.createMentoringClassIndex("mentoring_class");
-        } catch (Exception e) {
-            // 이미 존재하면 무시하거나, 예외 처리
-        }
+    public void init() throws IOException {
+        // 1. 인덱스 존재 여부 확인
+        BooleanResponse existsResponse = openSearchClient.indices().exists(e -> e.index(indexName));
+        if(!existsResponse.value())
+            openSearchService.createMentoringClassIndex(indexName);
 
         List<MentoringClass> mentoringClasses = mentoringClassRepository.findAllWithMentor();
         for (MentoringClass entity : mentoringClasses) {
@@ -54,10 +59,9 @@ public class OpenSearchDataInit {
             doc.setMentor(mentorInfo);
             doc.setFavoriteCount(entity.getFavoriteCount());
             try {
-                openSearchService.saveDocument("mentoring_class", doc.getId(), doc);
+                openSearchService.saveDocument(indexName, doc.getId(), doc);
             } catch (Exception e) {
-                // 예외 처리 로직 추가 필요
-                e.printStackTrace();
+                log.error("document 저장 실패 : {}", doc.getId(), e);
             }
         }
     }

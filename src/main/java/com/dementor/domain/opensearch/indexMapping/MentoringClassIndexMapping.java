@@ -1,4 +1,4 @@
-package com.dementor.domain.opensearch.domain;
+package com.dementor.domain.opensearch.indexMapping;
 
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 

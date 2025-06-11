@@ -1,5 +1,6 @@
-package com.dementor.domain.opensearch.domain;
+package com.dementor.domain.opensearch.document.mentoringClass;
 
+import com.dementor.domain.opensearch.document.MentorInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
