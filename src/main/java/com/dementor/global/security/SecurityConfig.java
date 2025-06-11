@@ -72,6 +72,7 @@ public class SecurityConfig {
                         // 클래스 조회 관련 엔드포인트는 모두 허용
                         .requestMatchers(HttpMethod.GET, "/api/class").permitAll() // 모든 수업 조회 허용
                         .requestMatchers(HttpMethod.GET, "/api/class/**").permitAll() // 클래스 관련 모든 GET 요청 허용
+                        .requestMatchers("/api/search").permitAll()
 
                         .requestMatchers("/api/authenticate").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll() // swagger 문서 허용

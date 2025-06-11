@@ -29,4 +29,6 @@ public interface MentoringClassRepository extends JpaRepository<MentoringClass, 
     @Query("SELECT mc.id FROM MentoringClass mc ORDER BY mc.favoriteCount DESC")
     List<Long> findTopIdsByOrderByFavoriteCountDesc(Pageable pageable);
 
+    @Query("SELECT DISTINCT mc FROM MentoringClass mc JOIN FETCH mc.mentor m JOIN FETCH m.job")
+    List<MentoringClass> findAllWithMentor();
 }
