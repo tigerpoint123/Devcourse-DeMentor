@@ -4,7 +4,6 @@ import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateReques
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
-import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.service.MentoringClassService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.pagination.PaginationUtil;
@@ -126,7 +125,7 @@ public class MentoringClassController implements MentoringClassSwagger {
 	@Override
 	@PreAuthorize("hasRole('MENTOR')")
 	@PutMapping("/{classId}")
-	public ResponseEntity<ApiResponse<MentoringClassUpdateResponse>> updateClass(
+	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(
 		@PathVariable Long classId,
 		@RequestBody MentoringClassUpdateRequest request,
 		Authentication authentication
@@ -134,7 +133,7 @@ public class MentoringClassController implements MentoringClassSwagger {
 		CustomUserDetails userDetails = (CustomUserDetails)authentication.getPrincipal();
 		Long memberId = userDetails.getId();
 
-		MentoringClassUpdateResponse response = mentoringClassService.updateClass(classId, memberId, request);
+		MentoringClassDetailResponse response = mentoringClassService.updateClass(classId, memberId, request);
 		return ResponseEntity
 			.status(HttpStatus.OK)
 			.body(ApiResponse.of(

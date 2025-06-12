@@ -26,7 +26,7 @@ public interface MentoringClassService {
     void deleteClass(Long classId) ;
 
     @Transactional
-    MentoringClassUpdateResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request);
+    MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request);
 
     List<MyMentoringResponse> getMentorClassFromMentor(Long memberId);
 

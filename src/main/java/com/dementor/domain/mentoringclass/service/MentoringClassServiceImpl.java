@@ -9,7 +9,6 @@ import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateReques
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
-import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.entity.Schedule;
 import com.dementor.domain.mentoringclass.exception.MentoringClassException;
@@ -204,7 +203,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     }
 
     @Transactional
-    public MentoringClassUpdateResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
+    public MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
@@ -222,33 +221,15 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
             mentoringClass.updateStack(request.stack());
 
         // 일정 정보
-        Schedule schedule = scheduleRepository.findByMentoringClassId(classId)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.SCHEDULE_NOT_FOUND));
-
-        if (request.schedule() != null) {
-            schedule.updateDayOfWeek(request.schedule().dayOfWeek());
-            schedule.updateTime(request.schedule().time());
+        List<Schedule> scheduleList = scheduleRepository.findByMentoringClassId(classId);
+        if(request.schedules() != null) {
+            for(Schedule schedule : scheduleList) {
+                schedule.updateDayOfWeek(request.schedules().get(0).dayOfWeek());
+                schedule.updateTime(request.schedules().get(0).time());
+            }
         }
 
-        return new MentoringClassUpdateResponse(
-                mentoringClass.getId(),
-                new MentoringClassUpdateResponse.MentorInfo(
-                        mentoringClass.getMentor().getId(),
-                        mentoringClass.getMentor().getName(),
-                        mentoringClass.getMentor().getJob().getName(),
-                        mentoringClass.getMentor().getCareer()
-                ),
-                mentoringClass.getStack(),
-                mentoringClass.getContent(),
-                mentoringClass.getTitle(),
-                mentoringClass.getPrice(),
-                new MentoringClassUpdateResponse.ScheduleInfo(
-                        schedule.getDayOfWeek(),
-                        schedule.getTime()
-                )
-        );
+        return MentoringClassDetailResponse.from(mentoringClass, scheduleList);
     }
 
     public List<MyMentoringResponse> getMentorClassFromMentor(Long memberId) {

@@ -1,6 +1,9 @@
 package com.dementor.domain.mentoringclass.dto.request;
 
+import com.dementor.domain.mentoringclass.dto.response.ScheduleResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.util.List;
 
 @Schema(description = "멘토링 수업 수정 요청")
 public record MentoringClassUpdateRequest(
@@ -17,6 +20,6 @@ public record MentoringClassUpdateRequest(
 	String[] stack,
 
 	@Schema(description = "스케줄 정보")
-	ScheduleRequest schedule
+	List<ScheduleResponse> schedules
 ) {
 }

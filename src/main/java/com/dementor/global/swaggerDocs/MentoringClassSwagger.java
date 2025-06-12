@@ -4,7 +4,6 @@ import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateReques
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
-import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import com.dementor.global.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -57,7 +56,7 @@ public interface MentoringClassSwagger {
     ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(MentoringClassCreateRequest request, Authentication authentication);
 
     @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
-    ResponseEntity<ApiResponse<MentoringClassUpdateResponse>> updateClass(
+    ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(
             Long classId, MentoringClassUpdateRequest request, Authentication authentication);
 
     @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
