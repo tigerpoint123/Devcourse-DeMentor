@@ -223,10 +223,16 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
         // 일정 정보
         List<Schedule> scheduleList = scheduleRepository.findByMentoringClassId(classId);
         if(request.schedules() != null) {
-            for(Schedule schedule : scheduleList) {
-                schedule.updateDayOfWeek(request.schedules().get(0).dayOfWeek());
-                schedule.updateTime(request.schedules().get(0).time());
-            }
+            scheduleRepository.deleteAll(scheduleList);
+
+            scheduleList = request.schedules().stream()
+                    .map(scheduleReq -> Schedule.builder()
+                            .mentoringClassId(classId)
+                            .dayOfWeek(scheduleReq.dayOfWeek())
+                            .time(scheduleReq.time())
+                            .build())
+                    .map(scheduleRepository::save)
+                    .toList();
         }
 
         return MentoringClassDetailResponse.from(mentoringClass, scheduleList);
