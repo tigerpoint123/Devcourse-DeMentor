@@ -2,8 +2,6 @@ package com.dementor.domain.opensearch.init;
 
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.domain.opensearch.document.JobInfo;
-import com.dementor.domain.opensearch.document.MentorInfo;
 import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.opensearch.service.OpenSearchService;
 import jakarta.annotation.PostConstruct;
@@ -38,26 +36,8 @@ public class MentoringClassDataInit {
 
         List<MentoringClass> mentoringClasses = mentoringClassRepository.findAllWithMentor();
         for (MentoringClass entity : mentoringClasses) {
-            MentoringClassDocument doc = new MentoringClassDocument();
-            doc.setId(entity.getId().toString());
-            doc.setTitle(entity.getTitle());
-            doc.setContent(entity.getContent());
-            doc.setStack(entity.getStack() != null ? String.join(",", entity.getStack()) : "");
-            doc.setPrice(entity.getPrice());
-            
-            // MentorInfo 설정
-            MentorInfo mentorInfo = new MentorInfo();
-            mentorInfo.setId(entity.getMentor().getId());
-            mentorInfo.setName(entity.getMentor().getName());
-            mentorInfo.setCareer(entity.getMentor().getCareer());
+            MentoringClassDocument doc = MentoringClassDocument.from(entity);
 
-            JobInfo jobInfo = new JobInfo();
-            jobInfo.setId(entity.getMentor().getJob().getId());
-            jobInfo.setName(entity.getMentor().getJob().getName());
-            mentorInfo.setJob(jobInfo);
-
-            doc.setMentor(mentorInfo);
-            doc.setFavoriteCount(entity.getFavoriteCount());
             try {
                 openSearchService.saveDocument(indexName, doc.getId(), doc);
             } catch (Exception e) {

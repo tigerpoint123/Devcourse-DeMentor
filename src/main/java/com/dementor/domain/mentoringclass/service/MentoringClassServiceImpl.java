@@ -15,6 +15,8 @@ import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.opensearch.service.OpenSearchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,8 +46,10 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     private final MentorRepository mentorRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private static final int POPULAR_CLASS_LIMIT = 10; // 인기 클래스 기준 수
-    private static final Duration CACHE_TTL = Duration.ofHours(1);  // 상수로 분리
+    private final OpenSearchService openSearchService;
+
+    private static final int POPULAR_CLASS_LIMIT = 10;
+    private static final Duration CACHE_TTL = Duration.ofHours(1);
 
     // 서버 시작 완료 후 실행
     @Override
@@ -83,7 +88,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     }
 
     @Transactional
-    public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) {
+    public MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) throws IOException {
         Mentor mentor = mentorRepository.findById(mentorId)
                 .orElseThrow(() -> new MentorException(MentorErrorCode.MENTOR_NOT_FOUND));
 
@@ -117,6 +122,10 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
                 .map(scheduleRepository::save)
                 .toList();
 
+        // 오픈서치 인덱싱
+        MentoringClassDocument document = MentoringClassDocument.from(mentoringClass);
+        openSearchService.saveDocument("mentoring_class", document.getId(), document);
+
         return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
 
@@ -131,22 +140,9 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
                 log.info("Redis 캐시 히트: 멘토링 클래스 ID {}", classId);
                 return objectMapper.readValue(cachedData, MentoringClassDetailResponse.class);
             }
-
             log.info("Redis 캐시 미스: 멘토링 클래스 ID {}", classId);
 
-            // DB에서 데이터 조회
-            MentoringClassDetailResponse response = findOneClassFromDb(classId);
-
-            // Redis에 캐시 저장 (1시간 TTL)
-//            redisTemplate.opsForValue().set(
-//                    cacheKey,
-//                    objectMapper.writeValueAsString(response),
-//                    CACHE_TTL
-//            );
-
-            log.info("Redis 캐시 저장 완료: 멘토링 클래스 ID {}", classId);
-            return response;
-
+            return findOneClassFromDb(classId);
         } catch (Exception e) {
             log.error("Redis 캐시 처리 중 오류 발생: {}", e.getMessage());
             return findOneClassFromDb(classId);
@@ -166,9 +162,9 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
                     String cacheKey = "mentoringClass::" + classId;
 
                     redisTemplate.opsForValue().set(
-                        cacheKey,
-                        objectMapper.writeValueAsString(response),
-                        CACHE_TTL
+                            cacheKey,
+                            objectMapper.writeValueAsString(response),
+                            CACHE_TTL
                     );
 
                     log.info("멘토링 클래스 ID {} 캐시 저장 완료", classId);
@@ -222,7 +218,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
 
         // 일정 정보
         List<Schedule> scheduleList = scheduleRepository.findByMentoringClassId(classId);
-        if(request.schedules() != null) {
+        if (request.schedules() != null) {
             scheduleRepository.deleteAll(scheduleList);
 
             scheduleList = request.schedules().stream()

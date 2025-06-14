@@ -5,18 +5,18 @@ import com.dementor.domain.mentoringclass.dto.request.MentoringClassCreateReques
 import com.dementor.domain.mentoringclass.dto.request.MentoringClassUpdateRequest;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassDetailResponse;
 import com.dementor.domain.mentoringclass.dto.response.MentoringClassFindResponse;
-import com.dementor.domain.mentoringclass.dto.response.MentoringClassUpdateResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface MentoringClassService {
     Page<MentoringClassFindResponse> findAllClass(List<Long> jobId, Pageable pageable);
 
     @Transactional
-    MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request);
+    MentoringClassDetailResponse createClass(Long mentorId, MentoringClassCreateRequest request) throws IOException;
 
     MentoringClassDetailResponse findOneClassFromRedis(Long classId);
 

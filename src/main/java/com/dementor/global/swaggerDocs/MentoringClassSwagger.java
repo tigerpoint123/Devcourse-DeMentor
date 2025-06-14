@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 
+import java.io.IOException;
 import java.util.List;
 
 /*
@@ -53,7 +54,7 @@ public interface MentoringClassSwagger {
     ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromDb(@PathVariable Long classId);
 
     @Operation(summary = "멘토링 수업 등록", description = "멘토가 멘토링 수업을 등록합니다.")
-    ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(MentoringClassCreateRequest request, Authentication authentication);
+    ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(MentoringClassCreateRequest request, Authentication authentication) throws IOException;
 
     @Operation(summary = "멘토링 수업 수정", description = "멘토링 수업 정보를 수정합니다.")
     ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(

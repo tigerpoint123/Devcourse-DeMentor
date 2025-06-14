@@ -21,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -28,151 +29,151 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassController implements MentoringClassSwagger {
-	private final MentoringClassService mentoringClassService;
+    private final MentoringClassService mentoringClassService;
 
-	@Override
-	@GetMapping
-	public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
-		@RequestParam(required = false) List<String> jobId,
-		@PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
-	) {
-		Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
+    @Override
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
+            @RequestParam(required = false) List<String> jobId,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
 
-		// String List를 Long List로 변환
-		List<Long> jobIds = jobId != null ?
-			jobId.stream()
-				.map(Long::parseLong)
-				.toList() :
-			null;
+        // String List를 Long List로 변환
+        List<Long> jobIds = jobId != null ?
+                jobId.stream()
+                        .map(Long::parseLong)
+                        .toList() :
+                null;
 
-		Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobIds, domainPageable);
+        Page<MentoringClassFindResponse> result = mentoringClassService.findAllClass(jobIds, domainPageable);
 
-		if (result.isEmpty()) {
-			return ResponseEntity
-				.status(HttpStatus.OK)
-				.body(ApiResponse.of(
-					true,
-					HttpStatus.OK,
-					"조회된 멘토링 수업이 없습니다.",
-					result
-				));
-		} else {
-			return ResponseEntity
-				.status(HttpStatus.OK)
-				.body(ApiResponse.of(
-					true,
-					HttpStatus.OK,
-					"멘토링 수업 조회 성공",
-					result
-				));
-		}
+        if (result.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(ApiResponse.of(
+                            true,
+                            HttpStatus.OK,
+                            "조회된 멘토링 수업이 없습니다.",
+                            result
+                    ));
+        } else {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(ApiResponse.of(
+                            true,
+                            HttpStatus.OK,
+                            "멘토링 수업 조회 성공",
+                            result
+                    ));
+        }
 
-	}
+    }
 
-	@Override
-	@GetMapping("/{classId}")
-	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromRedis(
-		@PathVariable Long classId
-	) {
-		MentoringClassDetailResponse response = mentoringClassService.findOneClassFromRedis(classId);
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(ApiResponse.of(
-				true,
-				HttpStatus.OK,
-				"멘토링 수업 상세 조회 성공",
-				response
-			));
-	}
+    @Override
+    @GetMapping("/{classId}")
+    public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromRedis(
+            @PathVariable Long classId
+    ) {
+        MentoringClassDetailResponse response = mentoringClassService.findOneClassFromRedis(classId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "멘토링 수업 상세 조회 성공",
+                        response
+                ));
+    }
 
-	@Override
-	@GetMapping("/db/{classId}")
-	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromDb(
-		@PathVariable Long classId
-	) {
-		MentoringClassDetailResponse response = mentoringClassService.findOneClassFromDb(classId);
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(ApiResponse.of(
-				true,
-				HttpStatus.OK,
-				"멘토링 수업 상세 조회 성공 (DB)",
-				response
-			));
-	}
+    @Override
+    @GetMapping("/db/{classId}")
+    public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> getClassByIdFromDb(
+            @PathVariable Long classId
+    ) {
+        MentoringClassDetailResponse response = mentoringClassService.findOneClassFromDb(classId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "멘토링 수업 상세 조회 성공 (DB)",
+                        response
+                ));
+    }
 
-	@Override
-	@PreAuthorize("hasRole('MENTOR')")
-	@PostMapping
-	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(
-		@RequestBody MentoringClassCreateRequest request,
-		Authentication authentication
-	) {
-		CustomUserDetails userDetails = (CustomUserDetails)authentication.getPrincipal();
-		Long memberId = userDetails.getId();
+    @Override
+    @PreAuthorize("hasRole('MENTOR')")
+    @PostMapping
+    public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> createClass(
+            @RequestBody MentoringClassCreateRequest request,
+            Authentication authentication
+    ) throws IOException {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
 
-		MentoringClassDetailResponse response = mentoringClassService.createClass(memberId, request);
-		return ResponseEntity
-			.status(HttpStatus.CREATED)
-			.body(ApiResponse.of(
-				true,
-				HttpStatus.CREATED,
-				"멘토링 클래스 생성 성공",
-				response
-			));
-	}
+        MentoringClassDetailResponse response = mentoringClassService.createClass(memberId, request);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.CREATED,
+                        "멘토링 클래스 생성 성공",
+                        response
+                ));
+    }
 
-	@Override
-	@PreAuthorize("hasRole('MENTOR')")
-	@PutMapping("/{classId}")
-	public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(
-		@PathVariable Long classId,
-		@RequestBody MentoringClassUpdateRequest request,
-		Authentication authentication
-	) {
-		CustomUserDetails userDetails = (CustomUserDetails)authentication.getPrincipal();
-		Long memberId = userDetails.getId();
+    @Override
+    @PreAuthorize("hasRole('MENTOR')")
+    @PutMapping("/{classId}")
+    public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(
+            @PathVariable Long classId,
+            @RequestBody MentoringClassUpdateRequest request,
+            Authentication authentication
+    ) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long memberId = userDetails.getId();
 
-		MentoringClassDetailResponse response = mentoringClassService.updateClass(classId, memberId, request);
-		return ResponseEntity
-			.status(HttpStatus.OK)
-			.body(ApiResponse.of(
-				true,
-				HttpStatus.OK,
-				"멘토링 클래스 수정 성공",
-				response
-			));
-	}
+        MentoringClassDetailResponse response = mentoringClassService.updateClass(classId, memberId, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "멘토링 클래스 수정 성공",
+                        response
+                ));
+    }
 
-	@Override
-	@PreAuthorize("hasRole('MENTOR')")
-	@DeleteMapping("/{classId}")
-	public ResponseEntity<ApiResponse<?>> deleteClass(
-		@PathVariable Long classId
-	) {
-		mentoringClassService.deleteClass(classId);
-		return ResponseEntity
-			.status(HttpStatus.NO_CONTENT)
-			.body(ApiResponse.of(
-				true,
-				HttpStatus.NO_CONTENT,
-				"멘토링 수업 삭제 성공",
-				null
-			));
-	}
+    @Override
+    @PreAuthorize("hasRole('MENTOR')")
+    @DeleteMapping("/{classId}")
+    public ResponseEntity<ApiResponse<?>> deleteClass(
+            @PathVariable Long classId
+    ) {
+        mentoringClassService.deleteClass(classId);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.NO_CONTENT,
+                        "멘토링 수업 삭제 성공",
+                        null
+                ));
+    }
 
-	@Override
-	@GetMapping("/favoriteCount/{classId}")
-	public ResponseEntity<ApiResponse<Integer>> findFavoriteCount(@PathVariable Long classId) {
-		int favoriteCount = mentoringClassService.findFavoriteCount(classId);
-		return ResponseEntity
-				.status(HttpStatus.OK)
-				.body(ApiResponse.of(
-						true,
-						HttpStatus.OK,
-						"즐겨찾기 개수 조회 성공",
-						favoriteCount
-				));
-	}
+    @Override
+    @GetMapping("/favoriteCount/{classId}")
+    public ResponseEntity<ApiResponse<Integer>> findFavoriteCount(@PathVariable Long classId) {
+        int favoriteCount = mentoringClassService.findFavoriteCount(classId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponse.of(
+                        true,
+                        HttpStatus.OK,
+                        "즐겨찾기 개수 조회 성공",
+                        favoriteCount
+                ));
+    }
 
 }

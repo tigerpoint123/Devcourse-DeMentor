@@ -21,10 +21,10 @@ public class OpenSearchService {
 
     private final OpenSearchClient openSearchClient;
 
-    public void saveDocument(String index, String id, MentoringClassDocument document) throws IOException {
+    public void saveDocument(String index, Long id, MentoringClassDocument document) throws IOException {
         IndexRequest<MentoringClassDocument> request = IndexRequest.of(i -> i
                 .index(index)
-                .id(id)
+                .id(String.valueOf(id))
                 .document(document));
         openSearchClient.index(request);
     }
