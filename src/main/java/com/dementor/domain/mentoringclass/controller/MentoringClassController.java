@@ -130,7 +130,7 @@ public class MentoringClassController implements MentoringClassSwagger {
             @PathVariable Long classId,
             @RequestBody MentoringClassUpdateRequest request,
             Authentication authentication
-    ) {
+    ) throws IOException {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         Long memberId = userDetails.getId();
 
@@ -150,7 +150,7 @@ public class MentoringClassController implements MentoringClassSwagger {
     @DeleteMapping("/{classId}")
     public ResponseEntity<ApiResponse<?>> deleteClass(
             @PathVariable Long classId
-    ) {
+    ) throws IOException {
         mentoringClassService.deleteClass(classId);
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)

@@ -50,6 +50,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
 
     private static final int POPULAR_CLASS_LIMIT = 10;
     private static final Duration CACHE_TTL = Duration.ofHours(1);
+    private static final String openSearchIndexName = "mentoring_class";
 
     // 서버 시작 완료 후 실행
     @Override
@@ -124,7 +125,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
 
         // 오픈서치 인덱싱
         MentoringClassDocument document = MentoringClassDocument.from(mentoringClass);
-        openSearchService.saveDocument("mentoring_class", document.getId(), document);
+        openSearchService.saveDocument(openSearchIndexName, document.getId(), document);
 
         return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
@@ -188,18 +189,19 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     }
 
     @Transactional
-    public void deleteClass(Long classId) {
+    public void deleteClass(Long classId) throws IOException {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
         List<Schedule> schedules = scheduleRepository.findByMentoringClassId(classId);
         scheduleRepository.deleteAll(schedules);
-
         mentoringClassRepository.delete(mentoringClass);
+        // 오픈서치 인덱스 삭제
+        openSearchService.deleteDocument(openSearchIndexName, classId);
     }
 
     @Transactional
-    public MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) {
+    public MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) throws IOException {
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
@@ -230,6 +232,10 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
                     .map(scheduleRepository::save)
                     .toList();
         }
+
+        //오픈서치 업데이트 인덱싱
+        MentoringClassDocument document = MentoringClassDocument.from(mentoringClass);
+        openSearchService.saveDocument(openSearchIndexName, document.getId(), document);
 
         return MentoringClassDetailResponse.from(mentoringClass, scheduleList);
     }

@@ -5,6 +5,7 @@ import com.dementor.domain.opensearch.indexMapping.MentoringClassIndexMapping;
 import lombok.RequiredArgsConstructor;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch.core.DeleteRequest;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -53,5 +54,12 @@ public class OpenSearchService {
                 .index(indexName)
                 .mappings(MentoringClassIndexMapping.mapping));
         openSearchClient.indices().create(request);
+    }
+
+    public void deleteDocument(String openSearchIndexName, Long classId) throws IOException {
+        DeleteRequest request = DeleteRequest.of(d -> d
+                .index(openSearchIndexName)
+                .id(String.valueOf(classId)));
+        openSearchClient.delete(request);
     }
 }

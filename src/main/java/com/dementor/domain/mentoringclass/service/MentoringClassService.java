@@ -23,10 +23,10 @@ public interface MentoringClassService {
     MentoringClassDetailResponse findOneClassFromDb(Long classId);
 
     @Transactional
-    void deleteClass(Long classId) ;
+    void deleteClass(Long classId) throws IOException;
 
     @Transactional
-    MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request);
+    MentoringClassDetailResponse updateClass(Long classId, Long memberId, MentoringClassUpdateRequest request) throws IOException;
 
     List<MyMentoringResponse> getMentorClassFromMentor(Long memberId);
 
