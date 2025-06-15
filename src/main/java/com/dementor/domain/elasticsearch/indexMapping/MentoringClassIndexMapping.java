@@ -9,11 +9,11 @@ public class MentoringClassIndexMapping {
             .properties("id", p -> p
                     .keyword(k -> k))
             .properties("title", p -> p
-                    .text(k -> k))
+                    .text(k -> k.analyzer("synonym_analyzer")))
             .properties("stack", p -> p
-                    .text(k -> k))
+                    .text(k -> k.analyzer("synonym_analyzer")))
             .properties("content", p -> p
-                    .text(k -> k))
+                    .text(k -> k.analyzer("synonym_analyzer")))
             .properties("price", p -> p
                     .integer(i -> i))
             .properties("mentor", p -> p.object(o -> o
