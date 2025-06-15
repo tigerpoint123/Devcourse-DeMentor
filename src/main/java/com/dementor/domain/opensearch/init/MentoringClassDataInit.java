@@ -1,6 +1,5 @@
 package com.dementor.domain.opensearch.init;
 
-import org.opensearch.client.opensearch.OpenSearchClient;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
@@ -8,13 +7,13 @@ import com.dementor.domain.opensearch.service.OpenSearchService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.opensearch.client.opensearch.OpenSearchClient;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassDataInit {

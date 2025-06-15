@@ -10,11 +10,12 @@ import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.elasticsearch.indexMapping.MentoringClassIndexMapping;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 
-//@Service
+@Service
 @RequiredArgsConstructor
 public class ElasticSearchService {
 

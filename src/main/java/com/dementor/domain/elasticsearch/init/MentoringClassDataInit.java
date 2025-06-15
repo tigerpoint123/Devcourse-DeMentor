@@ -8,12 +8,13 @@ import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 
-//@Component
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassDataInit {
