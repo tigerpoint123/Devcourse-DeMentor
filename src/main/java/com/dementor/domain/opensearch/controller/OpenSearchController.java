@@ -1,22 +1,23 @@
-package com.dementor.domain.elasticsearch.controller;
+package com.dementor.domain.opensearch.controller;
 
-import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
-import com.dementor.domain.elasticsearch.service.ElasticSearchService;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.opensearch.service.OpenSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
 
-//@RestController
-@RequestMapping("/api/elasticsearch")
+@RestController
+@RequestMapping("/api/opensearch")
 @RequiredArgsConstructor
-public class ElasticSearchController {
-    // TODO : 데이터 추가/수정/삭제 시, Elasticsearch에 반영하는 로직 추가 필요
+public class OpenSearchController {
+    // TODO : 데이터 추가/수정/삭제 시, OpenSearch에 반영하는 로직 추가 필요
 
-    private final ElasticSearchService elasticSearchService;
+    private final OpenSearchService elasticSearchService;
     String indexName = "mentoring_class";
 
     @GetMapping
@@ -25,4 +26,4 @@ public class ElasticSearchController {
     ) throws IOException {
         return elasticSearchService.search(indexName, keyword);
     }
-}
+} 

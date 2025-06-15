@@ -15,8 +15,8 @@ import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
 import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
-import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
-import com.dementor.domain.elasticsearch.service.ElasticSearchService;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.opensearch.service.OpenSearchService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,8 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     private final MentorRepository mentorRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private final ElasticSearchService openSearchService;
+//    private final ElasticSearchService elasticSearchService;
+    private final OpenSearchService elasticSearchService;
 
     private static final int POPULAR_CLASS_LIMIT = 10;
     private static final Duration CACHE_TTL = Duration.ofHours(1);
@@ -125,7 +126,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
 
         // 오픈서치 인덱싱
         MentoringClassDocument document = MentoringClassDocument.from(mentoringClass);
-        openSearchService.saveDocument(openSearchIndexName, document.getId(), document);
+        elasticSearchService.saveDocument(openSearchIndexName, document.getId(), document);
 
         return MentoringClassDetailResponse.from(mentoringClass, schedules);
     }
@@ -197,7 +198,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
         scheduleRepository.deleteAll(schedules);
         mentoringClassRepository.delete(mentoringClass);
         // 오픈서치 인덱스 삭제
-        openSearchService.deleteDocument(openSearchIndexName, classId);
+        elasticSearchService.deleteDocument(openSearchIndexName, classId);
     }
 
     @Transactional
@@ -235,7 +236,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
 
         //오픈서치 업데이트 인덱싱
         MentoringClassDocument document = MentoringClassDocument.from(mentoringClass);
-        openSearchService.saveDocument(openSearchIndexName, document.getId(), document);
+        elasticSearchService.saveDocument(openSearchIndexName, document.getId(), document);
 
         return MentoringClassDetailResponse.from(mentoringClass, scheduleList);
     }

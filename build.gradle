@@ -86,6 +86,9 @@ dependencies {
     implementation 'jakarta.json:jakarta.json-api:2.1.1'
     implementation 'org.glassfish:jakarta.json:2.0.1'
 
+    // 오픈서치 검색 엔진
+    implementation 'org.opensearch.client:opensearch-rest-high-level-client:2.13.0'
+    implementation 'org.opensearch.client:opensearch-java:2.4.0'
 }
 
 tasks.named('test') {

@@ -1,18 +1,20 @@
 package com.dementor.domain.elasticsearch.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.elasticsearch.indexMapping.MentoringClassIndexMapping;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 
-@Service
+//@Service
 @RequiredArgsConstructor
 public class ElasticSearchService {
 

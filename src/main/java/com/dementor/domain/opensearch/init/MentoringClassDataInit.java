@@ -1,26 +1,27 @@
-package com.dementor.domain.elasticsearch.init;
+package com.dementor.domain.opensearch.init;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
-import com.dementor.domain.elasticsearch.service.ElasticSearchService;
+import org.opensearch.client.opensearch.OpenSearchClient;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
+import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.opensearch.service.OpenSearchService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
 
-//@Component
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class MentoringClassDataInit {
 
-    private final ElasticSearchService elasticSearchService;
+    private final OpenSearchService elasticSearchService;
     private final MentoringClassRepository mentoringClassRepository;
-    private final ElasticsearchClient elasticsearchClient;
+    private final OpenSearchClient openSearchClient;
     String indexName = "mentoring_class";
 
     // TODO : 대용량 데이터라면 ?
@@ -28,7 +29,7 @@ public class MentoringClassDataInit {
     @Transactional(readOnly = true)
     public void init() throws IOException {
         // 1. 인덱스 존재 여부 확인
-        boolean exists = elasticsearchClient.indices().exists(e -> e.index(indexName)).value();
+        boolean exists = openSearchClient.indices().exists(e -> e.index(indexName)).value();
         if(!exists) {
             elasticSearchService.createMentoringClassIndex(indexName);
         }
@@ -44,4 +45,4 @@ public class MentoringClassDataInit {
             }
         }
     }
-}
+} 
