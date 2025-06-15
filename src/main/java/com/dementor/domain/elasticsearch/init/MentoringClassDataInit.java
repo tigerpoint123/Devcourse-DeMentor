@@ -1,14 +1,13 @@
-package com.dementor.domain.opensearch.init;
+package com.dementor.domain.elasticsearch.init;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.repository.MentoringClassRepository;
-import com.dementor.domain.opensearch.document.mentoringClass.MentoringClassDocument;
-import com.dementor.domain.opensearch.service.OpenSearchService;
+import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.elasticsearch.service.ElasticSearchService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.transport.endpoints.BooleanResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,9 +19,9 @@ import java.util.List;
 @Slf4j
 public class MentoringClassDataInit {
 
-    private final OpenSearchService openSearchService;
+    private final ElasticSearchService elasticSearchService;
     private final MentoringClassRepository mentoringClassRepository;
-    private final OpenSearchClient openSearchClient;
+    private final ElasticsearchClient elasticsearchClient;
     String indexName = "mentoring_class";
 
     // TODO : 대용량 데이터라면 ?
@@ -30,16 +29,17 @@ public class MentoringClassDataInit {
     @Transactional(readOnly = true)
     public void init() throws IOException {
         // 1. 인덱스 존재 여부 확인
-        BooleanResponse existsResponse = openSearchClient.indices().exists(e -> e.index(indexName));
-        if(!existsResponse.value())
-            openSearchService.createMentoringClassIndex(indexName);
+        boolean exists = elasticsearchClient.indices().exists(e -> e.index(indexName)).value();
+        if(!exists) {
+            elasticSearchService.createMentoringClassIndex(indexName);
+        }
 
         List<MentoringClass> mentoringClasses = mentoringClassRepository.findAllWithMentor();
         for (MentoringClass entity : mentoringClasses) {
             MentoringClassDocument doc = MentoringClassDocument.from(entity);
 
             try {
-                openSearchService.saveDocument(indexName, doc.getId(), doc);
+                elasticSearchService.saveDocument(indexName, doc.getId(), doc);
             } catch (Exception e) {
                 log.error("document 저장 실패 : {}", doc.getId(), e);
             }

@@ -80,9 +80,12 @@ dependencies {
     // 대상혁
     implementation 'net.datafaker:datafaker:2.1.0'
 
-    // 오픈서치 검색 엔진
-    implementation 'org.opensearch.client:opensearch-java:2.4.0'
-    implementation 'org.opensearch.client:opensearch-rest-client:2.13.0'
+    // 엘라스틱서치 검색 엔진
+    implementation 'co.elastic.clients:elasticsearch-java:8.13.0'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-client:8.13.0'
+    implementation 'jakarta.json:jakarta.json-api:2.1.1'
+    implementation 'org.glassfish:jakarta.json:2.0.1'
+
 }
 
 tasks.named('test') {

@@ -1,6 +1,8 @@
-package com.dementor.domain.opensearch.indexMapping;
+package com.dementor.domain.elasticsearch.indexMapping;
 
-import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.elasticsearch._types.analysis.TokenFilterDefinition;
 
 public class MentoringClassIndexMapping {
     public static final TypeMapping mapping = TypeMapping.of(t -> t
@@ -24,5 +26,21 @@ public class MentoringClassIndexMapping {
             )
             .properties("favoriteCount", p -> p
                     .integer(i -> i))
+    );
+
+    public static final IndexSettings settings = IndexSettings.of(s -> s
+            .analysis(a -> a
+                    .analyzer("synonym_analyzer", an -> an
+                            .custom(c -> c
+                                    .tokenizer("standard")
+                                    .filter("lowercase", "synonym_filter")))
+                    .filter("synonym_filter", f -> f
+                            .definition(TokenFilterDefinition.of(def -> def
+                                    .synonym(syn -> syn
+                                            .synonyms("Java, 자바")
+                                    )
+                            ))
+                    )
+            )
     );
 }

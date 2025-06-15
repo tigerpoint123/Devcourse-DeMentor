@@ -1,4 +1,4 @@
-package com.dementor.domain.opensearch.document;
+package com.dementor.domain.elasticsearch.document;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

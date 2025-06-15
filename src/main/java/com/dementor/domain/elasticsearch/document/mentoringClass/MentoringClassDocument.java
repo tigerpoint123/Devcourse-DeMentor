@@ -1,7 +1,7 @@
-package com.dementor.domain.opensearch.document.mentoringClass;
+package com.dementor.domain.elasticsearch.document.mentoringClass;
 
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
-import com.dementor.domain.opensearch.document.MentorInfo;
+import com.dementor.domain.elasticsearch.document.MentorInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
