@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Service
@@ -46,6 +47,7 @@ public class ChatRoomService {
 				.roomType(RoomType.MENTORING_CHAT)
 				.mentorId(mentorId)
 				.menteeId(menteeId)
+				.lastMessageAt(ZonedDateTime.now())
 				.build();
 
 		return chatRoomRepository.save(newRoom);

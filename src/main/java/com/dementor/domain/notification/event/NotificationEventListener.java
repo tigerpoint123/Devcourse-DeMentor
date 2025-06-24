@@ -3,10 +3,10 @@ package com.dementor.domain.notification.event;
 import com.dementor.domain.apply.event.MentoringApplyEvent;
 import com.dementor.domain.notification.dto.request.NotificationRequest;
 import com.dementor.domain.notification.entity.NotificationType;
-import com.dementor.domain.notification.service.NotificationService;
 import com.dementor.global.config.NotificationRabbitMqConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.connection.CorrelationData;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,6 @@ import java.util.Map;
 @Slf4j
 public class NotificationEventListener {
     private final RabbitTemplate rabbitTemplate;
-    private final NotificationService notificationService;
 
     @EventListener
     public void handleNotificationEvent(NotificationEvent event) {
@@ -44,11 +43,16 @@ public class NotificationEventListener {
                 )
         );
 
-        // RabbitMQ 에 알림 메시지 전송
+        CorrelationData correlationData = new CorrelationData(
+                "notification-" + event.applyId() + "-" + event.memberId() + System.currentTimeMillis()
+        );
+
+        // RabbitMQ 에 알림 메시지 전송 + confirm
         rabbitTemplate.convertAndSend(
                 NotificationRabbitMqConfig.NOTIFICATION_EXCHANGE,
                 NotificationRabbitMqConfig.NOTIFICATION_ROUTING_KEY,
-                request
+                request,
+                correlationData
         );
         log.info("Notification request sent to RabbitMQ for memberId: {}", event.memberId());
     }
