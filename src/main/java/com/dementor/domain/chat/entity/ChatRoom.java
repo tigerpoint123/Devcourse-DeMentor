@@ -3,7 +3,6 @@ package com.dementor.domain.chat.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Entity
@@ -23,7 +22,7 @@ public class ChatRoom {
 	@Column(nullable = false)
 	private RoomType roomType; // MENTORING_CHAT, ADMIN_CHAT
 
-	@Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+	@Column(nullable = false, columnDefinition = "TIMESTAMP")
 	private ZonedDateTime createdAt;
 
 	@PrePersist
@@ -33,8 +32,7 @@ public class ChatRoom {
 		}
 	}
 
-
-	@Column(nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+	@Column(nullable = true, columnDefinition = "TIMESTAMP")
 	private ZonedDateTime lastMessageAt;
 	// 메시지 보낼 때 직접 갱신
 	public void updateLastMessageTime(ZonedDateTime sentAt) {
@@ -55,6 +53,4 @@ public class ChatRoom {
 	@Column(name = "mentee_id")
 	private Long menteeId;
 
-	//    @Column(name = "target_nickname")
-	//    private String targetNickname;
 }

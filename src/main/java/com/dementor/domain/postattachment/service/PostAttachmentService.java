@@ -8,7 +8,7 @@ import com.dementor.domain.postattachment.entity.PostAttachment;
 import com.dementor.domain.postattachment.exception.PostAttachmentErrorCode;
 import com.dementor.domain.postattachment.exception.PostAttachmentException;
 import com.dementor.domain.postattachment.repository.PostAttachmentRepository;
-import com.dementor.firebase.service.FirebaseStorageService;
+import com.dementor.domain.mentor.service.FirebaseStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -23,7 +23,7 @@ import com.dementor.domain.member.exception.MemberErrorCode;
 import com.dementor.domain.member.exception.MemberException;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.member.service.MemberService;
-import com.dementor.email.service.EmailService;
+import com.dementor.domain.member.service.EmailService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest

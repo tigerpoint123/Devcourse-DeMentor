@@ -1,5 +1,6 @@
 package com.dementor.domain.chat.service;
 
+import com.dementor.domain.admin.entity.Admin;
 import com.dementor.domain.admin.repository.AdminRepository;
 import com.dementor.domain.chat.dto.ChatRoomResponseDto;
 import com.dementor.domain.chat.entity.ChatMessage;
@@ -8,32 +9,22 @@ import com.dementor.domain.chat.entity.RoomType;
 import com.dementor.domain.chat.entity.ViewerType;
 import com.dementor.domain.chat.repository.ChatMessageRepository;
 import com.dementor.domain.chat.repository.ChatRoomRepository;
-import com.dementor.domain.admin.entity.Admin;
 import com.dementor.domain.member.entity.Member;
-import com.dementor.domain.member.entity.UserRole;
 import com.dementor.domain.member.repository.MemberRepository;
-
 import com.dementor.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
-
 	private final ChatRoomRepository chatRoomRepository;
 	private final ChatMessageRepository chatMessageRepository;
 	private final MemberRepository memberRepository;
 	private final AdminRepository adminRepository;
-
 
 //	//닉네임 캐시 저장 - (닉네임캐싱) 최초 1회만 DB 조회 후 메모리 캐시에서 꺼냄
 //	private final Map<Long, String> nicknameCache = new ConcurrentHashMap<>();
@@ -55,7 +46,6 @@ public class ChatRoomService {
 				.roomType(RoomType.MENTORING_CHAT)
 				.mentorId(mentorId)
 				.menteeId(menteeId)
-				//                .targetNickname(mentorNickname) // 기본값 (멘티 기준)
 				.build();
 
 		return chatRoomRepository.save(newRoom);

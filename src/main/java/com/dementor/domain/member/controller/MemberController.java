@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dementor.domain.member.dto.request.SignupRequest;
 import com.dementor.domain.member.dto.response.MemberInfoResponse;
 import com.dementor.domain.member.service.MemberService;
-import com.dementor.email.service.EmailService;
+import com.dementor.domain.member.service.EmailService;
 import com.dementor.global.ApiResponse;
 import com.dementor.global.security.CustomUserDetails;
 

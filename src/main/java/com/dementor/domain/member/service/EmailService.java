@@ -1,4 +1,4 @@
-package com.dementor.email.service;
+package com.dementor.domain.member.service;
 
 import java.time.Duration;
 import java.util.Random;

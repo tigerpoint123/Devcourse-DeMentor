@@ -1,4 +1,4 @@
-package com.dementor.firebase.service;
+package com.dementor.domain.mentor.service;
 
 import java.io.File;
 import java.io.FileInputStream;
