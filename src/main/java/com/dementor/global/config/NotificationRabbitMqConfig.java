@@ -1,10 +1,7 @@
 package com.dementor.global.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Bean;
@@ -17,9 +14,16 @@ public class NotificationRabbitMqConfig {
     public static final String NOTIFICATION_EXCHANGE = "notification.exchange";
     public static final String NOTIFICATION_ROUTING_KEY = "notification.key";
 
+    public static final String NOTIFICATION_DLQ = "notification.dlq";
+    public static final String NOTIFICATION_DLX = "notification.dlx";
+    public static final String NOTIFICATION_DLQ_ROUTING_KEY = "notification.dlq.key";
+
     @Bean
     public Queue notificationQueue() {
-        return new Queue(NOTIFICATION_QUEUE, true);
+        return QueueBuilder.durable(NOTIFICATION_QUEUE)
+                .withArgument("x-dead-letter-exchange", NOTIFICATION_DLX)
+                .withArgument("x-dead-letter-routing-key", NOTIFICATION_DLQ_ROUTING_KEY)
+                .build();
     }
 
     @Bean
@@ -32,6 +36,23 @@ public class NotificationRabbitMqConfig {
         return BindingBuilder.bind(notificationQueue())
                 .to(notificationExchange())
                 .with(NOTIFICATION_ROUTING_KEY);
+    }
+
+    @Bean
+    public Queue notificationDlq() {
+        return new Queue(NOTIFICATION_DLQ, true);
+    }
+
+    @Bean
+    public DirectExchange notificationDlx() {
+        return new DirectExchange(NOTIFICATION_DLX);
+    }
+
+    @Bean
+    public Binding notificationDlqBinding() {
+        return BindingBuilder.bind(notificationDlq())
+                .to(notificationDlx())
+                .with(NOTIFICATION_DLQ_ROUTING_KEY);
     }
 
     @Bean
