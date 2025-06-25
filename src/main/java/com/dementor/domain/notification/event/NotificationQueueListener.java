@@ -16,17 +16,18 @@ public class NotificationQueueListener {
 
     @RabbitListener (queues = NotificationRabbitMqConfig.NOTIFICATION_QUEUE)
     public void receiveNotification(NotificationRequest request)  {
-        log.info("Received notification request: {}", request);
-
-        try {
-            Long memberId = extractMemberId(request);
-            if (memberId == null) log.error("memberId is null");
-
-            notificationService.sendNotification(memberId, request);
-            log.info("Notification processed successfully for memberId: {}", memberId);
-        } catch (Exception e) {
-            log.error("Failed to process notification: {}", request, e);
-        }
+//        log.info("Received notification request: {}", request);
+//
+//        try {
+//            Long memberId = extractMemberId(request);
+//            if (memberId == null) log.error("memberId is null");
+//
+//            notificationService.sendNotification(memberId, request);
+//            log.info("Notification processed successfully for memberId: {}", memberId);
+//        } catch (Exception e) {
+//            log.error("Failed to process notification: {}", request, e);
+//        }
+        throw new RuntimeException("DLQ 테스트용 예외");
     }
 
     private Long extractMemberId(NotificationRequest request) {
