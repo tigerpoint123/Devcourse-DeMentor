@@ -47,7 +47,6 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final ElasticSearchService elasticSearchService;
-//    private final OpenSearchService elasticSearchService;
 
     private static final int POPULAR_CLASS_LIMIT = 10;
     private static final Duration CACHE_TTL = Duration.ofHours(1);

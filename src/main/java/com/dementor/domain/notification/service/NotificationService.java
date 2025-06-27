@@ -36,7 +36,6 @@ public class NotificationService {
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
         try {
-            // 1. DB에 알림 저장
             Notification notification = Notification.builder()
                     .receiver(receiver)
                     .type(request.type())
@@ -46,7 +45,7 @@ public class NotificationService {
 
             notificationRepository.save(notification);
 
-            // 2. WebSocket으로 실시간 알림 전송
+            // WebSocket으로 실시간 알림 전송
             NotificationResponse response = NotificationResponse.from(notification);
             messagingTemplate.convertAndSendToUser(
                     receiver.getId().toString(),

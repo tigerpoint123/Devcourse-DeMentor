@@ -31,7 +31,7 @@ public class FavoriteController implements FavoriteSwagger {
     ) {
         FavoriteAddResponse response = favoriteService.addFavoriteRedis(classId, memberId);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.of(
                                 true,
@@ -49,7 +49,7 @@ public class FavoriteController implements FavoriteSwagger {
     ) {
         FavoriteAddResponse response = favoriteService.addFavoriteDB(classId, memberId);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(
                         ApiResponse.of(
                                 true,
@@ -67,7 +67,7 @@ public class FavoriteController implements FavoriteSwagger {
     ) {
         favoriteService.deleteFavorite(classId, memberId);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.NO_CONTENT)
                 .body(
                         ApiResponse.of(
                                 true,
