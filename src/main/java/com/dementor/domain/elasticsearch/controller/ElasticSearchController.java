@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/elasticsearch")
 @RequiredArgsConstructor
 public class ElasticSearchController {
-    // TODO : 데이터 추가/수정/삭제 시, Elasticsearch에 반영하는 로직 추가 필요
+    // TODO : 스케줄러로 DB 반영하는 로직에 엘라스틱 서치 반영도 포함해야 함
 
     private final ElasticSearchService elasticSearchService;
     String indexName = "mentoring_class";

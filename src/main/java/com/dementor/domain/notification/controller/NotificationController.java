@@ -3,6 +3,7 @@ package com.dementor.domain.notification.controller;
 import com.dementor.domain.notification.dto.response.NotificationResponse;
 import com.dementor.domain.notification.service.NotificationService;
 import com.dementor.global.security.CustomUserDetails;
+import com.dementor.global.swaggerDocs.NotificationSwagger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,13 +18,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
-public class NotificationController {
+public class NotificationController implements NotificationSwagger {
+    // TODO : DLQ 처리 로직 추가 필요
+
     private final NotificationService notificationService;
 
     @GetMapping
     public ResponseEntity<Page<NotificationResponse>> getNotifications(
             Authentication authentication,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
         CustomUserDetails userDetails = (CustomUserDetails)authentication.getPrincipal();
         Long memberId = userDetails.getId();
 
