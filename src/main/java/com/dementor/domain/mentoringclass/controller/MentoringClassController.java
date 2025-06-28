@@ -37,7 +37,7 @@ public class MentoringClassController implements MentoringClassSwagger {
             @RequestParam(required = false) List<String> jobId,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Pageable domainPageable = PaginationUtil.getMentoringClassPageable(pageable);
+        Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);
 
         // String List를 Long List로 변환
         List<Long> jobIds = jobId != null ?

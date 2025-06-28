@@ -10,6 +10,9 @@ import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
 import com.dementor.domain.elasticsearch.indexMapping.MentoringClassIndexMapping;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -30,7 +33,7 @@ public class ElasticSearchService {
         elasticsearchClient.index(request);
     }
 
-    public List<MentoringClassDocument> search(String index, String keyword) throws IOException {
+    public Page<MentoringClassDocument> search(String index, String keyword, Pageable pageable) throws IOException {
         SearchRequest request = new SearchRequest.Builder()
                 .index(index)
                 .query(q -> q
@@ -40,12 +43,16 @@ public class ElasticSearchService {
                                 .should(s3 -> s3.match(m -> m.field("stack").query(keyword)))
                         )
                 )
+                .from((int) pageable.getOffset())
+                .size(pageable.getPageSize())
                 .build();
 
         SearchResponse<MentoringClassDocument> response = elasticsearchClient.search(request, MentoringClassDocument.class);
-        return response.hits().hits().stream()
+        List<MentoringClassDocument> content = response.hits().hits().stream()
                 .map(Hit::source)
                 .toList();
+        long total = response.hits().total() != null ? response.hits().total().value() : content.size();
+        return new PageImpl<>(content, pageable, total);
     }
 
     public void createMentoringClassIndex(String indexName) throws IOException {

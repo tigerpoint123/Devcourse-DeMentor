@@ -39,7 +39,8 @@ import java.util.List;
 @Tag(name = "멘토링 수업", description = "멘토링 수업 관리")
 public interface MentoringClassSwagger {
     @Operation(summary = "멘토링 수업 전체 조회", description = "모든 멘토링 수업을 조회합니다.")
-    ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(List<String> jobId, @Parameter(description = "페이지 정보", example = """
+    ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
+            List<String> jobId, @Parameter(description = "페이지 정보", example = """
             {
               "page": 1,
               "size": 10,

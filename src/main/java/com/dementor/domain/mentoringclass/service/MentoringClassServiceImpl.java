@@ -20,8 +20,6 @@ import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class MentoringClassServiceImpl implements MentoringClassService, ApplicationListener<ContextRefreshedEvent> {
+public class MentoringClassServiceImpl implements MentoringClassService {
 
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
@@ -51,18 +49,6 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     private static final int POPULAR_CLASS_LIMIT = 10;
     private static final Duration CACHE_TTL = Duration.ofHours(1);
     private static final String openSearchIndexName = "mentoring_class";
-
-    // 서버 시작 완료 후 실행
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        log.info("서버 시작 완료: 멘토링 클래스 pre-warming 시작");
-        try {
-            warmUpPopularClasses();
-            log.info("멘토링 클래스 pre-warming 완료");
-        } catch (Exception e) {
-            log.error("서버 시작 시 pre-warming 실패", e);
-        }
-    }
 
     // 1시간마다 pre warming 실행 (캐시 TTL과 동일하게 설정)
     @Scheduled(fixedRate = 3600000) // 1시간 = 3600000 밀리초

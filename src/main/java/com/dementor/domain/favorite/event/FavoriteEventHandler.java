@@ -1,6 +1,7 @@
 package com.dementor.domain.favorite.event;
 
-import com.dementor.domain.favorite.repository.FavoriteRepository;
+import com.dementor.domain.elasticsearch.document.mentoringClass.MentoringClassDocument;
+import com.dementor.domain.elasticsearch.service.ElasticSearchService;
 import com.dementor.domain.mentoringclass.entity.MentoringClass;
 import com.dementor.domain.mentoringclass.exception.MentoringClassException;
 import com.dementor.domain.mentoringclass.exception.MentoringClassExceptionCode;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -23,9 +25,10 @@ import java.util.Set;
 public class FavoriteEventHandler {
     private final RedisTemplate<String, String> redisTemplate;
     private final MentoringClassRepository mentoringClassRepository;
-    private final FavoriteRepository favoriteRepository;
+    private final ElasticSearchService elasticSearchService;
 
     private static final String FAVORITE_COUNT_KEY = "favorite:count:";
+    private static final String openSearchIndexName = "mentoring_class";
 
     @PostConstruct
     @Transactional
@@ -56,9 +59,9 @@ public class FavoriteEventHandler {
         log.info("즐겨찾기 삭제 - 클래스ID: {}, 새로운 개수: {}", event.classId(), newCount);
     }
 
-    @Scheduled(fixedRate = 300000)
+    @Scheduled(fixedRate = 36000000) // 1시간 단위
     @Transactional
-    public void syncFavoriteCounts() {
+    public void syncFavoriteCounts() throws IOException {
         log.info("=== DB 동기화 시작 ===");
         Set<String> keys = redisTemplate.keys(FAVORITE_COUNT_KEY + "*");
         if (keys != null) {
@@ -69,8 +72,11 @@ public class FavoriteEventHandler {
                     MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                             .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
                     mentoringClass.updateFavoriteCount(Integer.parseInt(count));
-                    mentoringClassRepository.save(mentoringClass);
-                    log.info("동기화 - 클래스ID: {}, DB 업데이트 개수: {}", classId, count);
+                    log.info("DB 동기화 - 클래스ID: {}, DB 업데이트 개수: {}", classId, count);
+
+                    MentoringClassDocument mentoringClassDocument = MentoringClassDocument.from(mentoringClass);
+                    elasticSearchService.saveDocument(openSearchIndexName, classId, mentoringClassDocument);
+                    log.info("ElasticSearch 동기화 - 클래스ID: {}, 업데이트 개수: {}", classId, count);
                 }
             }
         }

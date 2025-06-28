@@ -34,7 +34,7 @@ public class AdminMentorApplymentController implements AdminMentorApplymentSwagg
 	public ResponseEntity<ApiResponse<Page<ApplymentResponse>>> findAllAdminMentorApplyment(
 		@PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
 	) {
-		Pageable domainPageable = PaginationUtil.getApplymentPageable(pageable);
+		Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);
 
 		Page<ApplymentResponse> responses = adminMentorApplymentService.findAllApplyment(domainPageable);
 

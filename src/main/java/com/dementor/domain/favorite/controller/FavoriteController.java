@@ -53,7 +53,7 @@ public class FavoriteController implements FavoriteSwagger {
                 .body(
                         ApiResponse.of(
                                 true,
-                                HttpStatus.OK,
+                                HttpStatus.CREATED,
                                 "즐겨찾기 등록 성공",
                                 response
                         )
@@ -71,7 +71,7 @@ public class FavoriteController implements FavoriteSwagger {
                 .body(
                         ApiResponse.of(
                                 true,
-                                HttpStatus.OK,
+                                HttpStatus.NO_CONTENT,
                                 "즐겨찾기 삭제 성공"
                         )
                 );
@@ -83,7 +83,7 @@ public class FavoriteController implements FavoriteSwagger {
         @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
         HttpServletRequest request
     ) {
-        Pageable domainPageable = PaginationUtil.getFavoritePageable(pageable);
+        Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);
 
         Page<FavoriteFindResponse> response = favoriteService.findAllFavorite(memberId, domainPageable);
 

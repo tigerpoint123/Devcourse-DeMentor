@@ -28,7 +28,7 @@ public class AdminModificationController {
 	public ResponseEntity<ApiResponse<Page<MentorEditFindAllRenewalResponse>>> findAllModificationRequest(
 		Pageable pageable
 	) {
-		Pageable domainPageable = PaginationUtil.getModificationPageable(pageable);
+		Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);
 
 		Page<MentorEditFindAllRenewalResponse> result = adminModificationService.findAllModificationRequest(
 			domainPageable);
