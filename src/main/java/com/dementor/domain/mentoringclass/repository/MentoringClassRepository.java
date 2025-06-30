@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MentoringClassRepository extends JpaRepository<MentoringClass, Long> {
@@ -31,4 +32,10 @@ public interface MentoringClassRepository extends JpaRepository<MentoringClass, 
 
     @Query("SELECT DISTINCT mc FROM MentoringClass mc JOIN FETCH mc.mentor m JOIN FETCH m.job")
     List<MentoringClass> findAllWithMentor();
+
+	@Query("SELECT mc FROM MentoringClass mc " +
+			"JOIN FETCH mc.mentor m " +
+			"JOIN FETCH m.job " +
+			"WHERE mc.id = :id")
+	Optional<MentoringClass> findByIdWithMentorAndJob(@Param("id") Long id);
 }

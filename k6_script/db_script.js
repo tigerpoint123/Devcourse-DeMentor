@@ -13,12 +13,12 @@ export const options = {
             startRate: 10,
             timeUnit: '1s',
             preAllocatedVUs: 50,
-            maxVUs: 100,
+            maxVUs: 200,
             stages: [
-                { target: 50, duration: '5s' },    // 5초 동안 초당 30건까지 증가
-                { target: 50, duration: '10s' },   // 10초 동안 초당 30건 유지
-                { target: 0, duration: '5s' },     // 5초 동안 0건까지 감소
-            ],
+                { target: 50, duration: '30s' },
+                { target: 100, duration: '30s' },
+                { target: 0, duration: '10s' },
+              ]
         }
     }
 };
@@ -50,6 +50,6 @@ export default function () {
 export function handleSummary(data) {
     return {
         'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-        'metrics.json': JSON.stringify(data),
+        'output/metrics_db.json': JSON.stringify(data),
     };
 } 

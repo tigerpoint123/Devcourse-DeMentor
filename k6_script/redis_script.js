@@ -13,19 +13,19 @@ export const options = {
             startRate: 10,
             timeUnit: '1s',
             preAllocatedVUs: 50,
-            maxVUs: 100,
+            maxVUs: 200,
             stages: [
-                { target: 50, duration: '5s' },    
-                { target: 50, duration: '10s' },   
-                { target: 0, duration: '5s' },     
-            ],
+                { target: 50, duration: '30s' },
+                { target: 100, duration: '30s' },
+                { target: 0, duration: '10s' },
+              ]
         }
     }
 };
 
 export default function () {
     const BASE_URL = 'http://host.docker.internal:8080';
-    const classId = 37; // 테스트할 인기 클래스 ID
+    const classId = 35; // 테스트할 인기 클래스 ID
     
     const redisClassRes = http.get(
         `${BASE_URL}/api/class/${classId}`,
@@ -50,6 +50,6 @@ export default function () {
 export function handleSummary(data) {
     return {
         'stdout': textSummary(data, { indent: ' ', enableColors: true }),
-        'metrics.json': JSON.stringify(data),
+        'output/metrics_redis.json': JSON.stringify(data),
     };
 } 

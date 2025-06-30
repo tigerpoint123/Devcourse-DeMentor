@@ -20,6 +20,8 @@ import com.dementor.domain.mentoringclass.repository.ScheduleRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +38,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class MentoringClassServiceImpl implements MentoringClassService {
+public class MentoringClassServiceImpl implements MentoringClassService, ApplicationListener<ApplicationReadyEvent> {
 
     private final MentoringClassRepository mentoringClassRepository;
     private final ScheduleRepository scheduleRepository;
@@ -49,13 +51,24 @@ public class MentoringClassServiceImpl implements MentoringClassService {
     private static final Duration CACHE_TTL = Duration.ofHours(1);
     private static final String openSearchIndexName = "mentoring_class";
 
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        log.info("서버 시작 후 멘토링 클래스 pre-warming 시작");
+        try {
+            warmUpPopularClasses();
+            log.info("pre-warming 완료");
+        } catch (Exception e) {
+            log.error("주기적 pre-warming 실패", e);
+        }
+    }
+
     // 1시간마다 pre warming 실행 (캐시 TTL과 동일하게 설정)
     @Scheduled(fixedRate = 3600000) // 1시간 = 3600000 밀리초
     public void scheduledPreWarming() {
         log.info("멘토링 클래스 주기적 pre-warming 시작");
         try {
             warmUpPopularClasses();
-            log.info("멘토링 클래스 주기적 pre-warming 완료");
+            log.info("주기적 pre-warming 완료");
         } catch (Exception e) {
             log.error("주기적 pre-warming 실패", e);
         }
@@ -165,7 +178,7 @@ public class MentoringClassServiceImpl implements MentoringClassService {
     }
 
     public MentoringClassDetailResponse findOneClassFromDb(Long classId) {
-        MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
+        MentoringClass mentoringClass = mentoringClassRepository.findByIdWithMentorAndJob(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
         List<Schedule> schedules = scheduleRepository.findByMentoringClassId(classId);
