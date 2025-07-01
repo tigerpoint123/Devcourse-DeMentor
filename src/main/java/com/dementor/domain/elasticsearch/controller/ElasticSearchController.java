@@ -23,7 +23,7 @@ import java.io.IOException;
 @RequestMapping("/api/elasticsearch")
 @RequiredArgsConstructor
 public class ElasticSearchController implements ElasticSearchSwagger {
-    // TODO : 스케줄러로 DB 반영하는 로직에 엘라스틱 서치 반영도 포함해야 함 (완)
+    // TODO : LLM API 혹은 RAG 기반 검색 기능으로 확장
 
     private final ElasticSearchService elasticSearchService;
     private static final String indexName = "mentoring_class";

@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/favorite")
 @RequiredArgsConstructor
 public class FavoriteController implements FavoriteSwagger {
+    // TODO : 즐겨찾기 일부 비동기 처리 고려 (rabbitmq)
 
     private final FavoriteService favoriteService;
 
