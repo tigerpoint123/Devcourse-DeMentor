@@ -30,7 +30,6 @@ import java.util.List;
 @Slf4j
 public class MentoringClassController implements MentoringClassSwagger {
     // TODO : 멘토링 신청 시 메시지 큐를 활용한 비동기 처리 고려
-
     private final MentoringClassService mentoringClassService;
 
     @Override
