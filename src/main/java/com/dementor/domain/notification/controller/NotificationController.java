@@ -19,6 +19,7 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 public class NotificationController implements NotificationSwagger {
+    // applyService -> notificationEventListener -> notificationQueueListener -> notificationServiceImpl
     // TODO : DLQ 처리 로직 추가 필요
 
     private final NotificationService notificationService;

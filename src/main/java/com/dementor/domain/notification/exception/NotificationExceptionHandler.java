@@ -1,20 +1,19 @@
-package com.dementor.domain.mentoringclass.exception;
+package com.dementor.domain.notification.exception;
 
 import com.dementor.global.ApiResponse;
-
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(basePackages = "com.dementor.domain.mentoringclass")  // 멘토링 클래스 도메인에서만 동작
-@Order(Ordered.HIGHEST_PRECEDENCE)  // GlobalExceptionHandler보다 먼저 처리되도록 설정
-public class MentoringClassExceptionHandler {
+@RestControllerAdvice(basePackages = "com.dementor.domain.notification")
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class NotificationExceptionHandler {
 
-    @ExceptionHandler(MentoringClassException.class)
-    public ResponseEntity<ApiResponse<?>> handleMentoringClassException(MentoringClassException e) {
-        MentoringClassExceptionCode errorCode = e.getErrorCode();
+    @ExceptionHandler(NotificationException.class)
+    public ResponseEntity<ApiResponse<?>> handleNotificationException(NotificationException e) {
+        NotificationExceptionCode errorCode = e.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ApiResponse.of(
@@ -23,4 +22,5 @@ public class MentoringClassExceptionHandler {
                         errorCode.getMessage()
                 ));
     }
+
 }

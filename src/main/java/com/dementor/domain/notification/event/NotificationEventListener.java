@@ -30,8 +30,8 @@ public class NotificationEventListener {
 
     @EventListener
     public void handleMentoringApplyEvent(MentoringApplyEvent event) {
-        log.info("Mentoring apply event received : applyId={}, classId={}, memberId={}",
-                event.applyId(), event.mentoringClassId(), event.memberId());
+        log.info("Mentoring apply event received : applyId={}, classId={}, mentorId={},memberId={}",
+                event.applyId(), event.mentoringClassId(), event.mentorId(),event.memberId());
 
         NotificationRequest request = NotificationRequest.of(
                 NotificationType.MENTORING_APPLY,
@@ -39,6 +39,7 @@ public class NotificationEventListener {
                 Map.of(
                         "applyId", event.applyId(),
                         "classId", event.mentoringClassId(),
+                        "mentorId", event.mentorId(),
                         "memberId", event.memberId()
                 )
         );

@@ -7,6 +7,8 @@ import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.notification.dto.request.NotificationRequest;
 import com.dementor.domain.notification.dto.response.NotificationResponse;
 import com.dementor.domain.notification.entity.Notification;
+import com.dementor.domain.notification.exception.NotificationException;
+import com.dementor.domain.notification.exception.NotificationExceptionCode;
 import com.dementor.domain.notification.repository.NotificationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,30 +32,43 @@ public class NotificationServiceImpl implements  NotificationService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public void receiveNotification(Long memberId, NotificationRequest request) throws Exception {
-        Member receiver = memberRepository.findById(memberId)
+    public void receiveApplymentNotification(Long memberId, Long mentorId, NotificationRequest request) throws Exception {
+        Member applyMember = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-
+        Member receiveMentor = memberRepository.findById(mentorId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
         try {
-            Notification notification = Notification.builder()
-                    .receiver(receiver)
+            Notification applyNotification = Notification.builder()
+                    .receiver(applyMember)
                     .type(request.type())
                     .content(request.content())
                     .data(request.data())
                     .build();
+            notificationRepository.save(applyNotification);
 
-            notificationRepository.save(notification);
+            Notification mentorNotification = Notification.builder()
+                    .receiver(receiveMentor)
+                    .type(request.type())
+                    .content(request.content())
+                    .data(request.data())
+                    .build();
+            notificationRepository.save(mentorNotification);
 
             // WebSocket으로 실시간 알림 전송
-            NotificationResponse response = NotificationResponse.from(notification);
+            NotificationResponse applyResponse = NotificationResponse.from(applyNotification);
             messagingTemplate.convertAndSendToUser(
-                    receiver.getId().toString(),
+                    applyMember.getId().toString(),
                     "/queue/notifications",
-                    response
+                    applyResponse
             );
-
+            NotificationResponse mentorResponse = NotificationResponse.from(mentorNotification);
+            messagingTemplate.convertAndSendToUser(
+                    receiveMentor.getId().toString(),
+                    "/queue/notifications",
+                    mentorResponse
+            );
         } catch (Exception e) {
-            log.error("Failed to send notification to user: {}", receiver.getId(), e);
+            log.error("Failed to send notification to user: {}", applyMember.getId(), e);
             throw new Exception("알림 전송 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
@@ -85,7 +99,7 @@ public class NotificationServiceImpl implements  NotificationService {
                 .orElseThrow(() -> new EntityNotFoundException("알림을 찾을 수 없습니다."));
 
         if (!notification.getReceiver().equals(member)) {
-            throw new AccessDeniedException("해당 알림에 대한 권한이 없습니다.");
+            throw new NotificationException(NotificationExceptionCode.NOTIFICATION_UNAUTHORIZED);
         }
 
         notification.markAsRead();
