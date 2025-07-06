@@ -32,43 +32,27 @@ public class NotificationServiceImpl implements  NotificationService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public void receiveApplymentNotification(Long memberId, Long mentorId, NotificationRequest request) throws Exception {
-        Member applyMember = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-        Member receiveMentor = memberRepository.findById(mentorId)
+    public void receiveApplymentNotification(Long memberId, NotificationRequest request) throws Exception {
+        Member receiver = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
         try {
-            Notification applyNotification = Notification.builder()
-                    .receiver(applyMember)
+            Notification notification = Notification.builder()
+                    .receiver(receiver)
                     .type(request.type())
                     .content(request.content())
                     .data(request.data())
                     .build();
-            notificationRepository.save(applyNotification);
-
-            Notification mentorNotification = Notification.builder()
-                    .receiver(receiveMentor)
-                    .type(request.type())
-                    .content(request.content())
-                    .data(request.data())
-                    .build();
-            notificationRepository.save(mentorNotification);
+            notificationRepository.save(notification);
 
             // WebSocket으로 실시간 알림 전송
-            NotificationResponse applyResponse = NotificationResponse.from(applyNotification);
+            NotificationResponse applyResponse = NotificationResponse.from(notification);
             messagingTemplate.convertAndSendToUser(
-                    applyMember.getId().toString(),
+                    receiver.getId().toString(),
                     "/queue/notifications",
                     applyResponse
             );
-            NotificationResponse mentorResponse = NotificationResponse.from(mentorNotification);
-            messagingTemplate.convertAndSendToUser(
-                    receiveMentor.getId().toString(),
-                    "/queue/notifications",
-                    mentorResponse
-            );
         } catch (Exception e) {
-            log.error("Failed to send notification to user: {}", applyMember.getId(), e);
+            log.error("Failed to send notification to user: {}", receiver.getId(), e);
             throw new Exception("알림 전송 중 오류가 발생했습니다: " + e.getMessage());
         }
     }

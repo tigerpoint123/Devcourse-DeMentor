@@ -6,6 +6,7 @@ import com.dementor.domain.member.exception.MemberException;
 import com.dementor.domain.member.repository.MemberRepository;
 import com.dementor.domain.notification.dto.request.NotificationRequest;
 import com.dementor.domain.notification.entity.FailedNotification;
+import com.dementor.domain.notification.exception.FailedNotificationException;
 import com.dementor.domain.notification.repository.FailedNotificationRepository;
 import com.dementor.domain.notification.service.NotificationService;
 import com.dementor.global.config.NotificationRabbitMqConfig;
@@ -13,6 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -30,14 +34,23 @@ public class NotificationQueueListener {
             Long memberId = extractMemberId(request.data().get("memberId"));
             Long mentorId = extractMemberId(request.data().get("mentorId"));
             if (memberId == null) log.error("memberId is null");
+            if (mentorId == null) log.error("mentorId is null");
 
-            notificationService.receiveApplymentNotification(memberId, mentorId, request);
+            notificationService.receiveApplymentNotification(memberId, request);
+            notificationService.receiveApplymentNotification(mentorId, request);
             log.info("Notification processed successfully for memberId: {}", memberId);
         } catch (Exception e) {
             log.error("Failed to process notification: {}", request, e);
-            throw e;
+            Map<String, Object> dataWithError = new HashMap<>(request.data());
+            dataWithError.put("errorMessage", e.getMessage());
+
+            NotificationRequest failedRequest = NotificationRequest.of(
+                    request.type(),
+                    request.content(),
+                    dataWithError
+            );
+            throw new FailedNotificationException(e, failedRequest);
         }
-//        throw new RuntimeException("DLQ 테스트용 예외");
     }
 
     @RabbitListener(queues = NotificationRabbitMqConfig.NOTIFICATION_DLQ)
@@ -47,36 +60,8 @@ public class NotificationQueueListener {
         Long memberId = extractMemberId(request.data().get("memberId"));
         Long mentorId = extractMemberId(request.data().get("mentorId"));
 
-        if (memberId != null) {
-            Member receiver = memberRepository.findById(memberId)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-
-            FailedNotification failed = FailedNotification.builder()
-                    .receiver(receiver)
-                    .type(request.type())
-                    .content(request.content())
-                    .data(request.data())
-                    .errorMessage("메시지 처리 실패로 DLQ 이동")
-                    .retried(false)
-                    .build();
-            failedNotificationRepository.save(failed);
-        }
-
-        if (mentorId != null) {
-            Member receiver = memberRepository.findById(mentorId)
-                    .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
-
-            FailedNotification failed = FailedNotification.builder()
-                    .receiver(receiver)
-                    .type(request.type())
-                    .content(request.content())
-                    .data(request.data())
-                    .errorMessage("메시지 처리 실패로 DLQ 이동")
-                    .retried(false)
-                    .build();
-            failedNotificationRepository.save(failed);
-
-        }
+        saveFailedNotification(memberId, request);
+        saveFailedNotification(mentorId, request);
     }
 
     private Long extractMemberId(Object object) {
@@ -94,5 +79,20 @@ public class NotificationQueueListener {
             log.error("Failed to extract memberId from object: {}", object, e);
             return null;
         }
+    }
+
+    private void saveFailedNotification(Long memberId, NotificationRequest request) {
+        Member receiver = memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        FailedNotification failed = FailedNotification.builder()
+                .receiver(receiver)
+                .type(request.type())
+                .content(request.content())
+                .data(request.data())
+                .errorMessage(request.data().get("errorMessage").toString())
+                .retried(false)
+                .build();
+        failedNotificationRepository.save(failed);
     }
 }
