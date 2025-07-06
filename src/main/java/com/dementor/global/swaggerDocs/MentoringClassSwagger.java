@@ -62,7 +62,7 @@ public interface MentoringClassSwagger {
             Long classId, MentoringClassUpdateRequest request, Authentication authentication) throws IOException;
 
     @Operation(summary = "멘토링 수업 삭제", description = "멘토링 수업을 삭제합니다.")
-    ResponseEntity<ApiResponse<?>> deleteClass(Long classId) throws IOException;
+    ResponseEntity<ApiResponse<Void>> deleteClass(Long classId) throws IOException;
 
     @Operation(summary = "멘토링 즐겨찾기 개수", description = "멘토링 즐겨찾기 개수를 조회합니다.")
     ResponseEntity<ApiResponse<Integer>> findFavoriteCount(Long classId);

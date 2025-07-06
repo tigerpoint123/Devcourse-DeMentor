@@ -22,7 +22,7 @@ public class NotificationQueueListener {
             Long memberId = extractMemberId(request);
             if (memberId == null) log.error("memberId is null");
 
-            notificationService.sendNotification(memberId, request);
+            notificationService.receiveNotification(memberId, request);
             log.info("Notification processed successfully for memberId: {}", memberId);
         } catch (Exception e) {
             log.error("Failed to process notification: {}", request, e);

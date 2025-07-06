@@ -31,7 +31,7 @@ public class NotificationServiceImpl implements  NotificationService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public void sendNotification(Long memberId, NotificationRequest request) throws Exception {
+    public void receiveNotification(Long memberId, NotificationRequest request) throws Exception {
         Member receiver = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
 
