@@ -11,8 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/favorite")
 @RequiredArgsConstructor
 public class FavoriteController implements FavoriteSwagger {
-    // TODO : 즐겨찾기 일부 비동기 처리 고려 (rabbitmq)
+    /*
+    TODO : 즐겨찾기 일부 비동기 처리 고려 (rabbitmq)
+    TODO : 즐겨찾기 등록 후, 동기화되지 않고 서버를 재시작하면, 즐겨찾기 수는 그대론데 favorite 테이블에는 들어가있음
+    * */
 
     private final FavoriteService favoriteService;
 
@@ -81,7 +82,7 @@ public class FavoriteController implements FavoriteSwagger {
     @GetMapping("/{memberId}")
     public ResponseEntity<ApiResponse<Page<FavoriteFindResponse>>> getFavoriteList(
         @PathVariable Long memberId,
-        @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
+        Pageable pageable,
         HttpServletRequest request
     ) {
         Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);

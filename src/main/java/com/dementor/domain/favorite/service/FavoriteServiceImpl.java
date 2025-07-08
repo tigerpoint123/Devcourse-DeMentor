@@ -60,7 +60,7 @@ public class FavoriteServiceImpl implements  FavoriteService {
     @Transactional
     public void deleteFavorite(Long classId, Long memberId) {
         Favorite favorite = favoriteRepository.findByMentoringClassIdAndMemberId(classId, memberId)
-                .orElseThrow(() -> new IllegalArgumentException("즐겨찾기를 찾을 수 없습니다: " + classId));
+                .orElseThrow(() -> new FavoriteException(FavoriteExceptionCode.FAVORITE_ONE_NOT_FOUND));
 
         favoriteRepository.delete(favorite);
         eventPublisher.publishEvent(new FavoriteRemovedEvent(favorite.getMentoringClassId()));

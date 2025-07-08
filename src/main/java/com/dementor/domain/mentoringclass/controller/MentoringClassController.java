@@ -13,8 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,7 +34,7 @@ public class MentoringClassController implements MentoringClassSwagger {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MentoringClassFindResponse>>> getClass(
             @RequestParam(required = false) List<String> jobId,
-            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+            Pageable pageable
     ) {
         Pageable domainPageable = PaginationUtil.getDefaultPageable(pageable);
 
@@ -126,7 +124,7 @@ public class MentoringClassController implements MentoringClassSwagger {
 
     @Override
     @PreAuthorize("hasRole('MENTOR')")
-    @PutMapping("/{classId}")
+    @PatchMapping("/{classId}")
     public ResponseEntity<ApiResponse<MentoringClassDetailResponse>> updateClass(
             @PathVariable Long classId,
             @RequestBody MentoringClassUpdateRequest request,
@@ -149,7 +147,7 @@ public class MentoringClassController implements MentoringClassSwagger {
     @Override
     @PreAuthorize("hasRole('MENTOR')")
     @DeleteMapping("/{classId}")
-    public ResponseEntity<ApiResponse<?>> deleteClass(
+    public ResponseEntity<ApiResponse<Void>> deleteClass(
             @PathVariable Long classId
     ) throws IOException {
         mentoringClassService.deleteClass(classId);
