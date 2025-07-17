@@ -41,13 +41,20 @@ public class FailedNotification extends BaseEntity {
 
     private LocalDateTime retriedAt;
 
+    private int retryCount;
+
+    private ErrorType errorType;
+
     @Builder
-    public FailedNotification(Member receiver, NotificationType type, String content, Map<String, Object> data, String errorMessage, boolean retried) {
+    public FailedNotification(Long id, Member receiver, NotificationType type, String content, Map<String, Object> data, String errorMessage, boolean retried, int retryCount, ErrorType errorType) {
+        this.id = id;
         this.receiver = receiver;
         this.type = type;
         this.content = content;
         this.data = data;
         this.errorMessage = errorMessage;
         this.retried = retried;
+        this.retryCount = retryCount;
+        this.errorType = errorType;
     }
 }
