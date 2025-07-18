@@ -24,11 +24,17 @@ public class FailedNotificationServiceImpl implements FailedNotificationService 
     @Override
     @Transactional
     public FailedNotificationResponse manualRetriedFailedNotification(Long id) {
+        // 디버깅 로그 추가
+        log.info("manualRetriedFailedNotification 호출됨 - ID: {}", id);
+        
         // 실패 알림 중 retried=false인 것만 조회
         // 알림 발송 재시도 후 성공 시 retried=true, retriedAt=now()로 업데이트
         // @Scheduled 어노테이션을 사용해 일정 주기로 재처리 메서드 실행
         FailedNotification failedNotification = failedNotificationRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("실패 알림 조회 실패"));
+                .orElseThrow(() -> {
+                    log.error("실패 알림을 찾을 수 없음 - ID: {}", id);
+                    return new RuntimeException("실패 알림 조회 실패");
+                });
 
         if (failedNotification.isRetried())
             return new FailedNotificationResponse(

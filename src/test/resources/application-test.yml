@@ -14,6 +14,32 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    publisher-confirm-type: correlated
+    listener:
+      simple:
+        retry:
+          enabled: false  # 테스트에서는 재시도 비활성화
+          max-attempts: 1
+          initial-interval: 100ms
+          multiplier: 1
+          max-interval: 1000ms
+        default-requeue-rejected: false
+
+  # Elasticsearch 설정 (테스트에서는 비활성화)
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 1000ms
+    socket-timeout: 1000ms
+
+# 테스트에서 Elasticsearch 초기화 비활성화
+elasticsearch:
+  enabled: false
+
 jwt:
   secret: "c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK"
   expiration: 86400000  # 24시간
