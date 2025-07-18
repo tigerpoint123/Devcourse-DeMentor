@@ -36,8 +36,8 @@ public class NotificationQueueListener {
             if (memberId == null) log.error("memberId is null");
             if (mentorId == null) log.error("mentorId is null");
 
-            notificationService.receiveApplymentNotification(memberId, request);
-            notificationService.receiveApplymentNotification(mentorId, request);
+            notificationService.sendApplymentNotification(memberId, request);
+            notificationService.sendApplymentNotification(mentorId, request);
             log.info("Notification processed successfully for memberId: {}", memberId);
         } catch (Exception e) {
             log.error("Failed to process notification: {}", request, e);

@@ -1,14 +1,13 @@
 package com.dementor.domain.notification.controller;
 
+import com.dementor.domain.notification.dto.response.FailedNotificationResponse;
 import com.dementor.domain.notification.service.FailedNotificationService;
 import com.dementor.global.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/dlq/notifications")
@@ -27,18 +26,19 @@ public class FailedNotificationController {
     */
     private final FailedNotificationService failedNotificationService;
 
-    @PostMapping("/{id}/retry")
-    public ResponseEntity<ApiResponse<?>> retry(
+    @PatchMapping("/{id}/retry")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<FailedNotificationResponse>> retry(
             @PathVariable Long id
     ) {
-        failedNotificationService.retriedFailedNotification();
+        FailedNotificationResponse response = failedNotificationService.manualRetriedFailedNotification(id);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponse.of(
                         true,
                         HttpStatus.OK,
                         "재처리 성공",
-                        null
+                        response
                 ));
     }
 }

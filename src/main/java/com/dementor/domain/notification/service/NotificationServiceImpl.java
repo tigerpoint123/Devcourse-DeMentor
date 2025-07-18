@@ -32,7 +32,7 @@ public class NotificationServiceImpl implements  NotificationService {
     private final MemberRepository memberRepository;
 
     @Transactional
-    public void receiveApplymentNotification(Long memberId, NotificationRequest request) throws Exception {
+    public void sendApplymentNotification(Long memberId, NotificationRequest request) throws Exception {
         Member receiver = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberException(MemberErrorCode.MEMBER_NOT_FOUND));
         try {

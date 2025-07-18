@@ -57,4 +57,19 @@ public class FailedNotification extends BaseEntity {
         this.retryCount = retryCount;
         this.errorType = errorType;
     }
+
+    public void increaseRetryCount() {
+        this.retryCount ++;
+    }
+    public void markRetried() {
+        this.retried = true;
+        this.retriedAt = LocalDateTime.now();
+    }
+    public void updateError(String errorMessage, ErrorType errorType) {
+        this.errorMessage = errorMessage;
+        this.errorType = errorType;
+    }
+    public boolean canRetry(int maxRetry) {
+        return !this.retried && this.retryCount < maxRetry;
+    }
 }
