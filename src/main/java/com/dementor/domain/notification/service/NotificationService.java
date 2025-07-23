@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface NotificationService {
-    void sendNotification(Long memberId, NotificationRequest request) throws Exception;
+    void sendApplymentNotification(Long memberId, NotificationRequest request) throws Exception;
     List<NotificationResponse> getUnreadNotifications(Long memberId);
     Page<NotificationResponse> getNotifications(Long memberId, Pageable pageable);
     void markAsRead(Long notificationId, Long memberId);

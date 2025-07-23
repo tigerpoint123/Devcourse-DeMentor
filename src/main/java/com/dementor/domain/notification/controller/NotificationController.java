@@ -8,8 +8,6 @@ import com.dementor.global.swaggerDocs.NotificationSwagger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -21,14 +19,36 @@ import java.util.List;
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
 public class NotificationController implements NotificationSwagger {
-    // TODO : DLQ 처리 로직 추가 필요
+    // applyService -> notificationEventListener -> notificationQueueListener -> notificationServiceImpl
+    /*
+    TODO : DLQ로 넘어갈 때 운영자 알림 (이메일, SMS, 슬랙 등) 전송 로직 필요
+✅ 고려할 수 있는 고도화 포인트
+1. ✅ 재처리 기능 (이미 설명한 것 포함)
+운영자가 특정 메시지를 재처리할 수 있는 수동 재처리 API or 버튼
+예외 패턴에 따라 자동 재처리 룰 구성 (ex. 특정 에러만 자동 복구)
+
+2. ✅ 실패 유형 분석 및 지표화
+실패 원인 분류 (ex. 타임아웃, 포맷 오류, 대상 없음 등)
+실패율 / 성공률 / DLQ 적재율 등을 Prometheus + Grafana로 시각화
+
+3. ✅ 메시지 추적 (Traceability)
+요청 ID, 사용자 ID를 메시지에 포함 → 로그 상에서 요청 흐름 추적
+Correlation ID 패턴 사용
+
+4. ✅ 보안 & 유효성
+메시지 페이로드 검증 (예: 필수 필드 누락 시 Drop)
+인증된 서비스만 Queue에 발행 가능하도록 ACL 설정
+
+5. ✅ 멀티 채널 대응 (선택)
+예: 알림 발송 실패 시 이메일 → 푸시 → SMS 순차 fallback 전략
+    * */
 
     private final NotificationService notificationService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getNotifications(
             Authentication authentication,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            Pageable pageable
     ) {
         CustomUserDetails userDetails = (CustomUserDetails)authentication.getPrincipal();
         Long memberId = userDetails.getId();

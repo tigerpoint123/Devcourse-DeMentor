@@ -187,7 +187,7 @@ public class MentoringClassServiceImpl implements MentoringClassService, Applica
     }
 
     @Transactional
-    public void deleteClass(Long classId) throws IOException {
+    public void deleteClass(Long classId) throws IOException { //TODO : Favorite, Apply도 삭제 필요
         MentoringClass mentoringClass = mentoringClassRepository.findById(classId)
                 .orElseThrow(() -> new MentoringClassException(MentoringClassExceptionCode.MENTORING_CLASS_NOT_FOUND));
 
