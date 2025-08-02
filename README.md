@@ -56,6 +56,10 @@ Service : https://www.dementor.site
 > 
 > -i 100 : 각 100번의 http 요청
 > 
+### 2-1-1. Node.js로 테스트 실행
+> 명령어 : artillery run k6_script/redis_load_test.yml --output k6_script/result.json
+> --output 이후는 결과를 json 형태로 저장
+> artillery 버전 1.x로 실행해야 함
 
 ### 2-2. 테스트 방법
 > web3_4_tried-it_begit(grafana, influxdb) 실행

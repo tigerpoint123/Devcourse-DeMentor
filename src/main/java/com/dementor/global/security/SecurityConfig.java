@@ -42,7 +42,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                //.cors(cors -> cors.configurationSource(corsConfigurationSource())) // 요거 추가!
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
 
                 .exceptionHandling(exceptionHandling -> exceptionHandling
@@ -112,7 +112,9 @@ public class SecurityConfig {
                 "https://api.dementor.site",
                 "https://admin.dementor.site",
                 "https://local.dementor.site:5173",
+                "http://localhost:5173",
                 "https://localhost:5173",
+                "http://localhost:8080",
                 "https://admin-local.dementor.site:5174",
                 "https://cdpn.io"
         ));
