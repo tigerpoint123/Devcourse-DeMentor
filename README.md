@@ -1,6 +1,6 @@
 # 💻개발자 멘토링 서비스 Dementor
 
-[![DeMentor.png](https://i.postimg.cc/2SXdHJGt/DeMentor.png)](https://postimg.cc/SnCzRgwL)
+<img width="1285" height="674" alt="스크린샷 2025-08-02 174633" src="https://github.com/user-attachments/assets/e3fb97a8-0eb7-42e0-890a-d59162937c05" />
 
 ### 배포 URL
 
@@ -74,8 +74,11 @@ Service : https:// <br>
 
 
 ## 5. 프로젝트 구조
+### 5-1. ERD
+<img width="1671" height="1022" alt="image" src="https://github.com/user-attachments/assets/73eede5f-b549-430c-9ad7-7a827b8d59ff" />
 
-<img width="5589" alt="frame (9)" src="https://github.com/user-attachments/assets/682a6486-74d9-475c-94e9-8f6403629d87" />
+### 5-2. 전체 구조
+<img width="1307" height="855" alt="image" src="https://github.com/user-attachments/assets/ab3a5929-fa04-4f1c-abab-8b9c7f615a8f" />
 
 <br>
 
