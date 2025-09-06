@@ -6,9 +6,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import com.dementor.domain.screenShare.websocket.ScreenShareChannelInterceptor;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -54,6 +57,16 @@ public class StompRabbitMqBrokerConfig implements WebSocketMessageBrokerConfigur
 			.setClientPasscode(rabbitmqPassword)
 			.setSystemLogin(rabbitmqUsername)
 			.setSystemPasscode(rabbitmqPassword);
+	}
+
+	@org.springframework.beans.factory.annotation.Autowired(required = false)
+	private ScreenShareChannelInterceptor screenShareChannelInterceptor;
+
+	@Override
+	public void configureClientInboundChannel(org.springframework.messaging.simp.config.ChannelRegistration registration) {
+		if (screenShareChannelInterceptor != null) {
+			registration.interceptors(screenShareChannelInterceptor);
+		}
 	}
 
 	@Bean
